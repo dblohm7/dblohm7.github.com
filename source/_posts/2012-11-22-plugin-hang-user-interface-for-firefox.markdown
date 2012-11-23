@@ -81,7 +81,12 @@ there's no reason why we can't then explicitly desynchronize them!
 
 Here's the first thing I do in the Plugin Hang UI's `WM_INITDIALOG` handler:
 
+{% codeblock lang:cpp %}
       // Disentangle our input queue from the hung Firefox process
       AttachThreadInput(GetCurrentThreadId(),
                         GetWindowThreadProcessId(mParentWindow, nullptr),
                         FALSE);
+{% endcodeblock %}
+
+Without this line, the Hang UI is at risk of deadlock, especially if the 
+user attempts to send input to the Firefox window underneath.
