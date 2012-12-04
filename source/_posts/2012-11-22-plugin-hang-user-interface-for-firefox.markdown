@@ -26,7 +26,7 @@ display the Plugin Hang UI dialog box.
 {% img http://dblohm7.ca/images/hangui.png %}
 
 My patch is currently under review, but the Plugin Hang UI is fully functional 
-in a [try build](http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-192a654f8ad6/try-win32/firefox-19.0a1.en-US.win32.installer.exe), 
+in a [try build](http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-f5d8fdf4f29a/try-win32/firefox-19.0a1.en-US.win32.installer.exe), 
 so please check it out and play with it!
 
 Changes to Preferences
