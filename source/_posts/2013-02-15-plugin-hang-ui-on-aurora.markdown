@@ -3,7 +3,7 @@ layout: post
 title: "Plugin Hang UI on Aurora"
 date: 2013-02-15 17:00
 comments: true
-categories: Mozilla, Plugins
+categories: [Mozilla, Plugins]
 ---
 The UI Has Landed
 -----------------
