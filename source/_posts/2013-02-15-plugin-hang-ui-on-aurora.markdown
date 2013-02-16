@@ -167,7 +167,7 @@ fffff880`0def4830 fffff960`0007c66d : fffff900`00000000 fffff900`0004366c fffff9
 ...
 </samp></pre>
 
-The highlighted hexidecimal value above is a handle to a window with class 
+The highlighted hexadecimal value above is a handle to a window with class 
 `MSCTFIME UI` (i.e. a Microsoft IME window) that was created by the main 
 UI thread in the hung Flash process. Despite my best efforts to try to 
 disconnect the Plugin Hang UI input queue from these threads, Windows is 
