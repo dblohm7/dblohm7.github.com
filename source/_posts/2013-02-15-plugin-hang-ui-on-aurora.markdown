@@ -73,7 +73,7 @@ error status by step 2.
 
 ### Sequence 2 (Less common unless running on fewer cores)
 
-1. Same as above.
+1. Same as in Sequence 1.
 
 2. `CleanupFromTimeout` runs before `OnNotifyMaybeChannelError`. This 
 work item attempts to do a regular `Close` on the channel. Since the 
