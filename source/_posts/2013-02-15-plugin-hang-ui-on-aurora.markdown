@@ -117,7 +117,7 @@ This lead be back down the input queue rabbit hole that I briefly discussed
 last time. I learned that on an intermittent basis, the Plugin Hang UI dialog 
 box was being hung up on Win32 `ShowWindow` and `SetFocus` calls. What I did 
 know was that my attempts to explicitly detach the Plugin Hang UI's thread 
-from the hung Firefox thread weren't working well as I would have liked.
+from the hung Firefox thread weren't working as well as I would have liked.
 
 After [numerous attempts](https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c9) 
 at fixing these issues, I determined that for the time being we will have to 
@@ -192,7 +192,7 @@ an owner.
 If you're interested in helping to test this feature, please install Nightly 
 and try the repro from [bug 834127](https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c0).
 When the Plugin Hang UI fires, try to move around the Plugin Hang UI as well 
-as the other windows on your desktop, including Firefox. If the windows change 
-the Z-order differently from the way that I have observed here, please try to 
-generate some steps to reproduce, drop me a line (aklotz on `#perf` or MoCo email) 
+as the other windows on your desktop, including Firefox. If the Z-order changes 
+differently from the way that I have observed here, please try to generate 
+some steps to reproduce, drop me a line (aklotz on `#perf` or MoCo email) 
 and let me know what's going on. Thanks!
