@@ -120,16 +120,16 @@ know was that my attempts to explicitly detach the Plugin Hang UI's thread
 from the hung Firefox thread weren't working as well as I would have liked.
 
 After [numerous attempts](https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c9) 
-at fixing these issues, I determined that for the time being we will have to 
+at fixing these issues, I determined that for the time being we will need to 
 rescind the owner-owned relationship between Firefox and the Plugin Hang UI 
-dialog. If we didn't do so, seemingly benign actions like a call to `PeekMessage` 
+dialog. If we didn't do so, seemingly benign actions like calling `PeekMessage` 
 or passing a `WM_NCLBUTTONDOWN` message to `DefWindowProc` would be enough 
 to bring the Plugin Hang UI to a halt. Why is this, you ask? I decided to 
 peek into kernel mode to find out.
 
 ### Adventures in Kernel Mode
 
-Recall that the guts of `USER32` and `GDI32` were moved into the kernel 
+Recall that the guts of `USER32` and `GDI32` were moved into kernel mode 
 via `win32k.sys` in the Windows NT 3.5 timeframe. It follows that any 
 efforts to examine Win32 internals necessitates peering into kernel mode. 
 I didn't need an elaborate remote debugging setup for my purposes, so I 
