@@ -138,10 +138,10 @@ to take a snapshot of my kernel and debug it.
 
 My workflow was essentially as follows:
 
-* Plugin Hang UI gets stuck
-* Attach a debugger (I use WinDbg) to `plugin-hang-ui.exe`
-* Run LiveKd
-* Type `!thread -t <tid>` into the kernel debugger, where `<tid>` is the 
+1. Plugin Hang UI gets stuck
+2. Attach a debugger (I use WinDbg) to `plugin-hang-ui.exe`
+3. Run LiveKd
+4. Type `!thread -t <tid>` into the kernel debugger, where `<tid>` is the 
 thread ID that is hung in the user-mode WinDbg
 
 Every kernel-mode call stack that I examined on a hung thread usually ended up going through this code path:
