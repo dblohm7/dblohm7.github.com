@@ -34,7 +34,7 @@ markers in action (the pink stuff for readers who are unfamiliar with SPS marker
 {% img http://dblohm7.ca/images/iomarkers.png %}
 
 In [bug 867757](https://bugzilla.mozilla.org/show_bug.cgi?id=867757) (under review) 
-this will become more sophisticated, as SPS will immeidately sample the callstack of 
+this will become more sophisticated, as SPS will immediately sample the callstack of 
 the thread whose I/O has been intercepted. This annotated stack will be inserted 
 directly into the timeline.
 
