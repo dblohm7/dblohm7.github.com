@@ -133,7 +133,7 @@ module that interposes calls to <code>read</code>, <code>write</code>, and <code
 timeline whenever main thread I/O is reported. Here is a sample screenshot of the
 markers in action (the pink stuff for readers who are unfamiliar with SPS markers):</p>
 
-<p><img src="http://dblohm7.ca/images/iomarkers.png"></p>
+<p><a href="http://dblohm7.ca/images/iomarkers.png"><img src="http://dblohm7.ca/images/iomarkers.png"></a></p>
 
 <p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867757">bug 867757</a> (under review)
 this will become more sophisticated, as SPS will immediately sample the callstack of
@@ -145,7 +145,7 @@ but with both existing patches applied the data is already useful. By firing up
 Cleopatra and filtering on either <code>NSPRInterposer</code> or <code>SQLiteInterposer</code>, you can
 isolate and view the main thread I/O stacks:</p>
 
-<p><img src="http://dblohm7.ca/images/iofilteredstacks.png"></p>
+<p><a href="http://dblohm7.ca/images/iofilteredstacks.png"><img src="http://dblohm7.ca/images/iofilteredstacks.png"></a></p>
 
 <p>Hopefully these patches will prove to be beneficial to our efforts to eliminate
 main thread I/O.</p>
