@@ -31,7 +31,7 @@ On the observer side of things, for now we simply insert a marker into the profi
 timeline whenever main thread I/O is reported. Here is a sample screenshot of the 
 markers in action (the pink stuff for readers who are unfamiliar with SPS markers):
 
-{% img http://dblohm7.ca/images/iomarkers.png %}
+{% clkimg http://dblohm7.ca/images/iomarkers.png %}
 
 In [bug 867757](https://bugzilla.mozilla.org/show_bug.cgi?id=867757) (under review) 
 this will become more sophisticated, as SPS will immediately sample the callstack of 
@@ -43,7 +43,7 @@ but with both existing patches applied the data is already useful. By firing up
 Cleopatra and filtering on either `NSPRInterposer` or `SQLiteInterposer`, you can 
 isolate and view the main thread I/O stacks:
 
-{% img http://dblohm7.ca/images/iofilteredstacks.png %}
+{% clkimg http://dblohm7.ca/images/iofilteredstacks.png %}
 
 Hopefully these patches will prove to be beneficial to our efforts to eliminate 
 main thread I/O.
