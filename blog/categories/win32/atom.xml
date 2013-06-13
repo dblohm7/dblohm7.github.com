@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Win32 | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2013-06-12T18:11:33-06:00</updated>
+  <updated>2013-06-13T10:29:52-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -34,11 +34,11 @@ thread is blocked, the Firefox user interface grinds to a halt.</p>
 
 
 <p>Currently this is feature is exclusive to Firefox Desktop on Windows.
-When the Hang UI is invoked, you'll notice that Firefox has created
+When the Hang UI is invoked, you&rsquo;ll notice that Firefox has created
 a new child process, plugin-hang-ui.exe. This child process will
 display the Plugin Hang UI dialog box.</p>
 
-<p><img src="http://dblohm7.ca/images/hangui.png"></p>
+<p><img class="<a" src="href="http://dblohm7.ca/images/hangui.png">http://dblohm7.ca/images/hangui.png</a>"></p>
 
 <p>My patch is currently under review, but the Plugin Hang UI is fully functional
 in a <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-f5d8fdf4f29a/try-win32/firefox-19.0a1.en-US.win32.installer.exe">try build</a>,
@@ -55,8 +55,8 @@ but its semantics change a little bit. Once the Plugin Hang UI has been
 displayed, Firefox will wait <code>dom.ipc.plugins.timeoutSecs</code> seconds before
 terminating the plugin automatically, even if the user did not elect to
 stop the plugin using the Hang UI. This is nearly identical to the way that
-Firefox behaves without the Hang UI -- the only difference is that now this
-timeout period doesn't commence until the Hang UI is displayed.</p></li>
+Firefox behaves without the Hang UI &mdash; the only difference is that now this
+timeout period doesn&rsquo;t commence until the Hang UI is displayed.</p></li>
 <li><p><code>dom.ipc.plugins.hangUIMinDisplaySecs</code>: This is the minimum number
 of seconds that Firefox should display the Plugin Hang UI. If
 <code>dom.ipc.plugins.timeoutSecs</code> is set to a value lower than this
@@ -69,29 +69,29 @@ user has half a chance to read the Plugin Hang UI.</p></li>
 
 <h2>Implementation Details</h2>
 
-<p>There are a couple of interesting things that I'd like to point out
+<p>There are a couple of interesting things that I&rsquo;d like to point out
 relating to this patch.</p>
 
 <p>Because the Plugin Hang UI is a child process, I needed to ensure that
 its window always appears in front of the hung Firefox window. I decided
 that I would have Firefox send its top-level <code>HWND</code> over to the child
 process so that the Hang UI could specify that handle as the owner of its
-top-level window. If you've seen <a href="http://blogs.msdn.com/b/oldnewthing">Raymond Chen's</a>
+top-level window. If you&rsquo;ve seen <a href="http://blogs.msdn.com/b/oldnewthing">Raymond Chen&rsquo;s</a>
 <a href="http://channel9.msdn.com/Blogs/scobleizer/Raymond-Chen-PDC-05-Talk-Five-Things-Every-Win32-Programmer-Needs-to-Know">Five Things Every Win32 Programmer Needs to Know</a>,
-then you'll know what is coming: Deadlock!</p>
+then you&rsquo;ll know what is coming: Deadlock!</p>
 
 <p>The problem is that the Hang UI window and the Firefox window are
 created by different threads. When I set the owner relationship
 between the Hang UI top-level window and the Firefox top-level window,
 the window manager implicitly synchronizes both threads' input queues.
 In the case of the Plugin Hang UI, this is a huge problem: Windows just
-synchronized the Hang UI's input queue with a hung thread!</p>
+synchronized the Hang UI&rsquo;s input queue with a hung thread!</p>
 
-<p>What's the solution, then? Think about it this way: the window manager
+<p>What&rsquo;s the solution, then? Think about it this way: the window manager
 might have implicitly synchronized the two threads' input queues, but
-there's no reason why we can't then <em>explicitly</em> desynchronize them!</p>
+there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchronize them!</p>
 
-<p>Here's the first thing I do in the Plugin Hang UI's <code>WM_INITDIALOG</code> handler:</p>
+<p>Here&rsquo;s the first thing I do in the Plugin Hang UI&rsquo;s <code>WM_INITDIALOG</code> handler:</p>
 
 <p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>

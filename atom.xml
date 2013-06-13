@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2013-06-12T18:11:33-06:00</updated>
+  <updated>2013-06-13T10:29:52-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -47,7 +47,7 @@ markers in action (the pink stuff for readers who are unfamiliar with SPS marker
 <p><img src="http://dblohm7.ca/images/iomarkers.png"></p>
 
 <p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867757">bug 867757</a> (under review)
-this will become more sophisticated, as SPS will immeidately sample the callstack of
+this will become more sophisticated, as SPS will immediately sample the callstack of
 the thread whose I/O has been intercepted. This annotated stack will be inserted
 directly into the timeline.</p>
 
@@ -71,19 +71,19 @@ main thread I/O.</p>
     <content type="html"><![CDATA[<h2>The UI Has Landed</h2>
 
 <p>The <a href="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Plugin Hang UI</a>
-landed in mozilla-central in time for January&#8217;s merge. This means that it is
+landed in mozilla-central in time for January&rsquo;s merge. This means that it is
 now available on both Nightly and Aurora.</p>
 
-<p>While it&#8217;s great that this code is now available to a larger audience, there
-are consequences to this. :-)</p>
+<p>While it&rsquo;s great that this code is now available to a larger audience, there
+are consequences to this. :&ndash;)</p>
 
 <h2>Telemetry and Pref Adjustments</h2>
 
 <p>The first (and more pleasant) consequence is that we are now receiving telemetry
-about the UI&#8217;s usage patterns. This allows us to make some adjustments as the
+about the UI&rsquo;s usage patterns. This allows us to make some adjustments as the
 Plugin Hang UI gets closer to the release channel. As happy as I am that this
-feature will be putting users in the driver&#8217;s seat when dealing with hung
-plugins, it&#8217;s also important to not annoy users.</p>
+feature will be putting users in the driver&rsquo;s seat when dealing with hung
+plugins, it&rsquo;s also important to not annoy users.</p>
 
 <p>Initially our telemetry suggested that the Plugin Hang UI frequently appeared
 but then cancelled automatically because the plugin resumed execution. This
@@ -101,7 +101,7 @@ Nightly and Aurora showing that the Plugin Hang UI was inducing crashes in the
 browser itself. Unfortunately the only thing that the stack traces were telling
 us was that the browser-side code that hosts out-of-process plugins was not
 being cleaned up properly after forcibly terminating the plugin container. We
-didn&#8217;t have any steps to reproduce. What broke this mystery wide open was when
+didn&rsquo;t have any steps to reproduce. What broke this mystery wide open was when
 our crash stats were finally able to show some correlations. I learned that
 nearly 50% of the crashes happened on single-core CPUs.</p>
 
@@ -112,7 +112,7 @@ Fortunately for me, even though the problem involved thread scheduling, I was st
 to reproduce it in a debugger. <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=828034#c8">This patch</a>
 took care of the problem.</p>
 
-<p>There&#8217;s a bit of nuance to what was happening with this crash. When
+<p>There&rsquo;s a bit of nuance to what was happening with this crash. When
 <code>plugin-container.exe</code> is forcibly terminated, cleanup of the browser-facing
 plugin code may be executed in one of two different sequences:</p>
 
@@ -121,9 +121,9 @@ plugin code may be executed in one of two different sequences:</p>
 <ol>
 <li><p>After terminating <code>plugin-container.exe</code>, the Plugin Hang UI posts a
 <code>CleanupFromTimeout</code> work item to the main thread. Concurrently on the
-I/O thread, Firefox&#8217;s <code>RPCChannel</code> detects an error and posts a
+I/O thread, Firefox&rsquo;s <code>RPCChannel</code> detects an error and posts a
 <code>OnNotifyMaybeChannelError</code> work item.</p></li>
-<li><p><code>OnNotifyMaybeChannelError</code> executes and sets the channel&#8217;s state to
+<li><p><code>OnNotifyMaybeChannelError</code> executes and sets the channel&rsquo;s state to
 <code>ChannelError</code>. It also cleans up the <code>PluginModuleParent</code> actor and its
 actors for subprotocols.</p></li>
 <li><p><code>CleanupFromTimeout</code> runs and attempts to Close the channel. This
@@ -138,8 +138,8 @@ error status by step 2.</p></li>
 <li><p>Same as in Sequence 1.</p></li>
 <li><p><code>CleanupFromTimeout</code> runs before <code>OnNotifyMaybeChannelError</code>. This
 work item attempts to do a regular <code>Close</code> on the channel. Since the
-channel&#8217;s state is still set to <code>ChannelConnected</code>, the close operation
-doesn&#8217;t realize that it needs to do additonal cleanup. It performs
+channel&rsquo;s state is still set to <code>ChannelConnected</code>, the close operation
+doesn&rsquo;t realize that it needs to do additonal cleanup. It performs
 a clean shutdown of the RPC channel without properly cleaning up the
 IPDL actors.</p></li>
 <li><p><code>OnMaybeNotifyChannelError</code> runs, sees the channel is already closed
@@ -152,12 +152,12 @@ due to the activities in step 2, and does nothing.</p></li>
 
 <p>Sequence 2 cannot crash if the <code>plugin-container.exe</code> process is terminated
 by the main thread. This is because <code>PluginModuleParent::ShouldContinueFromReplyTimeout</code>
-returns <code>false</code> in this case and the channel&#8217;s state is set to <code>ChannelTimeout</code> by
+returns <code>false</code> in this case and the channel&rsquo;s state is set to <code>ChannelTimeout</code> by
 the time that the <code>CleanupFromTimeout</code> work item executes. This guarantees that
 a full cleanup will be done by <code>CleanupFromTimeout</code>.</p>
 
 <p>With the Plugin Hang UI, <code>plugin-container.exe</code> is not terminated by the main
-thread, so the channel&#8217;s state must be explicitly updated after termination.</p>
+thread, so the channel&rsquo;s state must be explicitly updated after termination.</p>
 
 <h3>Solution</h3>
 
@@ -176,13 +176,13 @@ it was not showing any UI.</p>
 <p>This lead be back down the input queue rabbit hole that I briefly discussed
 last time. I learned that on an intermittent basis, the Plugin Hang UI dialog
 box was being hung up on Win32 <code>ShowWindow</code> and <code>SetFocus</code> calls. What I did
-know was that my attempts to explicitly detach the Plugin Hang UI&#8217;s thread
-from the hung Firefox thread weren&#8217;t working as well as I would have liked.</p>
+know was that my attempts to explicitly detach the Plugin Hang UI&rsquo;s thread
+from the hung Firefox thread weren&rsquo;t working as well as I would have liked.</p>
 
 <p>After <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c9">numerous attempts</a>
 at fixing these issues, I determined that for the time being we will need to
 rescind the owner-owned relationship between Firefox and the Plugin Hang UI
-dialog. If we didn&#8217;t do so, seemingly benign actions like calling <code>PeekMessage</code>
+dialog. If we didn&rsquo;t do so, seemingly benign actions like calling <code>PeekMessage</code>
 or passing a <code>WM_NCLBUTTONDOWN</code> message to <code>DefWindowProc</code> would be enough
 to bring the Plugin Hang UI to a halt. Why is this, you ask? I decided to
 peek into kernel mode to find out.</p>
@@ -192,7 +192,7 @@ peek into kernel mode to find out.</p>
 <p>Recall that the guts of <code>USER32</code> and <code>GDI32</code> were moved into kernel mode
 via <code>win32k.sys</code> in the Windows NT 3.5 timeframe. It follows that any
 efforts to examine Win32 internals necessitates peering into kernel mode.
-I didn&#8217;t need an elaborate remote debugging setup for my purposes, so I
+I didn&rsquo;t need an elaborate remote debugging setup for my purposes, so I
 used <a href="http://technet.microsoft.com/en-us/sysinternals/bb897415">Sysinternals LiveKd</a>
 to take a snapshot of my kernel and debug it.</p>
 
@@ -236,8 +236,8 @@ fffff880`0def4830 fffff960`0007c66d : fffff900`00000000 fffff900`0004366c fffff9
 UI thread in the hung Flash process. Despite my best efforts to try to
 disconnect the Plugin Hang UI input queue from these threads, Windows is
 insistent on sending a synchronous, inter-thread message to the IME window
-on the hung Flash thread. This doesn&#8217;t happen if we omit setting Firefox&#8217;s
-<code>HWND</code> as the Plugin Hang UI&#8217;s owner window.</p>
+on the hung Flash thread. This doesn&rsquo;t happen if we omit setting Firefox&rsquo;s
+<code>HWND</code> as the Plugin Hang UI&rsquo;s owner window.</p>
 
 <h3>Implications</h3>
 
@@ -253,13 +253,13 @@ active when Firefox first hung does not move. I think that this is acceptable.
 In fact, the same behavour would be observable if we had been able to specify
 an owner.</p>
 
-<p>If you&#8217;re interested in helping to test this feature, please install Nightly
+<p>If you&rsquo;re interested in helping to test this feature, please install Nightly
 and try the repro from <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c0">bug 834127</a>.
 When the Plugin Hang UI fires, try to move around the Plugin Hang UI as well
 as the other windows on your desktop, including Firefox. If the Z-order changes
 differently from the way that I have observed here, please try to generate
 some steps to reproduce, drop me a line (aklotz on <code>#perf</code> or MoCo email)
-and let me know what&#8217;s going on. Thanks!</p>
+and let me know what&rsquo;s going on. Thanks!</p>
 ]]></content>
   </entry>
   
@@ -284,7 +284,7 @@ thread is blocked, the Firefox user interface grinds to a halt.</p>
 
 
 <p>Currently this is feature is exclusive to Firefox Desktop on Windows.
-When the Hang UI is invoked, you&#8217;ll notice that Firefox has created
+When the Hang UI is invoked, you&rsquo;ll notice that Firefox has created
 a new child process, plugin-hang-ui.exe. This child process will
 display the Plugin Hang UI dialog box.</p>
 
@@ -305,8 +305,8 @@ but its semantics change a little bit. Once the Plugin Hang UI has been
 displayed, Firefox will wait <code>dom.ipc.plugins.timeoutSecs</code> seconds before
 terminating the plugin automatically, even if the user did not elect to
 stop the plugin using the Hang UI. This is nearly identical to the way that
-Firefox behaves without the Hang UI &#8211; the only difference is that now this
-timeout period doesn&#8217;t commence until the Hang UI is displayed.</p></li>
+Firefox behaves without the Hang UI &mdash; the only difference is that now this
+timeout period doesn&rsquo;t commence until the Hang UI is displayed.</p></li>
 <li><p><code>dom.ipc.plugins.hangUIMinDisplaySecs</code>: This is the minimum number
 of seconds that Firefox should display the Plugin Hang UI. If
 <code>dom.ipc.plugins.timeoutSecs</code> is set to a value lower than this
@@ -319,29 +319,29 @@ user has half a chance to read the Plugin Hang UI.</p></li>
 
 <h2>Implementation Details</h2>
 
-<p>There are a couple of interesting things that I&#8217;d like to point out
+<p>There are a couple of interesting things that I&rsquo;d like to point out
 relating to this patch.</p>
 
 <p>Because the Plugin Hang UI is a child process, I needed to ensure that
 its window always appears in front of the hung Firefox window. I decided
 that I would have Firefox send its top-level <code>HWND</code> over to the child
 process so that the Hang UI could specify that handle as the owner of its
-top-level window. If you&#8217;ve seen <a href="http://blogs.msdn.com/b/oldnewthing">Raymond Chen&#8217;s</a>
+top-level window. If you&rsquo;ve seen <a href="http://blogs.msdn.com/b/oldnewthing">Raymond Chen&rsquo;s</a>
 <a href="http://channel9.msdn.com/Blogs/scobleizer/Raymond-Chen-PDC-05-Talk-Five-Things-Every-Win32-Programmer-Needs-to-Know">Five Things Every Win32 Programmer Needs to Know</a>,
-then you&#8217;ll know what is coming: Deadlock!</p>
+then you&rsquo;ll know what is coming: Deadlock!</p>
 
 <p>The problem is that the Hang UI window and the Firefox window are
 created by different threads. When I set the owner relationship
 between the Hang UI top-level window and the Firefox top-level window,
 the window manager implicitly synchronizes both threads&#8217; input queues.
 In the case of the Plugin Hang UI, this is a huge problem: Windows just
-synchronized the Hang UI&#8217;s input queue with a hung thread!</p>
+synchronized the Hang UI&rsquo;s input queue with a hung thread!</p>
 
-<p>What&#8217;s the solution, then? Think about it this way: the window manager
+<p>What&rsquo;s the solution, then? Think about it this way: the window manager
 might have implicitly synchronized the two threads&#8217; input queues, but
-there&#8217;s no reason why we can&#8217;t then <em>explicitly</em> desynchronize them!</p>
+there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchronize them!</p>
 
-<p>Here&#8217;s the first thing I do in the Plugin Hang UI&#8217;s <code>WM_INITDIALOG</code> handler:</p>
+<p>Here&rsquo;s the first thing I do in the Plugin Hang UI&rsquo;s <code>WM_INITDIALOG</code> handler:</p>
 
 <figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
