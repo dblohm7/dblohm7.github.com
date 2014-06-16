@@ -4,10 +4,10 @@
 
 url: http://dblohm7.ca
 title: Aaron Klotz at Mozilla
-subtitle: My adventures as a member of Mozilla's Performance Team
+subtitle: My adventures as a member of Mozilla's Desktop Performance Team
 author: Aaron Klotz
 simple_search: http://google.com/search
-description: Blog by Aaron Klotz describing his work on the Performance Team at Mozilla.
+description: Blog by Mozilla Senior Platform Engineer Aaron Klotz describing his work on the Desktop Performance Team
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
