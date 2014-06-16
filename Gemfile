@@ -18,3 +18,4 @@ group :development do
 end
 
 gem 'sinatra', '~> 1.4.2'
+gem 'rest-client', '1.6.7', :require => 'rest-client'
