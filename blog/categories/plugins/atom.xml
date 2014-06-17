@@ -4,7 +4,11 @@
   <title><![CDATA[Category: Plugins | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/plugins/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
+<<<<<<< HEAD
   <updated>2014-06-17T02:31:42-06:00</updated>
+=======
+  <updated>2013-06-13T11:17:01-06:00</updated>
+>>>>>>> f53770f5811d376e5c5318cf799c53db0027fc8e
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -14,6 +18,7 @@
 
   
   <entry>
+<<<<<<< HEAD
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: An Introduction]]></title>
     <link href="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/"/>
     <updated>2014-06-17T02:30:00-06:00</updated>
@@ -81,6 +86,8 @@ information in this post is subject to change. :&ndash;)</p>
   </entry>
   
   <entry>
+=======
+>>>>>>> f53770f5811d376e5c5318cf799c53db0027fc8e
     <title type="html"><![CDATA[Plugin Hang UI on Aurora]]></title>
     <link href="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/"/>
     <updated>2013-02-15T17:00:00-07:00</updated>
@@ -360,7 +367,11 @@ there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchroniz
 
 <p>Here&rsquo;s the first thing I do in the Plugin Hang UI&rsquo;s <code>WM_INITDIALOG</code> handler:</p>
 
+<<<<<<< HEAD
 <p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+=======
+<p><div class='bogus-wrapper'><notextile><figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+>>>>>>> f53770f5811d376e5c5318cf799c53db0027fc8e
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
