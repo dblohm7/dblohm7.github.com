@@ -1,0 +1,495 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Plugin Hang UI on Aurora - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="The UI Has Landed The Plugin Hang UI
+landed in mozilla-central in time for January&rsquo;s merge. This means that it is
+now available on both Nightly &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36293908-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla's Desktop Performance Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Plugin Hang UI on Aurora</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-15T17:00:00-07:00" pubdate data-updated="true">Feb 15<span>th</span>, 2013</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>The UI Has Landed</h2>
+
+<p>The <a href="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Plugin Hang UI</a>
+landed in mozilla-central in time for January&rsquo;s merge. This means that it is
+now available on both Nightly and Aurora.</p>
+
+<p>While it&rsquo;s great that this code is now available to a larger audience, there
+are consequences to this. :&ndash;)</p>
+
+<h2>Telemetry and Pref Adjustments</h2>
+
+<p>The first (and more pleasant) consequence is that we are now receiving telemetry
+about the UI&rsquo;s usage patterns. This allows us to make some adjustments as the
+Plugin Hang UI gets closer to the release channel. As happy as I am that this
+feature will be putting users in the driver&rsquo;s seat when dealing with hung
+plugins, it&rsquo;s also important to not annoy users.</p>
+
+<p>Initially our telemetry suggested that the Plugin Hang UI frequently appeared
+but then cancelled automatically because the plugin resumed execution. This
+indicated to us that we should increase the default value of the
+<code>dom.ipc.plugins.hangUITimeoutSecs</code> preference (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=833560">bug 833560</a>).
+There has also been some discussion about scaling the Hang UI threshold depending
+on hardware performance and user behaviour. This threshold is tricky to balance;
+while we want users to be able to terminate a hanging plugin, we want to provide
+that feature with minimal annoyance.</p>
+
+<h2>Crashes</h2>
+
+<p>Another consequence of the feature landing is that we received reports from
+Nightly and Aurora showing that the Plugin Hang UI was inducing crashes in the
+browser itself. Unfortunately the only thing that the stack traces were telling
+us was that the browser-side code that hosts out-of-process plugins was not
+being cleaned up properly after forcibly terminating the plugin container. We
+didn&rsquo;t have any steps to reproduce. What broke this mystery wide open was when
+our crash stats were finally able to show some correlations. I learned that
+nearly 50% of the crashes happened on single-core CPUs.</p>
+
+<h3>The Problem</h3>
+
+<p>Once I was able to test this out for myself, the issue revealed itself in short order.
+Fortunately for me, even though the problem involved thread scheduling, I was still able
+to reproduce it in a debugger. <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=828034#c8">This patch</a>
+took care of the problem.</p>
+
+<p>There&rsquo;s a bit of nuance to what was happening with this crash. When
+<code>plugin-container.exe</code> is forcibly terminated, cleanup of the browser-facing
+plugin code may be executed in one of two different sequences:</p>
+
+<h3>Sequence 1 (Most common)</h3>
+
+<ol>
+<li><p>After terminating <code>plugin-container.exe</code>, the Plugin Hang UI posts a
+<code>CleanupFromTimeout</code> work item to the main thread. Concurrently on the
+I/O thread, Firefox&rsquo;s <code>RPCChannel</code> detects an error and posts a
+<code>OnNotifyMaybeChannelError</code> work item.</p></li>
+<li><p><code>OnNotifyMaybeChannelError</code> executes and sets the channel&rsquo;s state to
+<code>ChannelError</code>. It also cleans up the <code>PluginModuleParent</code> actor and its
+actors for subprotocols.</p></li>
+<li><p><code>CleanupFromTimeout</code> runs and attempts to Close the channel. This
+is effectively a no-op since the channel was already closed with an
+error status by step 2.</p></li>
+</ol>
+
+
+<h3>Sequence 2 (Less common unless running on fewer cores)</h3>
+
+<ol>
+<li><p>Same as in Sequence 1.</p></li>
+<li><p><code>CleanupFromTimeout</code> runs before <code>OnNotifyMaybeChannelError</code>. This
+work item attempts to do a regular <code>Close</code> on the channel. Since the
+channel&rsquo;s state is still set to <code>ChannelConnected</code>, the close operation
+doesn&rsquo;t realize that it needs to do additonal cleanup. It performs
+a clean shutdown of the RPC channel without properly cleaning up the
+IPDL actors.</p></li>
+<li><p><code>OnMaybeNotifyChannelError</code> runs, sees the channel is already closed
+due to the activities in step 2, and does nothing.</p></li>
+<li><p>A crash later occurs because the actors were never cleaned up properly.</p></li>
+</ol>
+
+
+<h3>Some Additional Analysis</h3>
+
+<p>Sequence 2 cannot crash if the <code>plugin-container.exe</code> process is terminated
+by the main thread. This is because <code>PluginModuleParent::ShouldContinueFromReplyTimeout</code>
+returns <code>false</code> in this case and the channel&rsquo;s state is set to <code>ChannelTimeout</code> by
+the time that the <code>CleanupFromTimeout</code> work item executes. This guarantees that
+a full cleanup will be done by <code>CleanupFromTimeout</code>.</p>
+
+<p>With the Plugin Hang UI, <code>plugin-container.exe</code> is not terminated by the main
+thread, so the channel&rsquo;s state must be explicitly updated after termination.</p>
+
+<h3>Solution</h3>
+
+<p>The patch modifies the <code>CleanupFromTimeout</code> work item so that if the
+plugin container was terminated outside the main thread, the channel is
+explicitly closed with an error state. This ensures that the actors are
+properly cleaned up.</p>
+
+<h2>Hangs</h2>
+
+<p>I filed <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=834127">bug 834127</a>
+when QA discovered that sometimes the Plugin Hang UI was not being displayed.
+I found out that Firefox was correctly spawning <code>plugin-hang-ui.exe</code>, however
+it was not showing any UI.</p>
+
+<p>This lead be back down the input queue rabbit hole that I briefly discussed
+last time. I learned that on an intermittent basis, the Plugin Hang UI dialog
+box was being hung up on Win32 <code>ShowWindow</code> and <code>SetFocus</code> calls. What I did
+know was that my attempts to explicitly detach the Plugin Hang UI&rsquo;s thread
+from the hung Firefox thread weren&rsquo;t working as well as I would have liked.</p>
+
+<p>After <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c9">numerous attempts</a>
+at fixing these issues, I determined that for the time being we will need to
+rescind the owner-owned relationship between Firefox and the Plugin Hang UI
+dialog. If we didn&rsquo;t do so, seemingly benign actions like calling <code>PeekMessage</code>
+or passing a <code>WM_NCLBUTTONDOWN</code> message to <code>DefWindowProc</code> would be enough
+to bring the Plugin Hang UI to a halt. Why is this, you ask? I decided to
+peek into kernel mode to find out.</p>
+
+<h3>Adventures in Kernel Mode</h3>
+
+<p>Recall that the guts of <code>USER32</code> and <code>GDI32</code> were moved into kernel mode
+via <code>win32k.sys</code> in the Windows NT 3.5 timeframe. It follows that any
+efforts to examine Win32 internals necessitates peering into kernel mode.
+I didn&rsquo;t need an elaborate remote debugging setup for my purposes, so I
+used <a href="http://technet.microsoft.com/en-us/sysinternals/bb897415">Sysinternals LiveKd</a>
+to take a snapshot of my kernel and debug it.</p>
+
+<p>My workflow was essentially as follows:</p>
+
+<ol>
+<li>Plugin Hang UI gets stuck</li>
+<li>Attach a debugger (I use WinDbg) to <code>plugin-hang-ui.exe</code></li>
+<li>Run LiveKd</li>
+<li>Type <code>!thread -t &lt;tid&gt;</code> into the kernel debugger, where <code>&lt;tid&gt;</code> is the
+thread ID that is hung in the user-mode WinDbg</li>
+</ol>
+
+
+<p>Every kernel-mode call stack that I examined on a hung thread usually ended up going through this code path:</p>
+
+<pre><samp>
+...
+Child-SP          RetAddr           : Args to Child                                                           : Call Site
+fffff880`0def3ec0 fffff800`0327c652 : fffffa80`079c43c0 fffffa80`079c43c0 00000000`00000000 fffffa80`00000008 : nt!KiSwapContext+0x7a
+fffff880`0def4000 fffff800`0328da9f : fffffd54`0000000c fffffd54`000002a0 000002ac`00000000 00000804`fffffd54 : nt!KiCommitThreadWait+0x1d2
+fffff880`0def4090 fffff800`03278a14 : 00000000`00000000 00000000`00000005 00000000`00000000 fffff800`03279600 : nt!KeWaitForSingleObject+0x19f
+fffff880`0def4130 fffff800`03279691 : fffffa80`079c43c0 fffffa80`079c4410 00000000`00000000 00000000`00000000 : nt!KiSuspendThread+0x54
+fffff880`0def4170 fffff800`0327c85d : fffffa80`079c43c0 00000000`00000000 fffff800`032789c0 00000000`00000000 : nt!KiDeliverApc+0x201
+fffff880`0def41f0 fffff800`0328da9f : fffffa80`0a7510e0 fffff800`0327c26f fffffa80`00000000 fffff800`03402e80 : nt!KiCommitThreadWait+0x3dd
+fffff880`0def4280 fffff960`0010d457 : fffff900`c2255200 00000000`0000000d 00000000`00000001 00000000`00000000 : nt!KeWaitForSingleObject+0x19f
+fffff880`0def4320 fffff960`0010d4f1 : fffff880`0def0000 fffff900`c08e0e20 00000000`00000000 00000000`00000000 : win32k!xxxRealSleepThread+0x257
+fffff880`0def43c0 fffff960`000c46d3 : 00000000`00000000 fffff900`c093ee90 00000000`00000200 00000000`00000046 : win32k!xxxSleepThread+0x59
+fffff880`0def43f0 fffff960`0010c53e : fffff900`c093ee90 fffff900`c08e0e20 00000000`00000000 fffff900`c25724b0 : win32k!xxxInterSendMsgEx+0x112a
+fffff880`0def4500 fffff960`000d8ccf : fffff900`c25724b0 fffff900`c25724b0 <mark>00000000`003c031a</mark> fffff900`c0800b90 : win32k!xxxSendMessageTimeout+0x1de
+fffff880`0def45b0 fffff960`000dae0b : fffff960`00000006 fffff880`0def47c0 fffff960`00000000 fffff900`00000000 : win32k!xxxCalcValidRects+0x1a3
+fffff880`0def46f0 fffff960`000dac3a : fffff900`00000001 fffff900`c08e0e20 fffff880`0def49b8 fffff900`00000000 : win32k!xxxEndDeferWindowPosEx+0x18f
+fffff880`0def47b0 fffff960`000d6e09 : 00000000`00000000 00000000`00000001 fffff900`00000000 fffff800`00000000 : win32k!xxxSetWindowPos+0x156
+fffff880`0def4830 fffff960`0007c66d : fffff900`00000000 fffff900`0004366c fffff900`00000000 fffff900`c209f410 : win32k!xxxActivateThisWindow+0x441
+...
+</samp></pre>
+
+
+<p>The highlighted hexadecimal value above is a handle to a window with class
+<code>MSCTFIME UI</code> (i.e. a Microsoft IME window) that was created by the main
+UI thread in the hung Flash process. Despite my best efforts to try to
+disconnect the Plugin Hang UI input queue from these threads, Windows is
+insistent on sending a synchronous, inter-thread message to the IME window
+on the hung Flash thread. This doesn&rsquo;t happen if we omit setting Firefox&rsquo;s
+<code>HWND</code> as the Plugin Hang UI&rsquo;s owner window.</p>
+
+<h3>Implications</h3>
+
+<p>Now that the Plugin Hang UI specifies a <code>NULL</code> owner, Windows can no longer
+guarantee that the Plugin Hang UI will always appear above the Firefox window
+that was active at the time that the plugin hang occurred. Having said that,
+our experiments have shown that Windows does not try to promote an unresponsive
+window to the front of the Z-order.</p>
+
+<p>In a multiple-window situation, Windows may move the other, inactive Firefox
+windows ahead of the Plugin Hang UI in the Z-order, but the window that was
+active when Firefox first hung does not move. I think that this is acceptable.
+In fact, the same behavour would be observable if we had been able to specify
+an owner.</p>
+
+<p>If you&rsquo;re interested in helping to test this feature, please install Nightly
+and try the repro from <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=834127#c0">bug 834127</a>.
+When the Plugin Hang UI fires, try to move around the Plugin Hang UI as well
+as the other windows on your desktop, including Firefox. If the Z-order changes
+differently from the way that I have observed here, please try to generate
+some steps to reproduce, drop me a line (aklotz on <code>#perf</code> or MoCo email)
+and let me know what&rsquo;s going on. Thanks!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-15T17:00:00-07:00" pubdate data-updated="true">Feb 15<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mozilla/'>Mozilla</a>, <a class='category' href='/blog/categories/plugins/'>Plugins</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2012/11/22/plugin-hang-user-interface-for-firefox/" title="Previous Post: Plugin Hang User Interface for Firefox">&laquo; Plugin Hang User Interface for Firefox</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/" title="Next Post: Detecting Main Thread I/O with SPS">Detecting Main Thread I/O with SPS &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Detecting Main Thread I/O With SPS</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/15/plugin-hang-ui-on-aurora/">Plugin Hang UI on Aurora</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Plugin Hang User Interface for Firefox</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/';
+        var disqus_url = 'http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

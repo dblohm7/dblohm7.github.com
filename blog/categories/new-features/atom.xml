@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: New Features | Aaron Klotz at Mozilla]]></title>
+  <link href="http://dblohm7.ca/blog/categories/new-features/atom.xml" rel="self"/>
+  <link href="http://dblohm7.ca/"/>
+  <updated>2014-06-17T02:31:42-06:00</updated>
+  <id>http://dblohm7.ca/</id>
+  <author>
+    <name><![CDATA[Aaron Klotz]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Plugin Hang User Interface for Firefox]]></title>
+    <link href="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/"/>
+    <updated>2012-11-22T10:22:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox</id>
+    <content type="html"><![CDATA[<p>My first significant project at Mozilla has been
+<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=805591">bug 805591</a>,
+implementing a user interface to be displayed by Firefox when
+an out-of-process plugin hangs. This is important because when NPAPI
+plugins hang, they block the main thread in Firefox. When the main
+thread is blocked, the Firefox user interface grinds to a halt.</p>
+
+<p>The purpose of the Plugin Hang UI is twofold:</p>
+
+<ul>
+<li>To inform the user which plugin is responsible for the hang; and</li>
+<li>Provide the user with an opportunity to terminate the plugin if he/she wishes.</li>
+</ul>
+
+
+<p>Currently this is feature is exclusive to Firefox Desktop on Windows.
+When the Hang UI is invoked, you&rsquo;ll notice that Firefox has created
+a new child process, plugin-hang-ui.exe. This child process will
+display the Plugin Hang UI dialog box.</p>
+
+<p><img class="<a" src="href="http://dblohm7.ca/images/hangui.png">http://dblohm7.ca/images/hangui.png</a>"></p>
+
+<p>My patch is currently under review, but the Plugin Hang UI is fully functional
+in a <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-f5d8fdf4f29a/try-win32/firefox-19.0a1.en-US.win32.installer.exe">try build</a>,
+so please check it out and play with it!</p>
+
+<h2>Changes to Preferences</h2>
+
+<ul>
+<li><p><code>dom.ipc.plugins.hangUITimeoutSecs</code>: This is the number of seconds
+that Firefox waits for a hung plugin before displaying the Plugin Hang UI.
+Setting this value to zero disables the Plugin Hang UI.</p></li>
+<li><p><code>dom.ipc.plugins.timeoutSecs</code>: This pref is still used with the Hang UI,
+but its semantics change a little bit. Once the Plugin Hang UI has been
+displayed, Firefox will wait <code>dom.ipc.plugins.timeoutSecs</code> seconds before
+terminating the plugin automatically, even if the user did not elect to
+stop the plugin using the Hang UI. This is nearly identical to the way that
+Firefox behaves without the Hang UI &mdash; the only difference is that now this
+timeout period doesn&rsquo;t commence until the Hang UI is displayed.</p></li>
+<li><p><code>dom.ipc.plugins.hangUIMinDisplaySecs</code>: This is the minimum number
+of seconds that Firefox should display the Plugin Hang UI. If
+<code>dom.ipc.plugins.timeoutSecs</code> is set to a value lower than this
+pref, the Hang UI is disabled. The idea here is that, if
+<code>dom.ipc.plugins.timeoutSecs</code> is only set to 5 seconds to begin with,
+then the plugin will already have been auto terminated before the
+user has half a chance to read the Plugin Hang UI.</p></li>
+</ul>
+
+
+<h2>Implementation Details</h2>
+
+<p>There are a couple of interesting things that I&rsquo;d like to point out
+relating to this patch.</p>
+
+<p>Because the Plugin Hang UI is a child process, I needed to ensure that
+its window always appears in front of the hung Firefox window. I decided
+that I would have Firefox send its top-level <code>HWND</code> over to the child
+process so that the Hang UI could specify that handle as the owner of its
+top-level window. If you&rsquo;ve seen <a href="http://blogs.msdn.com/b/oldnewthing">Raymond Chen&rsquo;s</a>
+<a href="http://channel9.msdn.com/Blogs/scobleizer/Raymond-Chen-PDC-05-Talk-Five-Things-Every-Win32-Programmer-Needs-to-Know">Five Things Every Win32 Programmer Needs to Know</a>,
+then you&rsquo;ll know what is coming: Deadlock!</p>
+
+<p>The problem is that the Hang UI window and the Firefox window are
+created by different threads. When I set the owner relationship
+between the Hang UI top-level window and the Firefox top-level window,
+the window manager implicitly synchronizes both threads' input queues.
+In the case of the Plugin Hang UI, this is a huge problem: Windows just
+synchronized the Hang UI&rsquo;s input queue with a hung thread!</p>
+
+<p>What&rsquo;s the solution, then? Think about it this way: the window manager
+might have implicitly synchronized the two threads' input queues, but
+there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchronize them!</p>
+
+<p>Here&rsquo;s the first thing I do in the Plugin Hang UI&rsquo;s <code>WM_INITDIALOG</code> handler:</p>
+
+<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
+</span><span class='line'>  <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
+</span><span class='line'>                    <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                    <span class="n">FALSE</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+
+<p>Without this line, the Hang UI is at risk of deadlock. This is
+especially true if the user attempts to send input to the Firefox
+window underneath.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Asynchronous Plugin Initialization: An Introduction - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="I have spent a lot of time this quarter working on bug 998863, &ldquo;Asynchronous
+Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36293908-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla's Desktop Performance Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Asynchronous Plugin Initialization: An Introduction</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true">Jun 17<span>th</span>, 2014</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I have spent a lot of time this quarter working on <a title="Asynchronous Initialization of Out-of-process Plugins" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998863">bug 998863</a>, &ldquo;Asynchronous
+Initialization of Out-of-process Plugins.&rdquo; While the bug summary is fairly self
+explanatory, I would like to provide some more details about why I am doing this
+and what kind of work it entails. I would also like to wrap up the post with an
+early demonstration of this feature and present some profiles to illustrate the
+potential performance improvement.</p>
+
+<h2>Rationale</h2>
+
+<p>The reason that I am undertaking this project is because NPAPI plugin startup
+is our most frequent cause of jank. In fact, at the time of this writing, our
+<a href="http://telemetry.mozilla.org/chromehangs/">Chrome Hangs telemetry</a> is showing
+that 4 out of our top 10 most frequent offending call stacks are related to
+plugin initialization and instantiation. Furthermore, creating the
+plugin-container.exe child process is the #1 most frequent chrome hang offender
+(Note that our Chrome Hang telemetry consists entirely of Windows builds, where
+process creation is quite expensive).</p>
+
+<h2>A High-level Breakdown of NPAPI Initialization and Instantiation</h2>
+
+<p>The typical steps involved can be broken down as follows:</p>
+
+<ol>
+<li>Launch the <code>plugin-container</code> process;</li>
+<li>Call <code>NP_Initialize</code> to load the plugin;</li>
+<li>Create instances by calling <code>NPP_New</code>;</li>
+<li>Call <code>NPP_NewStream</code> for instances that load stream data;</li>
+<li>If an instance is scriptable, call <code>NPP_GetValue</code> to obtain information
+about the plugin&rsquo;s scriptable object.</li>
+</ol>
+
+
+<p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
+Step 5 is a special case &mdash; we asynchronously return a proxy object, but if a
+synchronous JS method is called on that object, we must wait for the plugin to
+initialize (if it has not yet done so). My hope is that if we have to call a
+synchronous JS method on the proxy object, plugin initialization will be far
+enough along that the wait will be minimal.</p>
+
+<h2>A Brief Demonstration</h2>
+
+<p>The following video compares two locally-built Nightlies that are identical
+except for the asynchronous initialization patch. After loading the browser
+with a page containing several embedded Flash objects, we can profile and
+observe the effects of this patch.</p>
+
+<iframe width="420" height="315" src="//www.youtube-nocookie.com/embed/HZ8Z2Drv8uI?rel-0" frameborder="0" allowfullscreen></iframe>
+
+
+<p>Here are links to some profiles:</p>
+
+<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=a5a96119742fa75b64ab7d12566eede68468ef3c">Synchronous Plugin Initialization</a></p>
+
+<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=282e372d3357316307c182607f26c00f4f41011e">Asynchronous Plugin Initialization</a></p>
+
+<h2>Disclaimer</h2>
+
+<p>This patch requires some further work on scripting and stabilization. The
+information in this post is subject to change. :&ndash;)</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true">Jun 17<span>th</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/async/'>Async</a>, <a class='category' href='/blog/categories/mozilla/'>Mozilla</a>, <a class='category' href='/blog/categories/plugins/'>Plugins</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/" title="Previous Post: Detecting Main Thread I/O with SPS">&laquo; Detecting Main Thread I/O with SPS</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Detecting Main Thread I/O With SPS</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2013/02/15/plugin-hang-ui-on-aurora/">Plugin Hang UI on Aurora</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Plugin Hang User Interface for Firefox</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/';
+        var disqus_url = 'http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
