@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-08-14T15:22:10-06:00</updated>
+  <updated>2014-08-14T16:52:55-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -48,7 +48,7 @@ crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">
 that, when consented to, send us useful information for discovering problems.</p>
 
 <p>Our ability to analyze crash report/FHR/telemetry data is limited to those users
-who consented to share it with us. As much as I am proud of the fact that we
+who consent to share it with us. As much as I am proud of the fact that we
 respect the privacy of our users, this means that we only receive data from a
 fraction of them; many users who are experiencing problems are not included in
 this data.</p>
@@ -118,6 +118,11 @@ it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</
 
 <p>Taking an active role in the Mozilla community by reporting your issues through
 the proper channels is the best way to ensure that your problems can be fixed.</p>
+
+<p><strong>EDIT:</strong> To be clear: What I am suggesting is that users who are enthusiastic
+enough to post a comment to Hacker News (for example) should also be savvy
+enough to be able to file a proper bug report. Please do not misconstrue this
+post as a demand that novice users start filing bugs.</p>
 ]]></content>
   </entry>
   
