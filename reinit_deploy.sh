@@ -10,5 +10,6 @@ git init
 git config user.name "$USER_NAME"
 git config user.email "$USER_EMAIL"
 git remote add origin $ORIGIN_URL
+git pull origin master
 cd ..
 
