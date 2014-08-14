@@ -7,21 +7,14 @@ categories: [Mozilla]
 ---
 Something that I've been noticing on numerous social media and discussion forum 
 sites is that whenever Firefox comes up, inevitably there are comments in those 
-threads that steer toward Firefox performance. Given my role at Mozilla, these 
-comments are of particular interest to me.
+threads about Firefox performance. Given my role at Mozilla, these comments are 
+of particular interest to me.
 
 The reaction to roc's [recent blog post](http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html) 
-has motivated me enough to respond to a specific subset of comments that 
-exhibit the following pattern:
-
-* They contain declarations that Firefox has serious performance and/or memory problems;
-* They include a brief anecdote about jank/crashes/memory that the commenter has personally experienced;
-* They link to other similar comments as evidence;
-* They claim that Mozilla is in denial and refuses to find problems and fix them;
-* They include nothing that is actionable by Mozilla.
-
-To me the common theme in these comments is that their authors are experiencing 
-problems but are not reporting them to Mozilla in an actionable way.
+has motivated me enough to respond to a specific subset of comments. These 
+comments all exhibit a certain pattern: their authors are experiencing problems 
+with Firefox, are very dissatisfied, but they are not reporting them in a way 
+that is actionable by Mozilla.
 
 How Mozilla Finds Problems
 --------------------------
@@ -29,19 +22,89 @@ How Mozilla Finds Problems
 Mozilla encourages our contributors to run prerelease versions of Firefox, 
 especially [Nightly](http://nightly.mozilla.org) builds. This allows us to do 
 some good old-fashioned dogfooding during the development of a Firefox release. 
+
 We also have many tools that run as part of our continuous integration 
-infrastructure to help find problems. Valgrind, Address Sanitizer, 
-Leak Sanitizer, reference count tracking, deadlock detection, 
-Talos performance tests, and xperf are some of the various tools that we apply 
-to our builds. I do not claim that this list is exhaustive! :-)
+infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count 
+tracking, deadlock detection, assertions, Talos performance tests, and xperf are 
+some of the various tools that we apply to our builds. I do not claim that this 
+list is exhaustive! :-)
 
 We use numerous technologies to discover problems that occur while running on 
 our users' computers. We have a crash reporter that (with the user's consent) 
-reports data about the crash (interested parties may take a peek at our crash 
-statistics [here](https://crash-stats.mozilla.com/home/products/Firefox).). 
-We have Firefox Health Report and (with the users's consent) [Telemetry](http://telemetry.mozilla.org) 
-that send us useful information for discovering problems.
+reports [data](https://crash-stats.mozilla.com/home/products/Firefox) about the 
+crash. We have Firefox Health Report and [Telemetry](http://telemetry.mozilla.org) 
+that, when consented to, send us useful information for discovering problems.
+
+Our ability to analyze crash report/FHR/telemetry data is limited to those users 
+who consented to share it with us. As much as I am proud of the fact that we 
+respect the privacy of our users, this means that we only receive data from a 
+fraction of them; many users who are experiencing problems are not included in 
+this data.
+
+Despite the fact that we have all of these wonderful tools to help us deliver 
+quality releases, the fact is that they cannot exhaustively catch every possible 
+bug that is encountered out in the wild. There are too many combinations of 
+extensions and configurations out there to possibly allow us to catch 
+everything before release.
+
+That's where you, our users, come in!
 
 If You See Something, Report It!
 --------------------------------
 
+Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting. 
+I should know -- I do it with the best of them! Having said that, they are also 
+terrible for the purposes of bug reporting!
+
+As users it's easy for us to assume that somebody else will encounter our 
+problems and report them. Unfortunately that is not always the case, especially 
+with a browser that is as configurable as Firefox.
+
+### Reporting Bugs
+
+If you are experiencing a bug, the best way to ensure that something can be done 
+about your bug is to [report it](https://bugzilla.mozilla.org/enter_bug.cgi?format=guided) 
+in Bugzilla. This might seem a little bit intimidating for somebody who is new 
+to bug reporting, but I assure you, Mozillians are really nice! As long as you 
+follow the [etiquette guidelines](https://bugzilla.mozilla.org/page.cgi?id=etiquette.html), 
+you'll be fine! One suggestion though: try to follow our 
+[bug writing guidelines](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Bug_writing_guidelines). 
+Doing so will maximize the likelihood of a contributor being able to reproduce 
+your problem. In addition to these suggestions for bug filing, I also suggest 
+including certain types of data for specific types of problems:
+
+### Reporting a Bug for High Memory Usage
+
+If you're experiencing problems with Firefox's memory use, open a tab, and 
+point your browser to `about:memory`. This nifty feature provides a breakdown 
+of Firefox memory consumption. Save that report and attach it to the bug that 
+you've filed.
+
+### Reporting a Bug for Slowness
+
+If you want report a problem with Firefox being slow, the best way to help us is 
+is to include data that has been generated by the [Gecko Profiler](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler).
+Unfortunately this is tool requires a bit of technical savvy, but attaching the 
+URL of an uploaded profile to your performance bug can be very helpful.
+
+### Reporting a Bug for a Persistent, Reproducable Crash
+
+As you can see in our [crash report data](https://crash-stats.mozilla.com/home/products/Firefox),
+crashes reported to Mozilla are ranked by frequency. As you might expect, this 
+implies that it's often the squeaky wheels that get the grease.
+
+If you have an easily reproducable crash and you are sending your reports to 
+Mozilla, you can help us by pointing Firefox to `about:crashes`. This page lists 
+all of the crash reports that have been generated on your computer. If the crash 
+that you are experiencing isn't on our list of top crashers, you can still help 
+us to fix it: filing a bug that includes multiple crash report URLs from your 
+`about:crashes` screen will help tremendously.
+
+In Conclusion
+-------------
+
+If there is one idea that you can take away from this post (a TL;DR, if you will),
+it is this: *Mozilla cannot fix 100% of the bugs we do not know about.*
+
+Taking an active role in the Mozilla community by reporting your issues through 
+the proper channels is the best way to ensure that your problems can be fixed.
