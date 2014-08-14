@@ -36,7 +36,7 @@ crash. We have Firefox Health Report and [Telemetry](http://telemetry.mozilla.or
 that, when consented to, send us useful information for discovering problems.
 
 Our ability to analyze crash report/FHR/telemetry data is limited to those users 
-who consented to share it with us. As much as I am proud of the fact that we 
+who consent to share it with us. As much as I am proud of the fact that we 
 respect the privacy of our users, this means that we only receive data from a 
 fraction of them; many users who are experiencing problems are not included in 
 this data.
@@ -108,3 +108,9 @@ it is this: *Mozilla cannot fix 100% of the bugs that we do not know about.*
 
 Taking an active role in the Mozilla community by reporting your issues through 
 the proper channels is the best way to ensure that your problems can be fixed.
+
+**EDIT:** To be clear: What I am suggesting is that users who are enthusiastic 
+enough to post a comment to Hacker News (for example) should also be savvy 
+enough to be able to file a proper bug report. Please do not misconstrue this 
+post as a demand that novice users start filing bugs.
+
