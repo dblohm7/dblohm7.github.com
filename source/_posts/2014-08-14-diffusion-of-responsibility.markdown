@@ -13,8 +13,8 @@ of particular interest to me.
 The reaction to roc's [recent blog post](http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html) 
 has motivated me enough to respond to a specific subset of comments. These 
 comments all exhibit a certain pattern: their authors are experiencing problems 
-with Firefox, are very dissatisfied, but they are not reporting them in a way 
-that is actionable by Mozilla.
+with Firefox, they are very dissatisfied, but they are not discussing them in a 
+way that is actionable by Mozilla.
 
 How Mozilla Finds Problems
 --------------------------
