@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-08-14T14:18:46-06:00</updated>
+  <updated>2014-08-14T15:22:10-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -114,7 +114,7 @@ us to fix it: filing a bug that includes multiple crash report URLs from your
 <h2>In Conclusion</h2>
 
 <p>If there is one idea that you can take away from this post (a TL;DR, if you will),
-it is this: <em>Mozilla cannot fix 100% of the bugs we do not know about.</em></p>
+it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</em></p>
 
 <p>Taking an active role in the Mozilla community by reporting your issues through
 the proper channels is the best way to ensure that your problems can be fixed.</p>
