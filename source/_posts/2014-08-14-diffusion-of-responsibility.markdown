@@ -104,7 +104,7 @@ In Conclusion
 -------------
 
 If there is one idea that you can take away from this post (a TL;DR, if you will),
-it is this: *Mozilla cannot fix 100% of the bugs we do not know about.*
+it is this: *Mozilla cannot fix 100% of the bugs that we do not know about.*
 
 Taking an active role in the Mozilla community by reporting your issues through 
 the proper channels is the best way to ensure that your problems can be fixed.
