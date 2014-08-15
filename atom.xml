@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-08-14T16:52:55-06:00</updated>
+  <updated>2014-08-15T17:34:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -123,6 +123,10 @@ the proper channels is the best way to ensure that your problems can be fixed.</
 enough to post a comment to Hacker News (for example) should also be savvy
 enough to be able to file a proper bug report. Please do not misconstrue this
 post as a demand that novice users start filing bugs.</p>
+
+<p><strong>EDIT August 15, 2014:</strong> Nick Nethercote just <a href="https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/">blogged</a>
+about a tricky memory bug that couldn&rsquo;t have been diagnosed without the help of
+a Redditor whose complaint we steered to Bugzilla.</p>
 ]]></content>
   </entry>
   
