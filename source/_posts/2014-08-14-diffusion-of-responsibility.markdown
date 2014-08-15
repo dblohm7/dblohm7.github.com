@@ -114,3 +114,7 @@ enough to post a comment to Hacker News (for example) should also be savvy
 enough to be able to file a proper bug report. Please do not misconstrue this 
 post as a demand that novice users start filing bugs.
 
+**EDIT August 15, 2014:** Nick Nethercote just [blogged](https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/) 
+about a tricky memory bug that couldn't have been diagnosed without the help of 
+a Redditor whose complaint we steered to Bugzilla.
+
