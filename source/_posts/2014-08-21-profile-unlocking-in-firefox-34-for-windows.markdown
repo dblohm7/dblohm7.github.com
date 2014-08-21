@@ -6,14 +6,14 @@ comments: true
 categories: [Mozilla, New Features, Shutdown]
 ---
 Today's [Nightly 34](http://nightly.mozilla.org) build includes the work I did 
-for bug 286355: a profile unlocker for our Windows users. This should be very 
+for {%bug 286355%}: a profile unlocker for our Windows users. This should be very 
 helpful to those users whose workflow is interrupted by a Firefox instance that 
 cannot start because a previous Firefox instance has not finished shutting down. 
 
 Firefox 34 users running Windows Vista or newer will now be presented with this 
 dialog box:
 
-{% img http://dblohm7.ca/images/profile-unlock.png %}
+{% clkimg http://dblohm7.ca/images/profile-unlock.png %}
 
 Clicking "Close Firefox" will terminate that previous instance and proceed 
 with starting your new Firefox instance.
