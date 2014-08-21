@@ -13,7 +13,7 @@ cannot start because a previous Firefox instance has not finished shutting down.
 Firefox 34 users running Windows Vista or newer will now be presented with this 
 dialog box:
 
-{% clkimg http://dblohm7.ca/images/profile-unlock.png %}
+{% clkimg http://dblohm7.ca/images/profile-unlocker.png %}
 
 Clicking "Close Firefox" will terminate that previous instance and proceed 
 with starting your new Firefox instance.
