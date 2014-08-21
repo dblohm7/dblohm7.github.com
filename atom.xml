@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-08-21T09:54:35-06:00</updated>
+  <updated>2014-08-21T09:56:26-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -19,14 +19,14 @@
     <updated>2014-08-21T10:00:00-06:00</updated>
     <id>http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows</id>
     <content type="html"><![CDATA[<p>Today&rsquo;s <a href="http://nightly.mozilla.org">Nightly 34</a> build includes the work I did
-for bug 286355: a profile unlocker for our Windows users. This should be very
+for <a title="Need win32 implementation of nsIProfileUnlocker" href="https://bugzilla.mozilla.org/show_bug.cgi?id=286355">bug 286355</a>: a profile unlocker for our Windows users. This should be very
 helpful to those users whose workflow is interrupted by a Firefox instance that
 cannot start because a previous Firefox instance has not finished shutting down.</p>
 
 <p>Firefox 34 users running Windows Vista or newer will now be presented with this
 dialog box:</p>
 
-<p><img src="http://dblohm7.ca/images/profile-unlock.png"></p>
+<p><a href="http://dblohm7.ca/images/profile-unlock.png"><img src="http://dblohm7.ca/images/profile-unlock.png"></a></p>
 
 <p>Clicking &ldquo;Close Firefox&rdquo; will terminate that previous instance and proceed
 with starting your new Firefox instance.</p>
