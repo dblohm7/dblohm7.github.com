@@ -5,11 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Category: Win32 - Aaron Klotz at Mozilla</title>
+  <title>Asynchronous Plugin Initialization: Nightly - Aaron Klotz at Mozilla</title>
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="Category: Win32">
+  <meta name="description" content="As of today&rsquo;s Nightly, Asyncrhonous Plugin
+Initialization is available for testing. It is deactivated by default, so in
+order to try it out you &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://dblohm7.cablog/categories/win32">
+  <link rel="canonical" href="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -77,36 +79,103 @@
   <div id="main">
     <div id="content">
       <div>
-<article role="article">
+<article class="hentry" role="article">
   
   <header>
-    <h1 class="entry-title">Category: Win32</h1>
+    
+      <h1 class="entry-title">Asynchronous Plugin Initialization: Nightly</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-12-31T12:00:00-07:00" pubdate data-updated="true">Dec 31<span>st</span>, 2014</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
     
   </header>
-  
-  <div id="blog-archives" class="category">
 
 
+<div class="entry-content"><p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asyncrhonous Plugin
+Initialization is available for testing. It is deactivated by default, so in
+order to try it out you will need to navigate to <code>about:config</code> and toggle the
+<code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
 
-  
-  <h2>2012</h2>
+<p>If you experience any problems, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Plug-ins&amp;blocked=1116806">file a bug</a> that blocks <a title="Let Asynchronous Plugin Initialization ride the train" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1116806">bug 1116806</a>.</p>
 
-<article>
-  
-<h1><a href="/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Plugin Hang User Interface for Firefox</a></h1>
-<time datetime="2012-11-22T10:22:00-07:00" pubdate><span class='month'>Nov</span> <span class='day'>22</span> <span class='year'>2012</span></time>
-
-<footer>
-  <span class="categories">posted in <a class='category' href='/blog/categories/new-features/'>New Features</a>, <a class='category' href='/blog/categories/plugins/'>Plugins</a>, <a class='category' href='/blog/categories/win32/'>Win32</a></span>
-</footer>
-
-
-</article>
-
+<p>Happy New Year!</p>
 </div>
 
+
+  <footer>
+    <p class="meta">
+      
   
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-12-31T12:00:00-07:00" pubdate data-updated="true">Dec 31<span>st</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/async/'>Async</a>, <a class='category' href='/blog/categories/mozilla/'>Mozilla</a>, <a class='category' href='/blog/categories/plugins/'>Plugins</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/" title="Previous Post: Profile Unlocking in Firefox 34 for Windows">&laquo; Profile Unlocking in Firefox 34 for Windows</a>
+      
+      
+    </p>
+  </footer>
 </article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
 
 </div>
 
@@ -199,7 +268,10 @@
       var disqus_shortname = 'dblohm7';
       
         
-        var disqus_script = 'count.js';
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/';
+        var disqus_url = 'http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/';
+        var disqus_script = 'embed.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

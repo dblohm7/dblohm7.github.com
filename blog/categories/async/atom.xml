@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Async | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/async/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-08-24T14:40:22-06:00</updated>
+  <updated>2014-12-31T11:46:30-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,22 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Asynchronous Plugin Initialization: Nightly]]></title>
+    <link href="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/"/>
+    <updated>2014-12-31T12:00:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly</id>
+    <content type="html"><![CDATA[<p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asyncrhonous Plugin
+Initialization is available for testing. It is deactivated by default, so in
+order to try it out you will need to navigate to <code>about:config</code> and toggle the
+<code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
+
+<p>If you experience any problems, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Plug-ins&amp;blocked=1116806">file a bug</a> that blocks <a title="Let Asynchronous Plugin Initialization ride the train" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1116806">bug 1116806</a>.</p>
+
+<p>Happy New Year!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: An Introduction]]></title>
