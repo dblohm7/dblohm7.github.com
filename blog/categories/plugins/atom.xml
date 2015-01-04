@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Plugins | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/plugins/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2014-12-31T11:46:30-07:00</updated>
+  <updated>2015-01-04T01:47:04-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -18,7 +18,7 @@
     <link href="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/"/>
     <updated>2014-12-31T12:00:00-07:00</updated>
     <id>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly</id>
-    <content type="html"><![CDATA[<p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asyncrhonous Plugin
+    <content type="html"><![CDATA[<p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asynchronous Plugin
 Initialization is available for testing. It is deactivated by default, so in
 order to try it out you will need to navigate to <code>about:config</code> and toggle the
 <code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
