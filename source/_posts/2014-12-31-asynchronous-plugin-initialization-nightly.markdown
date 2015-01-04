@@ -5,7 +5,7 @@ date: 2014-12-31 12:00:00 -0700
 comments: true
 categories: [Mozilla, Plugins, Async]
 ---
-As of today's [Nightly](http://nightly.mozilla.org), Asyncrhonous Plugin 
+As of today's [Nightly](http://nightly.mozilla.org), Asynchronous Plugin 
 Initialization is available for testing. It is deactivated by default, so in 
 order to try it out you will need to navigate to `about:config` and toggle the 
 `dom.ipc.plugins.asyncInit` preference to `true`.
