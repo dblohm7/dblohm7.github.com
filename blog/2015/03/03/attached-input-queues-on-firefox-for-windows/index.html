@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Attached Input Queues on Firefox for Windows - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="I&rsquo;ve previously blogged
+indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36293908-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla's Desktop Performance Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Attached Input Queues on Firefox for Windows</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-03T17:28:06-07:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2015</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&rsquo;ve <a href="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">previously</a> <a href="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/">blogged</a>
+indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the realm of plugin hangs has grown into a more
+serious problem in the land of OMTC and e10s.</p>
+
+<p>As a brief recap for those who are not very familiar with this problem: imagine two windows, each on their own separate threads, forming a parent-child relationship
+with each other. When this situation arises, Windows implicitly attaches together and synchronizes their input queues, putting each thread at the mercy of the other
+attached threads&#8217; ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
+
+<p>One of the biggest annoyances when it comes to knowledge about which threads are affected, is that we are essentially flying blind. There is no
+way to query Windows for information about attached input queues. This is unfortunate, as it would be really nice to obtain some specific knowledge to allow us to
+analyze the state of Firefox threads&#8217; input queues so that we can mitigate the problem.</p>
+
+<p>I had previously been working on a personal side project to make this possible, but in light of recent developments (and a <a href="https://twitter.com/nsIAnswers/status/565883284748795905">tweet from bsmedberg</a>),
+I decided to bring this investigation under the umbrella of my full-time job. I&rsquo;m pleased to announce that I&rsquo;ve finished the first cut of a utility that I call
+the Input Queue Visualizer, or <code>iqvis</code>.</p>
+
+<p><code>iqvis</code> consists of two components, one of which is a kernel-mode driver. This driver exposes input queue attachment data to user mode. The <code>iqvis</code> user-mode
+executable is the client that queries the driver and outputs the results. In the next section I&rsquo;m going to discuss the inner workings of <code>iqvis</code>. Following that, I&rsquo;ll
+discuss the <a href="#results">results</a> of running <code>iqvis</code> on an instance of Firefox.</p>
+
+<h2><a name="internals"></a>Input Queue Visualizer Internals</h2>
+
+<p>First of all, let&rsquo;s start off with this caveat: <strong>Nearly everything that this driver does involves undocumented APIs and data structures</strong>. Because of this, <code>iqvis</code>
+does some things that you should never do in production software.</p>
+
+<p>One of the big consequences of using undocumented information is that <code>iqvis</code> requires pointers to very specific locations
+in kernel memory to be accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that
+debugging symbols exist for all of the locations that <code>iqvis</code> needs to access! I wrote the <code>iqvis</code> client to invoke the <code>dbghelp</code> engine to extract the pointers that
+I need from Windows symbols and send those values as the input to the <code>DeviceIoControl</code> call that triggers the data collection. Passing pointers from user mode to be
+accessed in kernel mode is a very dangerous thing to do (and again, I would never do it in production software), but it is damn convenient for <code>iqvis</code>!</p>
+
+<p>Another issue is that these undocumented details change between Windows versions. The initial version of <code>iqvis</code> works on 64-bit Windows 8.1, but different code is required
+for other major releases, such as Windows 7. The <code>iqvis</code> driver theoretically will work on Windows 7 but I need to make a few bug fixes for that case.</p>
+
+<p>So, getting those details out of the way, we can address the crux of the problem: we need to query input queue attachment information from <code>win32k.sys</code>, which is the
+driver that implements USER and GDI system calls on Windows NT systems.</p>
+
+<p>In particular, the window manager maintains a linked list that describes thread attachment info as a triple that points to the &ldquo;from&rdquo; thread, the &ldquo;to&rdquo; thread, and a count.
+The count is necessary because the same two threads may be attached to each other multiple times. The <code>iqvis</code> driver walks this linked list in a thread-safe way to obtain
+the attachment data, and then copies it to the output buffer for the <code>DeviceIoControl</code> request.</p>
+
+<p>Since <code>iqvis</code> involves a device driver, and since I have not digitally signed that device driver, one can&rsquo;t just run <code>iqvis</code> and call it a day. This program won&rsquo;t work
+unless the computer was either booted with kernel debugging enabled, or it was booted with driver signing temporarily disabled.</p>
+
+<h2><a name="results"></a>Running <code>iqvis</code> against Firefox</h2>
+
+<p>Today I ran <code>iqvis</code> using today&rsquo;s Nightly 39 as well as the lastest release of Flash. I also tried it with Flash Protected Mode both disabled and enabled.
+(Note that these examples used an older version of <code>iqvis</code> that outputs thread IDs in hexadecimal. The current version uses decimal for its output.)</p>
+
+<h3>Protected Mode Disabled</h3>
+
+<pre><samp>FromTID ToTID Count
+ac8 df4 1
+</samp></pre>
+
+
+<p>Looking up the thread IDs:</p>
+
+<ul>
+<li><code>df4</code> is the Firefox main thread;</li>
+<li><code>ac8</code> is the plugin-container main thread.</li>
+</ul>
+
+
+<p>I think that the output from this case is pretty much what I was expecting to see. The protected mode case, however, is more interesting.</p>
+
+<h3>Protected Mode Enabled</h3>
+
+<pre><samp>FromTID ToTID Count
+f8c dbc 1
+794 f8c 3
+</samp></pre>
+
+
+<p>Looking up the thread IDs:</p>
+
+<ul>
+<li><code>dbc</code> is the Firefox main thread;</li>
+<li><code>f8c</code> is the plugin-container main thread;</li>
+<li><code>794</code> is the Flash sandbox main thread.</li>
+</ul>
+
+
+<p>Notice how Flash is attached to plugin-container, which is then attached to Firefox. Notice that transitively the Flash sandbox is effectively attached to Firefox,
+confirming previous hypotheses that I&rsquo;ve discussed with colleagues in the past.</p>
+
+<p>Also notice how the Flash sandbox attachment to plugin-container has a count of 3!</p>
+
+<h2>In Conclusion</h2>
+
+<p>In my opinion, my Input Queue Visualizer has already yielded some very interesting data. Hopefully this will help us to troubleshoot our issues in the future. Oh,
+and the code is up on <a href="https://github.com/dblohm7/iqvis">GitHub</a>! It&rsquo;s poorly documented at the moment, but just remember to only try running it on 64-bit Windows
+8.1 for the time being!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-03T17:28:06-07:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2015</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/mozilla/'>Mozilla</a>, <a class='category' href='/blog/categories/win32/'>Win32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/" title="Previous Post: Asynchronous Plugin Initialization: Nightly">&laquo; Asynchronous Plugin Initialization: Nightly</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Asynchronous Plugin Initialization: Nightly</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/">Profile Unlocking in Firefox 34 for Windows</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/';
+        var disqus_url = 'http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
