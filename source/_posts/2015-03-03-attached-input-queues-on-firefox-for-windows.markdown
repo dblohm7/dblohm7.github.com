@@ -32,7 +32,7 @@ First of all, let's start off with this caveat: **Nearly everything that this dr
 does some things that you should never do in production software.
 
 One of the big consequences of using undocumented information is that `iqvis` requires pointers to very specific locations 
-in kernel memory to be accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that 
+in kernel memory to accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that 
 debugging symbols exist for all of the locations that `iqvis` needs to access! I wrote the `iqvis` client to invoke the `dbghelp` engine to extract the pointers that 
 I need from Windows symbols and send those values as the input to the `DeviceIoControl` call that triggers the data collection. Passing pointers from user mode to be 
 accessed in kernel mode is a very dangerous thing to do (and again, I would never do it in production software), but it is damn convenient for `iqvis`!
