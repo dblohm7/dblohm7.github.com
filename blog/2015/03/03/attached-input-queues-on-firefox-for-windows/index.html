@@ -134,7 +134,7 @@ discuss the <a href="#results">results</a> of running <code>iqvis</code> on an i
 does some things that you should never do in production software.</p>
 
 <p>One of the big consequences of using undocumented information is that <code>iqvis</code> requires pointers to very specific locations
-in kernel memory to be accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that
+in kernel memory to accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that
 debugging symbols exist for all of the locations that <code>iqvis</code> needs to access! I wrote the <code>iqvis</code> client to invoke the <code>dbghelp</code> engine to extract the pointers that
 I need from Windows symbols and send those values as the input to the <code>DeviceIoControl</code> call that triggers the data collection. Passing pointers from user mode to be
 accessed in kernel mode is a very dangerous thing to do (and again, I would never do it in production software), but it is damn convenient for <code>iqvis</code>!</p>
