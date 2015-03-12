@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/</loc>
-    <lastmod>2015-03-11T17:00:00-06:00</lastmod>
-  </url>
-  <url>
     <loc>http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/</loc>
     <lastmod>2015-03-03T17:28:06-07:00</lastmod>
   </url>
@@ -65,8 +61,5 @@
   </url>
   <url>
     <loc>http://dblohm7.ca/blog/categories/shutdown/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/chromium/</loc>
   </url>
 </urlset>

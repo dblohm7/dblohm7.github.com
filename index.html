@@ -9,7 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame. Today I want to talk about some code that we imported from Chromium &hellip;">
+  <meta name="description" content="I&rsquo;ve previously blogged
+indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,88 +79,6 @@
     <div id="content">
       <div class="blog-index">
   
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/03/11/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-03-11T17:00:00-06:00" pubdate data-updated="true"></time>
-        
-           | <a href="/blog/2015/03/11/waitmessage-considered-harmful/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
-
-<p>Today I want to talk about some code that we imported from Chromium some time
-ago: I replaced it in Mozilla&rsquo;s codebase a while back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
-
-<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
-<span class='line-number'>262</span>
-<span class='line-number'>263</span>
-<span class='line-number'>264</span>
-<span class='line-number'>265</span>
-<span class='line-number'>266</span>
-<span class='line-number'>267</span>
-<span class='line-number'>268</span>
-<span class='line-number'>269</span>
-<span class='line-number'>270</span>
-<span class='line-number'>271</span>
-<span class='line-number'>272</span>
-<span class='line-number'>273</span>
-<span class='line-number'>274</span>
-<span class='line-number'>275</span>
-<span class='line-number'>276</span>
-<span class='line-number'>277</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
-</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
-</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
-</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
-</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
-</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
-</span><span class='line'>    <span class="c1">// capture).</span>
-</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
-</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
-</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
-</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
-</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This code is wrong. <strong>Very</strong> wrong.</p>
-</div>
-  
-  
-
-
-    </article>
   
   
     <article>
@@ -1113,10 +1032,6 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2015/03/11/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
-      </li>
-    
-      <li class="post">
         <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
       </li>
     
@@ -1130,6 +1045,10 @@ window underneath.</p>
     
       <li class="post">
         <a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
       </li>
     
   </ul>
