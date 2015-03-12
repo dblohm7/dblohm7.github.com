@@ -30,9 +30,16 @@ module Jekyll
     def initialize(tag_name, markup, tokens)
       @title = nil
       @file = nil
+      @start = 1
+      @end = nil
       if markup.strip =~ /\s*lang:(\S+)/i
         @filetype = $1
         markup = markup.strip.sub(/lang:\S+/i,'')
+      end
+      if markup.strip =~ /\s*range:(\d+)-(\d+)/i
+        @start = $1.to_i
+        @end = $2.to_i
+        markup = markup.strip.sub(/range:\d+-\d+/i,'')
       end
       if markup.strip =~ /(.*)?(\s+|^)(\/*\S+)/i
         @title = $1 || nil
@@ -60,7 +67,7 @@ module Jekyll
         title = @title ? "#{@title} (#{file.basename})" : file.basename
         url = "/#{code_dir}/#{@file}"
         source = "<figure class='code'><figcaption><span>#{title}</span> <a href='#{url}'>download</a></figcaption>\n"
-        source += "#{HighlightCode::highlight(code, @filetype)}</figure>"
+        source += "#{HighlightCode::highlight(code, @filetype, @start, @end)}</figure>"
         TemplateWrapper::safe_wrap(source)
       end
     end
