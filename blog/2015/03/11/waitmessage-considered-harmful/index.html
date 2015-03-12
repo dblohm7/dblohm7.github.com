@@ -5,13 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Profile Unlocking in Firefox 34 for Windows - Aaron Klotz at Mozilla</title>
+  <title>WaitMessage Considered Harmful - Aaron Klotz at Mozilla</title>
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="Today&rsquo;s Nightly 34 build includes the work I did
-for bug 286355: a profile unlocker for our Windows users. This should be very
-helpful to those &hellip;">
+  <meta name="description" content="I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame. Today I want to talk about some code that we imported from Chromium &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -20,7 +18,7 @@ helpful to those &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows">
+  <link rel="canonical" href="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
   <script src="/javascripts/modernizr-2.0.js"></script>
@@ -83,7 +81,7 @@ helpful to those &hellip;">
   
   <header>
     
-      <h1 class="entry-title">Profile Unlocking in Firefox 34 for Windows</h1>
+      <h1 class="entry-title">WaitMessage Considered Harmful</h1>
     
     
       <p class="meta">
@@ -99,7 +97,7 @@ helpful to those &hellip;">
   
 
 
-<time datetime="2014-08-21T10:00:00-06:00" pubdate data-updated="true"></time>
+<time datetime="2015-03-11T17:00:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca">Comments</a>
@@ -109,29 +107,50 @@ helpful to those &hellip;">
   </header>
 
 
-<div class="entry-content"><p>Today&rsquo;s <a href="http://nightly.mozilla.org">Nightly 34</a> build includes the work I did
-for <a title="Need win32 implementation of nsIProfileUnlocker" href="https://bugzilla.mozilla.org/show_bug.cgi?id=286355">bug 286355</a>: a profile unlocker for our Windows users. This should be very
-helpful to those users whose workflow is interrupted by a Firefox instance that
-cannot start because a previous Firefox instance has not finished shutting down.</p>
+<div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
 
-<p>Firefox 34 users running Windows Vista or newer will now be presented with this
-dialog box:</p>
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago: I replaced it in Mozilla&rsquo;s codebase a while back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
 
-<p><a href="http://dblohm7.ca/images/profile-unlocker.png"><img src="http://dblohm7.ca/images/profile-unlocker.png"></a></p>
+<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
-<p>Clicking &ldquo;Close Firefox&rdquo; will terminate that previous instance and proceed
-with starting your new Firefox instance.</p>
 
-<p>Unfortunately this feature is not available to Windows XP users. To support this
-feature on Windows XP we would need to call undocumented API functions. I
-prefer to avoid calling undocumented APIs when writing production software due
-to the potential stability and compatibility issues that can arise from doing
-so.</p>
-
-<p>While this feature adds some convenience to an otherwise annoying issue, please
-be assured that the Desktop Performance Team will continue to investigate and
-fix the root causes of long shutdowns so that a profile unlocker hopefully
-becomes unnecessary.</p>
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
 </div>
 
 
@@ -154,12 +173,12 @@ becomes unnecessary.</p>
   
 
 
-<time datetime="2014-08-21T10:00:00-06:00" pubdate data-updated="true"></time>
+<time datetime="2015-03-11T17:00:00-06:00" pubdate data-updated="true"></time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/new-features/'>new features</a>, <a class='category' href='/blog/categories/shutdown/'>shutdown</a>
+    <a class='category' href='/blog/categories/chromium/'>chromium</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/win32/'>win32</a>
   
 </span>
 
@@ -168,7 +187,7 @@ becomes unnecessary.</p>
     
       <div class="sharing">
   
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/" >Tweet</a>
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/" >Tweet</a>
   
   
   
@@ -179,10 +198,8 @@ becomes unnecessary.</p>
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/08/14/diffusion-of-responsibility/" title="Previous Post: Diffusion of Responsibility">&laquo; Diffusion of Responsibility</a>
+        <a class="basic-alignment left" href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/" title="Previous Post: Attached Input Queues on Firefox for Windows">&laquo; Attached Input Queues on Firefox for Windows</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/" title="Next Post: Asynchronous Plugin Initialization: Nightly">Asynchronous Plugin Initialization: Nightly &raquo;</a>
       
     </p>
   </footer>
@@ -286,8 +303,8 @@ becomes unnecessary.</p>
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/';
-        var disqus_url = 'http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/';
+        var disqus_identifier = 'http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/';
+        var disqus_url = 'http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/';
         var disqus_script = 'embed.js';
       
     (function () {

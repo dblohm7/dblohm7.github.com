@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Win32 | Aaron Klotz at Mozilla]]></title>
+  <title><![CDATA[Category: win32 | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-03-04T18:05:17-07:00</updated>
+  <updated>2015-03-11T22:14:36-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
+    <link href="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/"/>
+    <updated>2015-03-11T17:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful</id>
+    <content type="html"><![CDATA[<p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
+
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago: I replaced it in Mozilla&rsquo;s codebase a while back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
+
+<p><figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Attached Input Queues on Firefox for Windows]]></title>
@@ -24,11 +75,11 @@ serious problem in the land of OMTC and e10s.</p>
 
 <p>As a brief recap for those who are not very familiar with this problem: imagine two windows, each on their own separate threads, forming a parent-child relationship
 with each other. When this situation arises, Windows implicitly attaches together and synchronizes their input queues, putting each thread at the mercy of the other
-attached threads' ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
+attached threads&#8217; ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
 
 <p>One of the biggest annoyances when it comes to knowledge about which threads are affected, is that we are essentially flying blind. There is no
 way to query Windows for information about attached input queues. This is unfortunate, as it would be really nice to obtain some specific knowledge to allow us to
-analyze the state of Firefox threads' input queues so that we can mitigate the problem.</p>
+analyze the state of Firefox threads&#8217; input queues so that we can mitigate the problem.</p>
 
 <p>I had previously been working on a personal side project to make this possible, but in light of recent developments (and a <a href="https://twitter.com/nsIAnswers/status/565883284748795905">tweet from bsmedberg</a>),
 I decided to bring this investigation under the umbrella of my full-time job. I&rsquo;m pleased to announce that I&rsquo;ve finished the first cut of a utility that I call
@@ -139,7 +190,7 @@ When the Hang UI is invoked, you&rsquo;ll notice that Firefox has created
 a new child process, plugin-hang-ui.exe. This child process will
 display the Plugin Hang UI dialog box.</p>
 
-<p><img class="<a" src="href="http://dblohm7.ca/images/hangui.png">http://dblohm7.ca/images/hangui.png</a>"></p>
+<p><img class="<a" src="href="http://dblohm7.ca/images/hangui.png">http://dblohm7.ca/images/hangui.png</a>&#8221;></p>
 
 <p>My patch is currently under review, but the Plugin Hang UI is fully functional
 in a <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-f5d8fdf4f29a/try-win32/firefox-19.0a1.en-US.win32.installer.exe">try build</a>,
@@ -156,7 +207,7 @@ but its semantics change a little bit. Once the Plugin Hang UI has been
 displayed, Firefox will wait <code>dom.ipc.plugins.timeoutSecs</code> seconds before
 terminating the plugin automatically, even if the user did not elect to
 stop the plugin using the Hang UI. This is nearly identical to the way that
-Firefox behaves without the Hang UI &mdash; the only difference is that now this
+Firefox behaves without the Hang UI &ndash; the only difference is that now this
 timeout period doesn&rsquo;t commence until the Hang UI is displayed.</p></li>
 <li><p><code>dom.ipc.plugins.hangUIMinDisplaySecs</code>: This is the minimum number
 of seconds that Firefox should display the Plugin Hang UI. If
@@ -184,35 +235,25 @@ then you&rsquo;ll know what is coming: Deadlock!</p>
 <p>The problem is that the Hang UI window and the Firefox window are
 created by different threads. When I set the owner relationship
 between the Hang UI top-level window and the Firefox top-level window,
-the window manager implicitly synchronizes both threads' input queues.
+the window manager implicitly synchronizes both threads&#8217; input queues.
 In the case of the Plugin Hang UI, this is a huge problem: Windows just
 synchronized the Hang UI&rsquo;s input queue with a hung thread!</p>
 
 <p>What&rsquo;s the solution, then? Think about it this way: the window manager
-might have implicitly synchronized the two threads' input queues, but
+might have implicitly synchronized the two threads&#8217; input queues, but
 there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchronize them!</p>
 
 <p>Here&rsquo;s the first thing I do in the Plugin Hang UI&rsquo;s <code>WM_INITDIALOG</code> handler:</p>
 
-<p><div class='bogus-wrapper'><notextile><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<p><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>  <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
-</span><span class='line'>  <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
-</span><span class='line'>                    <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
-</span><span class='line'>                    <span class="n">FALSE</span><span class="p">);</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure></notextile></div></p>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'>      <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
+</span><span class='line'>      <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
+</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                        <span class="n">FALSE</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>Without this line, the Hang UI is at risk of deadlock. This is
 especially true if the user attempts to send input to the Firefox

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Mozilla | Aaron Klotz at Mozilla]]></title>
+  <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-03-04T18:05:17-07:00</updated>
+  <updated>2015-03-11T22:14:36-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
+    <link href="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/"/>
+    <updated>2015-03-11T17:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful</id>
+    <content type="html"><![CDATA[<p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
+
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago: I replaced it in Mozilla&rsquo;s codebase a while back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
+
+<p><figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Attached Input Queues on Firefox for Windows]]></title>
@@ -24,11 +75,11 @@ serious problem in the land of OMTC and e10s.</p>
 
 <p>As a brief recap for those who are not very familiar with this problem: imagine two windows, each on their own separate threads, forming a parent-child relationship
 with each other. When this situation arises, Windows implicitly attaches together and synchronizes their input queues, putting each thread at the mercy of the other
-attached threads' ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
+attached threads&#8217; ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
 
 <p>One of the biggest annoyances when it comes to knowledge about which threads are affected, is that we are essentially flying blind. There is no
 way to query Windows for information about attached input queues. This is unfortunate, as it would be really nice to obtain some specific knowledge to allow us to
-analyze the state of Firefox threads' input queues so that we can mitigate the problem.</p>
+analyze the state of Firefox threads&#8217; input queues so that we can mitigate the problem.</p>
 
 <p>I had previously been working on a personal side project to make this possible, but in light of recent developments (and a <a href="https://twitter.com/nsIAnswers/status/565883284748795905">tweet from bsmedberg</a>),
 I decided to bring this investigation under the umbrella of my full-time job. I&rsquo;m pleased to announce that I&rsquo;ve finished the first cut of a utility that I call
@@ -143,7 +194,7 @@ cannot start because a previous Firefox instance has not finished shutting down.
 <p>Firefox 34 users running Windows Vista or newer will now be presented with this
 dialog box:</p>
 
-<p><a href="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>"><img class="<a" src="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>"></a></p>
+<p><a href="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>&#8221;><img class="<a" src="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>&#8221;></a></p>
 
 <p>Clicking &ldquo;Close Firefox&rdquo; will terminate that previous instance and proceed
 with starting your new Firefox instance.</p>
@@ -187,10 +238,10 @@ some good old-fashioned dogfooding during the development of a Firefox release.<
 infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
 tracking, deadlock detection, assertions, Talos performance tests, and xperf are
 some of the various tools that we apply to our builds. I do not claim that this
-list is exhaustive! :&ndash;)</p>
+list is exhaustive! :-)</p>
 
 <p>We use numerous technologies to discover problems that occur while running on
-our users' computers. We have a crash reporter that (with the user&rsquo;s consent)
+our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
 reports <a href="https://crash-stats.mozilla.com/home/products/Firefox">data</a> about the
 crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">Telemetry</a>
 that, when consented to, send us useful information for discovering problems.</p>
@@ -212,7 +263,7 @@ everything before release.</p>
 <h2>If You See Something, Report It!</h2>
 
 <p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
-I should know &mdash; I do it with the best of them! Having said that, they are also
+I should know &ndash; I do it with the best of them! Having said that, they are also
 terrible for the purposes of bug reporting!</p>
 
 <p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
@@ -245,7 +296,7 @@ you&rsquo;ve filed.</p>
 consuming large amounts of CPU time, the best way to help us is
 is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
 [<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
-user profile that stores your settings and browser history &mdash; they are different
+user profile that stores your settings and browser history &ndash; they are different
 things with the same name.</em>] This tool tracks how Firefox uses your CPU over
 time. If you are able to attach a profile that was taken during a period of time
 where Firefox was running poorly, it will help us understand what exactly Firefox
@@ -295,73 +346,6 @@ a Redditor whose complaint we steered to Bugzilla.</p>
 <p><strong>EDIT August 23, 2014:</strong> Wow, this has blown up. More edits to update this post
 with additional information in repose to some of the questions posted in the
 comments. Thanks for reading!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Asynchronous Plugin Initialization: An Introduction]]></title>
-    <link href="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/"/>
-    <updated>2014-06-17T02:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction</id>
-    <content type="html"><![CDATA[<p>I have spent a lot of time this quarter working on <a title="Asynchronous Initialization of Out-of-process Plugins" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998863">bug 998863</a>, &ldquo;Asynchronous
-Initialization of Out-of-process Plugins.&rdquo; While the bug summary is fairly self
-explanatory, I would like to provide some more details about why I am doing this
-and what kind of work it entails. I would also like to wrap up the post with an
-early demonstration of this feature and present some profiles to illustrate the
-potential performance improvement.</p>
-
-<h2>Rationale</h2>
-
-<p>The reason that I am undertaking this project is because NPAPI plugin startup
-is our most frequent cause of jank. In fact, at the time of this writing, our
-<a href="http://telemetry.mozilla.org/chromehangs/">Chrome Hangs telemetry</a> is showing
-that 4 out of our top 10 most frequent offending call stacks are related to
-plugin initialization and instantiation. Furthermore, creating the
-plugin-container.exe child process is the #1 most frequent chrome hang offender
-(Note that our Chrome Hang telemetry consists entirely of Windows builds, where
-process creation is quite expensive).</p>
-
-<h2>A High-level Breakdown of NPAPI Initialization and Instantiation</h2>
-
-<p>The typical steps involved can be broken down as follows:</p>
-
-<ol>
-<li>Launch the <code>plugin-container</code> process;</li>
-<li>Call <code>NP_Initialize</code> to load the plugin;</li>
-<li>Create instances by calling <code>NPP_New</code>;</li>
-<li>Call <code>NPP_NewStream</code> for instances that load stream data;</li>
-<li>If an instance is scriptable, call <code>NPP_GetValue</code> to obtain information
-about the plugin&rsquo;s scriptable object.</li>
-</ol>
-
-
-<p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case &mdash; we asynchronously return a proxy object, but if a
-synchronous JS method is called on that object, we must wait for the plugin to
-initialize (if it has not yet done so). My hope is that if we have to call a
-synchronous JS method on the proxy object, plugin initialization will be far
-enough along that the wait will be minimal.</p>
-
-<h2>A Brief Demonstration</h2>
-
-<p>The following video compares two locally-built Nightlies that are identical
-except for the asynchronous initialization patch. After loading the browser
-with a page containing several embedded Flash objects, we can profile and
-observe the effects of this patch.</p>
-
-<iframe width="420" height="315" src="//www.youtube-nocookie.com/embed/HZ8Z2Drv8uI?rel-0" frameborder="0" allowfullscreen></iframe>
-
-
-<p>Here are links to some profiles:</p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=a5a96119742fa75b64ab7d12566eede68468ef3c">Synchronous Plugin Initialization</a></p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=282e372d3357316307c182607f26c00f4f41011e">Asynchronous Plugin Initialization</a></p>
-
-<h2>Disclaimer</h2>
-
-<p>This patch requires some further work on scripting and stabilization. The
-information in this post is subject to change. :&ndash;)</p>
 ]]></content>
   </entry>
   

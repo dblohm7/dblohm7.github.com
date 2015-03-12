@@ -9,8 +9,7 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="I&rsquo;ve previously blogged
-indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the &hellip;">
+  <meta name="description" content="I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame. Today I want to talk about some code that we imported from Chromium &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -52,7 +51,7 @@ indirectly about attached input queues, but today I want to address the issue di
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
   
-    <h2>My adventures as a member of Mozilla's Desktop Performance Team</h2>
+    <h2>My adventures as a member of Mozilla&#8217;s Desktop Performance Team</h2>
   
 </hgroup>
 
@@ -85,6 +84,88 @@ indirectly about attached input queues, but today I want to address the issue di
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2015/03/11/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-11T17:00:00-06:00" pubdate data-updated="true"></time>
+        
+           | <a href="/blog/2015/03/11/waitmessage-considered-harmful/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2015/03/11/waitmessage-considered-harmful/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
+
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago: I replaced it in Mozilla&rsquo;s codebase a while back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
+
+<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a></h1>
     
     
@@ -101,7 +182,7 @@ indirectly about attached input queues, but today I want to address the issue di
   
 
 
-<time datetime="2015-03-03T17:28:06-07:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2015</time>
+<time datetime="2015-03-03T17:28:06-07:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Comments</a>
@@ -232,7 +313,7 @@ and the code is up on <a href="https://github.com/dblohm7/iqvis">GitHub</a>! It&
   
 
 
-<time datetime="2014-12-31T12:00:00-07:00" pubdate data-updated="true">Dec 31<span>st</span>, 2014</time>
+<time datetime="2014-12-31T12:00:00-07:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Comments</a>
@@ -278,7 +359,7 @@ order to try it out you will need to navigate to <code>about:config</code> and t
   
 
 
-<time datetime="2014-08-21T10:00:00-06:00" pubdate data-updated="true">Aug 21<span>st</span>, 2014</time>
+<time datetime="2014-08-21T10:00:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/">Comments</a>
@@ -339,7 +420,7 @@ becomes unnecessary.</p>
   
 
 
-<time datetime="2014-08-14T14:00:00-06:00" pubdate data-updated="true">Aug 14<span>th</span>, 2014</time>
+<time datetime="2014-08-14T14:00:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2014/08/14/diffusion-of-responsibility/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
@@ -370,7 +451,7 @@ some good old-fashioned dogfooding during the development of a Firefox release.<
 infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
 tracking, deadlock detection, assertions, Talos performance tests, and xperf are
 some of the various tools that we apply to our builds. I do not claim that this
-list is exhaustive! :&ndash;)</p>
+list is exhaustive! :-)</p>
 
 <p>We use numerous technologies to discover problems that occur while running on
 our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
@@ -395,7 +476,7 @@ everything before release.</p>
 <h2>If You See Something, Report It!</h2>
 
 <p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
-I should know &mdash; I do it with the best of them! Having said that, they are also
+I should know &ndash; I do it with the best of them! Having said that, they are also
 terrible for the purposes of bug reporting!</p>
 
 <p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
@@ -428,7 +509,7 @@ you&rsquo;ve filed.</p>
 consuming large amounts of CPU time, the best way to help us is
 is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
 [<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
-user profile that stores your settings and browser history &mdash; they are different
+user profile that stores your settings and browser history &ndash; they are different
 things with the same name.</em>] This tool tracks how Firefox uses your CPU over
 time. If you are able to attach a profile that was taken during a period of time
 where Firefox was running poorly, it will help us understand what exactly Firefox
@@ -506,7 +587,7 @@ comments. Thanks for reading!</p>
   
 
 
-<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true">Jun 17<span>th</span>, 2014</time>
+<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Comments</a>
@@ -549,7 +630,7 @@ about the plugin&rsquo;s scriptable object.</li>
 
 
 <p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case &mdash; we asynchronously return a proxy object, but if a
+Step 5 is a special case &ndash; we asynchronously return a proxy object, but if a
 synchronous JS method is called on that object, we must wait for the plugin to
 initialize (if it has not yet done so). My hope is that if we have to call a
 synchronous JS method on the proxy object, plugin initialization will be far
@@ -574,7 +655,7 @@ observe the effects of this patch.</p>
 <h2>Disclaimer</h2>
 
 <p>This patch requires some further work on scripting and stabilization. The
-information in this post is subject to change. :&ndash;)</p>
+information in this post is subject to change. :-)</p>
 </div>
   
   
@@ -603,7 +684,7 @@ information in this post is subject to change. :&ndash;)</p>
   
 
 
-<time datetime="2013-06-12T18:00:00-06:00" pubdate data-updated="true">Jun 12<span>th</span>, 2013</time>
+<time datetime="2013-06-12T18:00:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Comments</a>
@@ -683,7 +764,7 @@ main thread I/O.</p>
   
 
 
-<time datetime="2013-02-15T17:00:00-07:00" pubdate data-updated="true">Feb 15<span>th</span>, 2013</time>
+<time datetime="2013-02-15T17:00:00-07:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2013/02/15/plugin-hang-ui-on-aurora/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/">Comments</a>
@@ -700,7 +781,7 @@ landed in mozilla-central in time for January&rsquo;s merge. This means that it 
 now available on both Nightly and Aurora.</p>
 
 <p>While it&rsquo;s great that this code is now available to a larger audience, there
-are consequences to this. :&ndash;)</p>
+are consequences to this. :-)</p>
 
 <h2>Telemetry and Pref Adjustments</h2>
 
@@ -913,7 +994,7 @@ and let me know what&rsquo;s going on. Thanks!</p>
   
 
 
-<time datetime="2012-11-22T10:22:00-07:00" pubdate data-updated="true">Nov 22<span>nd</span>, 2012</time>
+<time datetime="2012-11-22T10:22:00-07:00" pubdate data-updated="true"></time>
         
            | <a href="/blog/2012/11/22/plugin-hang-user-interface-for-firefox/#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">Comments</a>
@@ -960,7 +1041,7 @@ but its semantics change a little bit. Once the Plugin Hang UI has been
 displayed, Firefox will wait <code>dom.ipc.plugins.timeoutSecs</code> seconds before
 terminating the plugin automatically, even if the user did not elect to
 stop the plugin using the Hang UI. This is nearly identical to the way that
-Firefox behaves without the Hang UI &mdash; the only difference is that now this
+Firefox behaves without the Hang UI &ndash; the only difference is that now this
 timeout period doesn&rsquo;t commence until the Hang UI is displayed.</p></li>
 <li><p><code>dom.ipc.plugins.hangUIMinDisplaySecs</code>: This is the minimum number
 of seconds that Firefox should display the Plugin Hang UI. If
@@ -1032,6 +1113,10 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/11/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
       </li>
     
@@ -1045,10 +1130,6 @@ window underneath.</p>
     
       <li class="post">
         <a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
       </li>
     
   </ul>

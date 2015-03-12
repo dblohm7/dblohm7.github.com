@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Shutdown | Aaron Klotz at Mozilla]]></title>
+  <title><![CDATA[Category: shutdown | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/shutdown/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-03-04T18:05:17-07:00</updated>
+  <updated>2015-03-11T22:14:36-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -26,7 +26,7 @@ cannot start because a previous Firefox instance has not finished shutting down.
 <p>Firefox 34 users running Windows Vista or newer will now be presented with this
 dialog box:</p>
 
-<p><a href="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>"><img class="<a" src="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>"></a></p>
+<p><a href="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>&#8221;><img class="<a" src="href="http://dblohm7.ca/images/profile-unlocker.png">http://dblohm7.ca/images/profile-unlocker.png</a>&#8221;></a></p>
 
 <p>Clicking &ldquo;Close Firefox&rdquo; will terminate that previous instance and proceed
 with starting your new Firefox instance.</p>

@@ -52,7 +52,7 @@ Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
   
-    <h2>My adventures as a member of Mozilla's Desktop Performance Team</h2>
+    <h2>My adventures as a member of Mozilla&#8217;s Desktop Performance Team</h2>
   
 </hgroup>
 
@@ -98,7 +98,7 @@ Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
   
 
 
-<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true">Jun 17<span>th</span>, 2014</time>
+<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true"></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://dblohm7.ca">Comments</a>
@@ -141,7 +141,7 @@ about the plugin&rsquo;s scriptable object.</li>
 
 
 <p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case &mdash; we asynchronously return a proxy object, but if a
+Step 5 is a special case &ndash; we asynchronously return a proxy object, but if a
 synchronous JS method is called on that object, we must wait for the plugin to
 initialize (if it has not yet done so). My hope is that if we have to call a
 synchronous JS method on the proxy object, plugin initialization will be far
@@ -166,7 +166,7 @@ observe the effects of this patch.</p>
 <h2>Disclaimer</h2>
 
 <p>This patch requires some further work on scripting and stabilization. The
-information in this post is subject to change. :&ndash;)</p>
+information in this post is subject to change. :-)</p>
 </div>
 
 
@@ -189,12 +189,12 @@ information in this post is subject to change. :&ndash;)</p>
   
 
 
-<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true">Jun 17<span>th</span>, 2014</time>
+<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true"></time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/async/'>Async</a>, <a class='category' href='/blog/categories/mozilla/'>Mozilla</a>, <a class='category' href='/blog/categories/plugins/'>Plugins</a>
+    <a class='category' href='/blog/categories/async/'>async</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/plugins/'>plugins</a>
   
 </span>
 
@@ -238,6 +238,10 @@ information in this post is subject to change. :&ndash;)</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/11/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
       </li>
     
@@ -253,17 +257,13 @@ information in this post is subject to change. :&ndash;)</p>
         <a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating...</li>
+    <li class="loading">Status updating&#8230;</li>
   </ul>
   
   <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
