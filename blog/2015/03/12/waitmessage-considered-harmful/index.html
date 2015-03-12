@@ -1,0 +1,391 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>WaitMessage Considered Harmful - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame. Today I want to talk about some code that we imported from Chromium &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-36293908-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s Desktop Performance Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">WaitMessage Considered Harmful</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-12T15:00:00-06:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
+
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
+
+<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
+
+<p>Let us start with the calls to <code>GetQueueStatus</code> and <code>PeekMessage</code>. Those APIs
+mark any messages already in the thread&rsquo;s message queue as having been seen,
+such that they are no longer considered &ldquo;new.&rdquo; Even though those function calls
+do not remove messages from the queue, any messages that were in the queue at
+this point are considered to be &ldquo;old.&rdquo;</p>
+
+<p>The logic in this code snippet is essentially saying, &ldquo;if the queue contains
+mouse messages that do not belong to this thread, then they must belong to an
+attached thread.&rdquo; The code then calls <code>WaitMessage</code> in an effort to give the
+other thread(s) a chance to process their mouse messages. This is where the code
+goes off the rails.</p>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms644956%28v=vs.85%29.aspx">documentation</a>
+for <code>WaitMessage</code> states the following:</p>
+
+<blockquote><p>Note that <code>WaitMessage</code> does not return if there is unread input in the message
+queue after the thread has called a function to check the queue. This is
+because functions such as <code>PeekMessage</code>, <code>GetMessage</code>, <code>GetQueueStatus</code>,
+<code>WaitMessage</code>, <code>MsgWaitForMultipleObjects</code>, and <code>MsgWaitForMultipleObjectsEx</code>
+check the queue and then change the state information for the queue so that
+the input is no longer considered new. A subsequent call to <code>WaitMessage</code> will
+not return until new input of the specified type arrives. The existing unread
+input (received prior to the last time the thread checked the queue) is ignored.</p></blockquote>
+
+<p><code>WaitMessage</code> will only return if there is <em>a new</em> (as opposed to <em>any</em>) message
+in the queue for the calling thread. Any messages for the calling thread that
+were already in there at the time of the <code>GetQueueStatus</code> and <code>PeekMessage</code> calls
+are no longer new, so they are ignored.</p>
+
+<p>There might very well be a message at the head of that queue that should be
+processed by the current thread. Instead it is ignored while we wait for other
+threads. Here is the crux of the problem: we&rsquo;re waiting on other threads whose
+input queues are attached to our own! That other thread can&rsquo;t process its
+messages because our thread has messages in front of its messages; on the other
+hand, our thread has blocked itself!</p>
+
+<p>The only way to break this deadlock is for new messages to be added to the queue.
+That is a big reason why we&rsquo;re seeing things like <a title="Page doesn't load/render if the mouse is not moving" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1105386">bug 1105386</a>: Moving the
+mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</p>
+
+<p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
+going to be getting rid of this code in third-party binaries that attach their
+own windows to Firefox&rsquo;s windows.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-03-12T15:00:00-06:00" pubdate data-updated="true"></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/chromium/'>chromium</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/win32/'>win32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/" title="Previous Post: Attached Input Queues on Firefox for Windows">&laquo; Attached Input Queues on Firefox for Windows</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2015/03/12/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Asynchronous Plugin Initialization: Nightly</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/">Profile Unlocking in Firefox 34 for Windows</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2015 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/';
+        var disqus_url = 'http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
