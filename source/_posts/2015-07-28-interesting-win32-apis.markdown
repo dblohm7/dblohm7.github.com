@@ -5,7 +5,7 @@ date: 2015-07-28 11:30:00 -0600
 comments: true
 categories: [Mozilla, Win32]
 ---
-Today I decided to diff the export tables of some core Win32 DLLs to see what's
+Yesterday I decided to diff the export tables of some core Win32 DLLs to see what's
 changed between Windows 8.1 and the Windows 10 technical preview. There weren't
 many changes, but the ones that were there are quite exciting IMHO. While
 researching these new APIs, I also stumbled across some others that were
@@ -21,7 +21,7 @@ and [`ReclaimVirtualMemory`](https://msdn.microsoft.com/en-us/library/windows/de
 functions, we can now specify ranges of virtual memory that are safe to
 discarded under memory pressure. Later on, should we request that access be
 restored to that memory, the kernel will either return that virtual memory to us
-unmodified, or advise us that the associated frames have been discarded.
+unmodified, or advise us that the associated pages have been discarded.
 
 A couple of years ago we had an intern on the Perf Team who was working on
 bringing this capability to Linux. I am pleasantly surprised that this is now
