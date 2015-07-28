@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-03-12T14:47:54-06:00</updated>
+  <updated>2015-07-28T11:34:31-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,60 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Interesting Win32 APIs]]></title>
+    <link href="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
+    <updated>2015-07-28T11:30:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
+    <content type="html"><![CDATA[<p>Today I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
+changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
+many changes, but the ones that were there are quite exciting IMHO. While
+researching these new APIs, I also stumbled across some others that were
+added during the Windows 8 timeframe that we should be considering as well.</p>
+
+<h2>Volatile Ranges</h2>
+
+<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
+claim that these APIS are actually new for the Windows 8.1 Update. Using the
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
+functions, we can now specify ranges of virtual memory that are safe to
+discarded under memory pressure. Later on, should we request that access be
+restored to that memory, the kernel will either return that virtual memory to us
+unmodified, or advise us that the associated frames have been discarded.</p>
+
+<p>A couple of years ago we had an intern on the Perf Team who was working on
+bringing this capability to Linux. I am pleasantly surprised that this is now
+offered on Windows.</p>
+
+<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
+
+<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
+API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
+files when we want the kernel to read ahead. On Win32, we were opening the
+backing file and then doing a series of sequential reads through the file to
+force the kernel to cache the file data. As of Windows 8, we can now call
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
+for a similar effect.</p>
+
+<h2>Operation Recorder: An API for SuperFetch</h2>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
+APIs are intended to record access patterns during a file I/O operation.
+SuperFetch will then create prefetch files for the operation, enabling prefetch
+capabilities above and beyond the use case of initial process startup.</p>
+
+<h2>Memory Pressure Notifications</h2>
+
+<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
+Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
+allocates a kernel handle that becomes signalled when physical memory is running
+low. Gecko already has facilities for handling memory pressure events on other
+platforms, so we should probably add this to the Win32 port.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
@@ -253,143 +307,6 @@ so.</p>
 be assured that the Desktop Performance Team will continue to investigate and
 fix the root causes of long shutdowns so that a profile unlocker hopefully
 becomes unnecessary.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Diffusion of Responsibility]]></title>
-    <link href="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/"/>
-    <updated>2014-08-14T14:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility</id>
-    <content type="html"><![CDATA[<p>Something that I&rsquo;ve been noticing on numerous social media and discussion forum
-sites is that whenever Firefox comes up, inevitably there are comments in those
-threads about Firefox performance. Given my role at Mozilla, these comments are
-of particular interest to me.</p>
-
-<p>The reaction to roc&rsquo;s <a href="http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html">recent blog post</a>
-has motivated me enough to respond to a specific subset of comments. These
-comments all exhibit a certain pattern: their authors are experiencing problems
-with Firefox, they are very dissatisfied, but they are not discussing them in a
-way that is actionable by Mozilla.</p>
-
-<h2>How Mozilla Finds Problems</h2>
-
-<p>Mozilla encourages our contributors to run prerelease versions of Firefox,
-especially <a href="http://nightly.mozilla.org">Nightly</a> builds. This allows us to do
-some good old-fashioned dogfooding during the development of a Firefox release.</p>
-
-<p>We also have many tools that run as part of our continuous integration
-infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
-tracking, deadlock detection, assertions, Talos performance tests, and xperf are
-some of the various tools that we apply to our builds. I do not claim that this
-list is exhaustive! :-)</p>
-
-<p>We use numerous technologies to discover problems that occur while running on
-our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
-reports <a href="https://crash-stats.mozilla.com/home/products/Firefox">data</a> about the
-crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">Telemetry</a>
-that, when consented to, send us useful information for discovering problems.</p>
-
-<p>Our ability to analyze crash report/FHR/telemetry data is limited to those users
-who consent to share it with us. As much as I am proud of the fact that we
-respect the privacy of our users, this means that we only receive data from a
-fraction of them; many users who are experiencing problems are not included in
-this data.</p>
-
-<p>Despite the fact that we have all of these wonderful tools to help us deliver
-quality releases, the fact is that they cannot exhaustively catch every possible
-bug that is encountered out in the wild. There are too many combinations of
-extensions and configurations out there to possibly allow us to catch
-everything before release.</p>
-
-<p>That&rsquo;s where you, our users, come in!</p>
-
-<h2>If You See Something, Report It!</h2>
-
-<p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
-I should know &ndash; I do it with the best of them! Having said that, they are also
-terrible for the purposes of bug reporting!</p>
-
-<p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
-problems and report them. Unfortunately that is not always the case, especially
-with a browser that is as configurable as Firefox.</p>
-
-<h3>Reporting Bugs</h3>
-
-<p>If you are experiencing a bug, the best way to ensure that something can be done
-about your bug is to <a href="https://bugzilla.mozilla.org/enter_bug.cgi?format=guided">report it</a>
-in Bugzilla. This might seem a little bit intimidating for somebody who is new
-to bug reporting, but I assure you, Mozillians are really nice! As long as you
-follow the <a href="https://bugzilla.mozilla.org/page.cgi?id=etiquette.html">etiquette guidelines</a>,
-you&rsquo;ll be fine! One suggestion though: try to follow our
-<a href="https://developer.mozilla.org/en-US/docs/Mozilla/QA/Bug_writing_guidelines">bug writing guidelines</a>.
-Doing so will maximize the likelihood of a contributor being able to reproduce
-your problem. In addition to these suggestions for bug filing, I also suggest
-including certain types of data for specific types of problems:</p>
-
-<h3>Reporting a Bug for High Memory Usage</h3>
-
-<p>If you&rsquo;re experiencing problems with Firefox&rsquo;s memory use, open a tab, and
-point your browser to <code>about:memory</code>. This nifty feature provides a breakdown
-of Firefox memory consumption. Save that report and attach it to the bug that
-you&rsquo;ve filed.</p>
-
-<h3>Reporting a Bug for Slowness or Heavy CPU Usage</h3>
-
-<p>If you want report a problem with Firefox being slow and/or mysteriously
-consuming large amounts of CPU time, the best way to help us is
-is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
-[<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
-user profile that stores your settings and browser history &ndash; they are different
-things with the same name.</em>] This tool tracks how Firefox uses your CPU over
-time. If you are able to attach a profile that was taken during a period of time
-where Firefox was running poorly, it will help us understand what exactly Firefox
-was doing. Unfortunately this is tool requires a bit of technical savvy, but
-attaching the URL of an uploaded profile to your performance bug can be very helpful.</p>
-
-<h3>Reporting a Bug for a Persistent, Reproducable Crash</h3>
-
-<p>As you can see in our <a href="https://crash-stats.mozilla.com/home/products/Firefox">crash report data</a>,
-crashes reported to Mozilla are ranked by frequency. As you might expect, this
-implies that it&rsquo;s often the squeaky wheels that get the grease.</p>
-
-<p>If you have an easily reproducable crash and you are sending your reports to
-Mozilla, you can help us by pointing Firefox to <code>about:crashes</code>. This page lists
-all of the crash reports that have been generated on your computer. If the crash
-that you are experiencing isn&rsquo;t on our list of top crashers, you can still help
-us to fix it: filing a bug that includes multiple crash report URLs from your
-<code>about:crashes</code> screen will help tremendously.</p>
-
-<h3>Reporting a Bug for a Website that Looks Wrong in Firefox</h3>
-
-<p>I&rsquo;d suggest reporting your problem over at <a href="http://webcompat.com">webcompat.com</a>.
-Volunteers will review your report and determine whether your problem is caused
-by the website or by Firefox, and file a bug with the appropriate entity.</p>
-
-<h3>I have a problem that isn&rsquo;t listed here. What should I do?</h3>
-
-<p>Send us <a href="https://input.mozilla.org/en-US/feedback">feedback</a>!</p>
-
-<h2>In Conclusion</h2>
-
-<p>If there is one idea that you can take away from this post (a TL;DR, if you will),
-it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</em></p>
-
-<p>Taking an active role in the Mozilla community by reporting your issues through
-the proper channels is the best way to ensure that your problems can be fixed.</p>
-
-<p><strong>EDIT:</strong> To be clear: What I am suggesting is that users who are enthusiastic
-enough to post a comment to Hacker News (for example) should also be savvy
-enough to be able to file a proper bug report. Please do not misconstrue this
-post as a demand that novice users start filing bugs.</p>
-
-<p><strong>EDIT August 15, 2014:</strong> Nick Nethercote just <a href="https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/">blogged</a>
-about a tricky memory bug that couldn&rsquo;t have been diagnosed without the help of
-a Redditor whose complaint we steered to Bugzilla.</p>
-
-<p><strong>EDIT August 23, 2014:</strong> Wow, this has blown up. More edits to update this post
-with additional information in repose to some of the questions posted in the
-comments. Thanks for reading!</p>
 ]]></content>
   </entry>
   

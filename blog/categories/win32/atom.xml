@@ -4,7 +4,7 @@
   <title><![CDATA[Category: win32 | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-03-12T14:47:54-06:00</updated>
+  <updated>2015-07-28T11:34:31-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,60 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Interesting Win32 APIs]]></title>
+    <link href="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
+    <updated>2015-07-28T11:30:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
+    <content type="html"><![CDATA[<p>Today I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
+changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
+many changes, but the ones that were there are quite exciting IMHO. While
+researching these new APIs, I also stumbled across some others that were
+added during the Windows 8 timeframe that we should be considering as well.</p>
+
+<h2>Volatile Ranges</h2>
+
+<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
+claim that these APIS are actually new for the Windows 8.1 Update. Using the
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
+functions, we can now specify ranges of virtual memory that are safe to
+discarded under memory pressure. Later on, should we request that access be
+restored to that memory, the kernel will either return that virtual memory to us
+unmodified, or advise us that the associated frames have been discarded.</p>
+
+<p>A couple of years ago we had an intern on the Perf Team who was working on
+bringing this capability to Linux. I am pleasantly surprised that this is now
+offered on Windows.</p>
+
+<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
+
+<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
+API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
+files when we want the kernel to read ahead. On Win32, we were opening the
+backing file and then doing a series of sequential reads through the file to
+force the kernel to cache the file data. As of Windows 8, we can now call
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
+for a similar effect.</p>
+
+<h2>Operation Recorder: An API for SuperFetch</h2>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
+APIs are intended to record access patterns during a file I/O operation.
+SuperFetch will then create prefetch files for the operation, enabling prefetch
+capabilities above and beyond the use case of initial process startup.</p>
+
+<h2>Memory Pressure Notifications</h2>
+
+<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
+Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
+allocates a kernel handle that becomes signalled when physical memory is running
+low. Gecko already has facilities for handling memory pressure events on other
+platforms, so we should probably add this to the Win32 port.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
