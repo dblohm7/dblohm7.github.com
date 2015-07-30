@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-07-28T13:15:34-06:00</updated>
+  <updated>2015-07-30T11:58:57-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -27,7 +27,7 @@ added during the Windows 8 timeframe that we should be considering as well.</p>
 <h2>Volatile Ranges</h2>
 
 <p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
-claim that these APIS are actually new for the Windows 8.1 Update. Using the
+claim that these APIs are actually new for the Windows 8.1 Update. Using the
 <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
 and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
 functions, we can now specify ranges of virtual memory that are safe to
