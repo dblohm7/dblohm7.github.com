@@ -15,7 +15,7 @@ Volatile Ranges
 ---------------
 
 While my diff showed these APIs as new exports for Windows 10, the MSDN docs
-claim that these APIS are actually new for the Windows 8.1 Update. Using the
+claim that these APIs are actually new for the Windows 8.1 Update. Using the
 [`OfferVirtualMemory`](https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx)
 and [`ReclaimVirtualMemory`](https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx)
 functions, we can now specify ranges of virtual memory that are safe to
