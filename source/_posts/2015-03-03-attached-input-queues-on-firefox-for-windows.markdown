@@ -3,7 +3,7 @@ layout: post
 title: "Attached Input Queues on Firefox for Windows"
 date: 2015-03-03 17:28:06 -0700
 comments: true
-categories: [Mozilla, Win32]
+categories: [Mozilla, Win32, Undocumented Windows]
 ---
 I've [previously](http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/) [blogged](http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/) 
 indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the realm of plugin hangs has grown into a more 
