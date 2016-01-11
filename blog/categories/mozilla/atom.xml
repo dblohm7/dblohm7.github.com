@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-01-11T12:37:06-07:00</updated>
+  <updated>2016-01-11T12:40:10-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -370,61 +370,6 @@ whose relationship to this bug was not obvious.</p>
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Throwing Code Over the Proverbial Fence]]></title>
-    <link href="http://dblohm7.ca/blog/2015/08/30/throwing-code-over-the-proverbial-fence/"/>
-    <updated>2015-08-30T22:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/08/30/throwing-code-over-the-proverbial-fence</id>
-    <content type="html"><![CDATA[<p>I was thrilled to see <a href="https://blog.mozilla.org/futurereleases/2015/07/02/what-to-look-forward-to-from-firefox/">Uncompromised Quality</a> as one of our top-line goals for
-Firefox. On the other hand, it is one thing to state a goal and another to
-deliver on it.</p>
-
-<p>I&rsquo;ve worked on software performance for a long time, across a few different
-employers. When it comes to quality, I&rsquo;ve seen both ends of the spectrum. If
-there is one constant that I&rsquo;ve observed when it comes to software quality, it
-is that the culture of the development team will either make or break the
-product.</p>
-
-<p>Disclaimer: I do not speak for Mozilla. I neither speak for my peers in the
-Firefox Desktop Performance Team, nor do I speak for my management. This post
-contains my personal opinions on this topic. Note that when I talk about
-&ldquo;performance&rdquo; in the context of this post, I am really referring to quality
-in general. Furthermore, this post should not be construed as an indictment of
-quality at Mozilla &ndash; I am speaking in generalities here.</p>
-
-<h2>What is the role of a performance team?</h2>
-
-<p>While I think that it is important for a performance team to have the authority
-to back out regressions, one task that I think that a perf team should not be
-involved with is the justification as to whether or not a feature is ready for
-release. When a perf team consents to this, it is effectively allowing a
-shift of the burden of proof toward itself and away from the teams that are
-developing new features. Unfortunately the burden of proof always takes
-the <em>responsibility</em> along with it.</p>
-
-<p>I&rsquo;ve seen this before, and it works out <strong>very</strong> poorly.</p>
-
-<p>When teams do not hold themselves accountable for the quality of their own
-features, they become complacent. Quality becomes &ldquo;somebody else&rsquo;s problem.&rdquo;
-Code gets thrown over the fence by the feature teams so that they can receive
-whatever incentives were promised to them for shipping. QA catches what they can,
-but that is a course-grained filter. Regression tests don&rsquo;t catch anything
-because they don&rsquo;t exist. The organization is threatened by the loss of users
-or contracts, and eventually the perf team is called in, under the gun, to come
-in and clean up the mess.</p>
-
-<p>Coming back to Mozilla for a moment: Imagine an environment where developers
-could uplift their patches with impunity, and the onus was on the release
-managers to demonstrate why a patch should not be accepted into a certain
-channel. This hypothetical situation is as absurd as it is unacceptable. The
-same applies to performance: it must not be the perf team&rsquo;s responsibility to
-prove that a feature is not ready to ship; it must be the responsibility of the
-feature&rsquo;s owners to show that the feature <em>is</em> ready.</p>
-
-<h4>So, what <em>should</em> a performance team do?</h4>
-]]></content>
-  </entry>
-  
-  <entry>
     <title type="html"><![CDATA[On WebExtensions]]></title>
     <link href="http://dblohm7.ca/blog/2015/08/30/on-webextensions/"/>
     <updated>2015-08-30T02:00:00-06:00</updated>
@@ -636,6 +581,107 @@ mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</
 <p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
 going to be getting rid of this code in third-party binaries that attach their
 own windows to Firefox&rsquo;s windows.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Attached Input Queues on Firefox for Windows]]></title>
+    <link href="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/"/>
+    <updated>2015-03-03T17:28:06-07:00</updated>
+    <id>http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows</id>
+    <content type="html"><![CDATA[<p>I&rsquo;ve <a href="http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">previously</a> <a href="http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/">blogged</a>
+indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the realm of plugin hangs has grown into a more
+serious problem in the land of OMTC and e10s.</p>
+
+<p>As a brief recap for those who are not very familiar with this problem: imagine two windows, each on their own separate threads, forming a parent-child relationship
+with each other. When this situation arises, Windows implicitly attaches together and synchronizes their input queues, putting each thread at the mercy of the other
+attached threads&#8217; ability to pump messages. If one thread does something bad in its message pump, any other threads that are attached to it are likely to be affected as well.</p>
+
+<p>One of the biggest annoyances when it comes to knowledge about which threads are affected, is that we are essentially flying blind. There is no
+way to query Windows for information about attached input queues. This is unfortunate, as it would be really nice to obtain some specific knowledge to allow us to
+analyze the state of Firefox threads&#8217; input queues so that we can mitigate the problem.</p>
+
+<p>I had previously been working on a personal side project to make this possible, but in light of recent developments (and a <a href="https://twitter.com/nsIAnswers/status/565883284748795905">tweet from bsmedberg</a>),
+I decided to bring this investigation under the umbrella of my full-time job. I&rsquo;m pleased to announce that I&rsquo;ve finished the first cut of a utility that I call
+the Input Queue Visualizer, or <code>iqvis</code>.</p>
+
+<p><code>iqvis</code> consists of two components, one of which is a kernel-mode driver. This driver exposes input queue attachment data to user mode. The <code>iqvis</code> user-mode
+executable is the client that queries the driver and outputs the results. In the next section I&rsquo;m going to discuss the inner workings of <code>iqvis</code>. Following that, I&rsquo;ll
+discuss the <a href="#results">results</a> of running <code>iqvis</code> on an instance of Firefox.</p>
+
+<h2><a name="internals"></a>Input Queue Visualizer Internals</h2>
+
+<p>First of all, let&rsquo;s start off with this caveat: <strong>Nearly everything that this driver does involves undocumented APIs and data structures</strong>. Because of this, <code>iqvis</code>
+does some things that you should never do in production software.</p>
+
+<p>One of the big consequences of using undocumented information is that <code>iqvis</code> requires pointers to very specific locations
+in kernel memory to accomplish things. These pointers will change every time that Windows is updated. To mitigate this, I kind of cheated: it turns out that
+debugging symbols exist for all of the locations that <code>iqvis</code> needs to access! I wrote the <code>iqvis</code> client to invoke the <code>dbghelp</code> engine to extract the pointers that
+I need from Windows symbols and send those values as the input to the <code>DeviceIoControl</code> call that triggers the data collection. Passing pointers from user mode to be
+accessed in kernel mode is a very dangerous thing to do (and again, I would never do it in production software), but it is damn convenient for <code>iqvis</code>!</p>
+
+<p>Another issue is that these undocumented details change between Windows versions. The initial version of <code>iqvis</code> works on 64-bit Windows 8.1, but different code is required
+for other major releases, such as Windows 7. The <code>iqvis</code> driver theoretically will work on Windows 7 but I need to make a few bug fixes for that case.</p>
+
+<p>So, getting those details out of the way, we can address the crux of the problem: we need to query input queue attachment information from <code>win32k.sys</code>, which is the
+driver that implements USER and GDI system calls on Windows NT systems.</p>
+
+<p>In particular, the window manager maintains a linked list that describes thread attachment info as a triple that points to the &ldquo;from&rdquo; thread, the &ldquo;to&rdquo; thread, and a count.
+The count is necessary because the same two threads may be attached to each other multiple times. The <code>iqvis</code> driver walks this linked list in a thread-safe way to obtain
+the attachment data, and then copies it to the output buffer for the <code>DeviceIoControl</code> request.</p>
+
+<p>Since <code>iqvis</code> involves a device driver, and since I have not digitally signed that device driver, one can&rsquo;t just run <code>iqvis</code> and call it a day. This program won&rsquo;t work
+unless the computer was either booted with kernel debugging enabled, or it was booted with driver signing temporarily disabled.</p>
+
+<h2><a name="results"></a>Running <code>iqvis</code> against Firefox</h2>
+
+<p>Today I ran <code>iqvis</code> using today&rsquo;s Nightly 39 as well as the lastest release of Flash. I also tried it with Flash Protected Mode both disabled and enabled.
+(Note that these examples used an older version of <code>iqvis</code> that outputs thread IDs in hexadecimal. The current version uses decimal for its output.)</p>
+
+<h3>Protected Mode Disabled</h3>
+
+<pre><samp>FromTID ToTID Count
+ac8 df4 1
+</samp></pre>
+
+
+<p>Looking up the thread IDs:</p>
+
+<ul>
+<li><code>df4</code> is the Firefox main thread;</li>
+<li><code>ac8</code> is the plugin-container main thread.</li>
+</ul>
+
+
+<p>I think that the output from this case is pretty much what I was expecting to see. The protected mode case, however, is more interesting.</p>
+
+<h3>Protected Mode Enabled</h3>
+
+<pre><samp>FromTID ToTID Count
+f8c dbc 1
+794 f8c 3
+</samp></pre>
+
+
+<p>Looking up the thread IDs:</p>
+
+<ul>
+<li><code>dbc</code> is the Firefox main thread;</li>
+<li><code>f8c</code> is the plugin-container main thread;</li>
+<li><code>794</code> is the Flash sandbox main thread.</li>
+</ul>
+
+
+<p>Notice how Flash is attached to plugin-container, which is then attached to Firefox. Notice that transitively the Flash sandbox is effectively attached to Firefox,
+confirming previous hypotheses that I&rsquo;ve discussed with colleagues in the past.</p>
+
+<p>Also notice how the Flash sandbox attachment to plugin-container has a count of 3!</p>
+
+<h2>In Conclusion</h2>
+
+<p>In my opinion, my Input Queue Visualizer has already yielded some very interesting data. Hopefully this will help us to troubleshoot our issues in the future. Oh,
+and the code is up on <a href="https://github.com/dblohm7/iqvis">GitHub</a>! It&rsquo;s poorly documented at the moment, but just remember to only try running it on 64-bit Windows
+8.1 for the time being!</p>
 ]]></content>
   </entry>
   
