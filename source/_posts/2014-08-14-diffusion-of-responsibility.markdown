@@ -49,8 +49,8 @@ everything before release.
 
 That's where you, our users, come in!
 
-If You See Something, Report It!
---------------------------------
+If You See Something, Say Something!
+------------------------------------
 
 Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting. 
 I should know -- I do it with the best of them! Having said that, they are also 

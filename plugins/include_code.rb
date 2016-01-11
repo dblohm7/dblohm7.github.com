@@ -63,6 +63,7 @@ module Jekyll
 
       Dir.chdir(code_path) do
         code = file.read
+        code = code.lines.to_a[@start-1..-1].join
         @filetype = file.extname.sub('.','') if @filetype.nil?
         title = @title ? "#{@title} (#{file.basename})" : file.basename
         url = "/#{code_dir}/#{@file}"

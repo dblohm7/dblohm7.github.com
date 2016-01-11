@@ -37,13 +37,15 @@ module HighlightCode
     table = '<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers">'
     code = ''
     startindex = startln - 1
+    if endln.nil?
+      endindex = str.lines.count - 1
+    else
+      endindex = endln - 1 - startindex
+    end
     str.lines.each_with_index do |line,index|
-      if index < startindex
-        next
-      end
-      table += "<span class='line-number'>#{index+1}</span>\n"
+      table += "<span class='line-number'>#{startindex+index+1}</span>\n"
       code  += "<span class='line'>#{line}</span>"
-      if endln == index + 1
+      if index == endindex
         break
       end
     end

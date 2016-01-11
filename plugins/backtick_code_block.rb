@@ -9,10 +9,16 @@ module BacktickCodeBlock
     @lang = nil
     @url = nil
     @title = nil
+    @start = 1
+    @end = nil
     input.gsub(/^`{3} *([^\n]+)?\n(.+?)\n`{3}/m) do
       @options = $1 || ''
       str = $2
 
+      if @options =~ /\s*start:(\S+)/i
+        @start = $1.to_i
+        @options = @options.sub(/\s*start:(\S+)/i,'')
+      end
       if @options =~ AllOptions
         @lang = $1
         @caption = "<figcaption><span>#{$2}</span><a href='#{$3}'>#{$4 || 'link'}</a></figcaption>"
@@ -33,7 +39,7 @@ module BacktickCodeBlock
           raw += str
           raw += "\n```\n"
         else
-          code = HighlightCode::highlight(str, @lang)
+          code = HighlightCode::highlight(str, @lang, @start, @end)
           "<figure class='code'>#{@caption}#{code}</figure>"
         end
       end
