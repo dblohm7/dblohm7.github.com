@@ -4,7 +4,7 @@
   <title><![CDATA[Category: philosophizing | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/philosophizing/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2015-08-30T01:58:56-06:00</updated>
+  <updated>2016-01-11T12:37:06-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,61 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Throwing Code Over the Proverbial Fence]]></title>
+    <link href="http://dblohm7.ca/blog/2015/08/30/throwing-code-over-the-proverbial-fence/"/>
+    <updated>2015-08-30T22:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2015/08/30/throwing-code-over-the-proverbial-fence</id>
+    <content type="html"><![CDATA[<p>I was thrilled to see <a href="https://blog.mozilla.org/futurereleases/2015/07/02/what-to-look-forward-to-from-firefox/">Uncompromised Quality</a> as one of our top-line goals for
+Firefox. On the other hand, it is one thing to state a goal and another to
+deliver on it.</p>
+
+<p>I&rsquo;ve worked on software performance for a long time, across a few different
+employers. When it comes to quality, I&rsquo;ve seen both ends of the spectrum. If
+there is one constant that I&rsquo;ve observed when it comes to software quality, it
+is that the culture of the development team will either make or break the
+product.</p>
+
+<p>Disclaimer: I do not speak for Mozilla. I neither speak for my peers in the
+Firefox Desktop Performance Team, nor do I speak for my management. This post
+contains my personal opinions on this topic. Note that when I talk about
+&ldquo;performance&rdquo; in the context of this post, I am really referring to quality
+in general. Furthermore, this post should not be construed as an indictment of
+quality at Mozilla &ndash; I am speaking in generalities here.</p>
+
+<h2>What is the role of a performance team?</h2>
+
+<p>While I think that it is important for a performance team to have the authority
+to back out regressions, one task that I think that a perf team should not be
+involved with is the justification as to whether or not a feature is ready for
+release. When a perf team consents to this, it is effectively allowing a
+shift of the burden of proof toward itself and away from the teams that are
+developing new features. Unfortunately the burden of proof always takes
+the <em>responsibility</em> along with it.</p>
+
+<p>I&rsquo;ve seen this before, and it works out <strong>very</strong> poorly.</p>
+
+<p>When teams do not hold themselves accountable for the quality of their own
+features, they become complacent. Quality becomes &ldquo;somebody else&rsquo;s problem.&rdquo;
+Code gets thrown over the fence by the feature teams so that they can receive
+whatever incentives were promised to them for shipping. QA catches what they can,
+but that is a course-grained filter. Regression tests don&rsquo;t catch anything
+because they don&rsquo;t exist. The organization is threatened by the loss of users
+or contracts, and eventually the perf team is called in, under the gun, to come
+in and clean up the mess.</p>
+
+<p>Coming back to Mozilla for a moment: Imagine an environment where developers
+could uplift their patches with impunity, and the onus was on the release
+managers to demonstrate why a patch should not be accepted into a certain
+channel. This hypothetical situation is as absurd as it is unacceptable. The
+same applies to performance: it must not be the perf team&rsquo;s responsibility to
+prove that a feature is not ready to ship; it must be the responsibility of the
+feature&rsquo;s owners to show that the feature <em>is</em> ready.</p>
+
+<h4>So, what <em>should</em> a performance team do?</h4>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[On WebExtensions]]></title>
