@@ -291,9 +291,10 @@ functions being hooked by the injected NVIDIA DLLs.</p>
 <h2>Putting it all Together</h2>
 
 <p>By this point I knew who was hooking our code and knew how it was getting there.
-I also noticed that CreateWindowEx is the only function that the NVIDIA DLLs and
-our own code were both trying to intercept. Clearly there was some kind of bad
-interaction occurring between the two interception mechanisms, but what was it?</p>
+I also noticed that <code>CreateWindowEx</code> is the only function that the NVIDIA DLLs
+and our own code were both trying to intercept. Clearly there was some kind of
+bad interaction occurring between the two interception mechanisms, but what was
+it?</p>
 
 <p>I decided to go back and examine a
 <a href="https://crash-stats.mozilla.com/report/index/e884dc17-957f-4270-86ab-f59742151113">specific</a>
@@ -414,12 +415,13 @@ called <code>detour_skip_jmp</code>, I found the bug:</p>
 
 
 <p>This code is supposed to be telling Detours where the target address of a <code>jmp</code>
-is so that Detours can follow it. <code>pbNew</code> is supposed to be the target address
-of the <code>jmp</code>. Unfortunately <code>pbCode</code> is referencing the address <em>of the
-beginning of the current <code>jmp</code> instruction</em>. Unfortunately, the address in this
-<code>jmp</code> instruction is always relative to the address of the <em>next</em> instruction,
-not the <em>current</em> instruction! Detours ends up attempting to write a <code>jmp</code>
-<em>five bytes prior</em> to the intended target address!</p>
+is, so that Detours can follow it. <code>pbNew</code> is supposed to be the target address
+of the <code>jmp</code>. <code>pbCode</code> is referencing the address <em>of the beginning of the <code>jmp</code>
+instruction itself</em>. Unfortunately, with this type of <code>jmp</code> instruction, target
+addresses are always relative to the address of the <em>next</em> instruction, not
+the <em>current</em> instruction! Since the current <code>jmp</code> instruction is five bytes
+long, Detours ends up writing its <code>jmp</code> <em>five bytes prior</em> to the intended
+target address!</p>
 
 <p>I went and checked the source code for Detours Express 3.0 to see if this had
 been fixed, and indeed it had:</p>
