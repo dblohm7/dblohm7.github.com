@@ -184,9 +184,10 @@ Putting it all Together
 -----------------------
 
 By this point I knew who was hooking our code and knew how it was getting there.
-I also noticed that CreateWindowEx is the only function that the NVIDIA DLLs and
-our own code were both trying to intercept. Clearly there was some kind of bad
-interaction occurring between the two interception mechanisms, but what was it?
+I also noticed that `CreateWindowEx` is the only function that the NVIDIA DLLs
+and our own code were both trying to intercept. Clearly there was some kind of
+bad interaction occurring between the two interception mechanisms, but what was
+it?
 
 I decided to go back and examine a
 [specific](https://crash-stats.mozilla.com/report/index/e884dc17-957f-4270-86ab-f59742151113)
@@ -291,12 +292,13 @@ called `detour_skip_jmp`, I found the bug:
 ```
 
 This code is supposed to be telling Detours where the target address of a `jmp`
-is so that Detours can follow it. `pbNew` is supposed to be the target address
-of the `jmp`. Unfortunately `pbCode` is referencing the address *of the
-beginning of the current `jmp` instruction*. Unfortunately, the address in this
-`jmp` instruction is always relative to the address of the *next* instruction,
-not the *current* instruction! Detours ends up attempting to write a `jmp`
-*five bytes prior* to the intended target address!
+is, so that Detours can follow it. `pbNew` is supposed to be the target address
+of the `jmp`. `pbCode` is referencing the address *of the beginning of the `jmp`
+instruction itself*. Unfortunately, with this type of `jmp` instruction, target
+addresses are always relative to the address of the *next* instruction, not
+the *current* instruction! Since the current `jmp` instruction is five bytes
+long, Detours ends up writing its `jmp` *five bytes prior* to the intended
+target address!
 
 I went and checked the source code for Detours Express 3.0 to see if this had
 been fixed, and indeed it had:
