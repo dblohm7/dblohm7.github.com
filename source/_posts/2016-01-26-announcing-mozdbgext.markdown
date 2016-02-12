@@ -3,7 +3,7 @@ layout: post
 title: "Announcing mozdbgext"
 date: 2016-01-26 12:45:00 -0700
 comments: true
-categories: [Mozilla, Debugging, Win32]
+categories: [Mozilla, Debugging, Win32, mozdbgext]
 ---
 A well-known problem at Mozilla is that, while most of our desktop users run
 Windows, most of Mozilla's developers do not. There are a lot of problems that
