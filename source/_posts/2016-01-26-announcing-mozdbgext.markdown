@@ -82,7 +82,7 @@ as a hexadecimal value.
 
 ### Downloading windbgext
 
-I have pre-built a [32-bit binary](https://github.com/dblohm7/mozdbgext/blob/master/bin/mozdbgext.dll?raw=true)
+I have pre-built binaries ([32-bit](https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true), [64-bit](https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true))
 (which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
 but the code should be source compatible.
 
