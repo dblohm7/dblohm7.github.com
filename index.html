@@ -9,8 +9,7 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="A well-known problem at Mozilla is that, while most of our desktop users run
-Windows, most of Mozilla&rsquo;s developers do not. There are a lot of &hellip;">
+  <meta name="description" content="As of today I have added a new command to mozdbgext: !iat. The syntax is pretty simple: !iat &lt;hexadecimal address&gt; This address shouldn&rsquo;t &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +78,144 @@ Windows, most of Mozilla&rsquo;s developers do not. There are a lot of &hellip;"
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-02-11T18:30:00-07:00" pubdate data-updated="true"></time>
+        
+           | <a href="/blog/2016/02/11/new-mozdbgext-command-iat/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
+
+<p>The syntax is pretty simple:</p>
+
+<p><code>!iat &lt;hexadecimal address&gt;</code></p>
+
+<p>This address shouldn&rsquo;t be just any pointer; it should be the address of an
+entry in the current module&rsquo;s import address table (IAT). These addresses
+are typically very identifiable by the <code>_imp_</code> prefix in their symbol names.</p>
+
+<p>The purpose of this extension is to look up the name of the DLL from whom the
+function is being imported. Furthermore, the extension checks the expected
+target address of the import with the actual target address of the import. This
+allows us to detect API hooking via IAT patching.</p>
+
+<h3>An Example Session</h3>
+
+<p>I fired up a local copy of Nightly, attached a debugger to it, and dumped the
+call stack of its main thread:</p>
+
+<pre><samp>
+ # ChildEBP RetAddr
+00 0018ecd0 765aa32a ntdll!NtWaitForMultipleObjects+0xc
+01 0018ee64 761ec47b KERNELBASE!WaitForMultipleObjectsEx+0x10a
+02 0018eecc 1406905a USER32!MsgWaitForMultipleObjectsEx+0x17b
+03 0018ef18 1408e2c8 xul!mozilla::widget::WinUtils::WaitForMessage+0x5a
+04 0018ef84 13fdae56 xul!nsAppShell::ProcessNextNativeEvent+0x188
+05 0018ef9c 13fe3778 xul!nsBaseAppShell::DoProcessNextNativeEvent+0x36
+06 0018efbc 10329001 xul!nsBaseAppShell::OnProcessNextEvent+0x158
+07 0018f0e0 1038e612 xul!nsThread::ProcessNextEvent+0x401
+08 0018f0fc 1095de03 xul!NS_ProcessNextEvent+0x62
+09 0018f130 108e493d xul!mozilla::ipc::MessagePump::Run+0x273
+0a 0018f154 108e48b2 xul!MessageLoop::RunInternal+0x4d
+0b 0018f18c 108e448d xul!MessageLoop::RunHandler+0x82
+0c 0018f1ac 13fe78f0 xul!MessageLoop::Run+0x1d
+0d 0018f1b8 14090f07 xul!nsBaseAppShell::Run+0x50
+0e 0018f1c8 1509823f xul!nsAppShell::Run+0x17
+0f 0018f1e4 1514975a xul!nsAppStartup::Run+0x6f
+10 0018f5e8 15146527 xul!XREMain::XRE_mainRun+0x146a
+11 0018f650 1514c04a xul!XREMain::XRE_main+0x327
+12 0018f768 00215c1e xul!XRE_main+0x3a
+13 0018f940 00214dbd firefox!do_main+0x5ae
+14 0018f9e4 0021662e firefox!NS_internal_main+0x18d
+15 0018fa18 0021a269 firefox!wmain+0x12e
+16 0018fa60 76e338f4 firefox!__tmainCRTStartup+0xfe
+17 0018fa74 77d656c3 KERNEL32!BaseThreadInitThunk+0x24
+18 0018fabc 77d6568e ntdll!__RtlUserThreadStart+0x2f
+19 0018facc 00000000 ntdll!_RtlUserThreadStart+0x1b
+</samp></pre>
+
+
+<p>Let us examine the code at frame 3:</p>
+
+<pre><samp>
+14069042 6a04            push    4
+14069044 68ff1d0000      push    1DFFh
+14069049 8b5508          mov     edx,dword ptr [ebp+8]
+1406904c 2b55f8          sub     edx,dword ptr [ebp-8]
+1406904f 52              push    edx
+14069050 6a00            push    0
+14069052 6a00            push    0
+14069054 ff159cc57d19    call    dword ptr [xul!_imp__MsgWaitForMultipleObjectsEx (197dc59c)]
+1406905a 8945f4          mov     dword ptr [ebp-0Ch],eax
+</samp></pre>
+
+
+<p>Notice the function call to <code>MsgWaitForMultipleObjectsEx</code> occurs indirectly;
+the call instruction is referencing a pointer within the <code>xul.dll</code> binary
+itself. This is the IAT entry that corresponds to that function.</p>
+
+<p>Now, if I load <code>mozdbgext</code>, I can take the address of that IAT entry and execute
+the following command:</p>
+
+<pre><samp>
+0:000> !iat 0x197dc59c
+Expected target: USER32.dll!MsgWaitForMultipleObjectsEx
+Actual target: USER32!MsgWaitForMultipleObjectsEx+0x0
+</samp></pre>
+
+
+<p><code>!iat</code> has done two things for us:</p>
+
+<ol>
+<li>It did a reverse lookup to determine the module and function name for the
+import that corresponds to that particular IAT entry; and</li>
+<li>It followed the IAT pointer and determined the symbol at the target address.</li>
+</ol>
+
+
+<p>Normally we want both the expected and actual targets to match. If they don&rsquo;t,
+we should investigate further, as this mismatch may indicate that the IAT has
+been patched by a third party.</p>
+
+<p>Note that <code>!iat</code> command is breakpad aware (provided that you&rsquo;ve already
+loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Microsoft
+symbol engine as necessary.</p>
+
+<p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
+names for the IAT entries, you need to enter the hexadeicmal representation of
+the pointer.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1333,103 +1470,6 @@ comments. Thanks for reading!</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true"></time>
-        
-           | <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I have spent a lot of time this quarter working on <a title="Asynchronous Initialization of Out-of-process Plugins" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998863">bug 998863</a>, &ldquo;Asynchronous
-Initialization of Out-of-process Plugins.&rdquo; While the bug summary is fairly self
-explanatory, I would like to provide some more details about why I am doing this
-and what kind of work it entails. I would also like to wrap up the post with an
-early demonstration of this feature and present some profiles to illustrate the
-potential performance improvement.</p>
-
-<h2>Rationale</h2>
-
-<p>The reason that I am undertaking this project is because NPAPI plugin startup
-is our most frequent cause of jank. In fact, at the time of this writing, our
-<a href="http://telemetry.mozilla.org/chromehangs/">Chrome Hangs telemetry</a> is showing
-that 4 out of our top 10 most frequent offending call stacks are related to
-plugin initialization and instantiation. Furthermore, creating the
-plugin-container.exe child process is the #1 most frequent chrome hang offender
-(Note that our Chrome Hang telemetry consists entirely of Windows builds, where
-process creation is quite expensive).</p>
-
-<h2>A High-level Breakdown of NPAPI Initialization and Instantiation</h2>
-
-<p>The typical steps involved can be broken down as follows:</p>
-
-<ol>
-<li>Launch the <code>plugin-container</code> process;</li>
-<li>Call <code>NP_Initialize</code> to load the plugin;</li>
-<li>Create instances by calling <code>NPP_New</code>;</li>
-<li>Call <code>NPP_NewStream</code> for instances that load stream data;</li>
-<li>If an instance is scriptable, call <code>NPP_GetValue</code> to obtain information
-about the plugin&rsquo;s scriptable object.</li>
-</ol>
-
-
-<p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case &ndash; we asynchronously return a proxy object, but if a
-synchronous JS method is called on that object, we must wait for the plugin to
-initialize (if it has not yet done so). My hope is that if we have to call a
-synchronous JS method on the proxy object, plugin initialization will be far
-enough along that the wait will be minimal.</p>
-
-<h2>A Brief Demonstration</h2>
-
-<p>The following video compares two locally-built Nightlies that are identical
-except for the asynchronous initialization patch. After loading the browser
-with a page containing several embedded Flash objects, we can profile and
-observe the effects of this patch.</p>
-
-<iframe width="420" height="315" src="//www.youtube-nocookie.com/embed/HZ8Z2Drv8uI?rel-0" frameborder="0" allowfullscreen></iframe>
-
-
-<p>Here are links to some profiles:</p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=a5a96119742fa75b64ab7d12566eede68468ef3c">Synchronous Plugin Initialization</a></p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=282e372d3357316307c182607f26c00f4f41011e">Asynchronous Plugin Initialization</a></p>
-
-<h2>Disclaimer</h2>
-
-<p>This patch requires some further work on scripting and stabilization. The
-information in this post is subject to change. :-)</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="2">&larr; Older</a>
@@ -1445,6 +1485,10 @@ information in this post is subject to change. :-)</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/01/26/announcing-mozdbgext/">Announcing Mozdbgext</a>
       </li>
     
@@ -1458,10 +1502,6 @@ information in this post is subject to change. :-)</p>
     
       <li class="post">
         <a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/03/12/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
       </li>
     
   </ul>

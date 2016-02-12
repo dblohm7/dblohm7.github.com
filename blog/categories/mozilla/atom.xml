@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-01-26T12:45:46-07:00</updated>
+  <updated>2016-02-11T18:34:47-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,114 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
+    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
+    <updated>2016-02-11T18:30:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
+    <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
+
+<p>The syntax is pretty simple:</p>
+
+<p><code>!iat &lt;hexadecimal address&gt;</code></p>
+
+<p>This address shouldn&rsquo;t be just any pointer; it should be the address of an
+entry in the current module&rsquo;s import address table (IAT). These addresses
+are typically very identifiable by the <code>_imp_</code> prefix in their symbol names.</p>
+
+<p>The purpose of this extension is to look up the name of the DLL from whom the
+function is being imported. Furthermore, the extension checks the expected
+target address of the import with the actual target address of the import. This
+allows us to detect API hooking via IAT patching.</p>
+
+<h3>An Example Session</h3>
+
+<p>I fired up a local copy of Nightly, attached a debugger to it, and dumped the
+call stack of its main thread:</p>
+
+<pre><samp>
+ # ChildEBP RetAddr
+00 0018ecd0 765aa32a ntdll!NtWaitForMultipleObjects+0xc
+01 0018ee64 761ec47b KERNELBASE!WaitForMultipleObjectsEx+0x10a
+02 0018eecc 1406905a USER32!MsgWaitForMultipleObjectsEx+0x17b
+03 0018ef18 1408e2c8 xul!mozilla::widget::WinUtils::WaitForMessage+0x5a
+04 0018ef84 13fdae56 xul!nsAppShell::ProcessNextNativeEvent+0x188
+05 0018ef9c 13fe3778 xul!nsBaseAppShell::DoProcessNextNativeEvent+0x36
+06 0018efbc 10329001 xul!nsBaseAppShell::OnProcessNextEvent+0x158
+07 0018f0e0 1038e612 xul!nsThread::ProcessNextEvent+0x401
+08 0018f0fc 1095de03 xul!NS_ProcessNextEvent+0x62
+09 0018f130 108e493d xul!mozilla::ipc::MessagePump::Run+0x273
+0a 0018f154 108e48b2 xul!MessageLoop::RunInternal+0x4d
+0b 0018f18c 108e448d xul!MessageLoop::RunHandler+0x82
+0c 0018f1ac 13fe78f0 xul!MessageLoop::Run+0x1d
+0d 0018f1b8 14090f07 xul!nsBaseAppShell::Run+0x50
+0e 0018f1c8 1509823f xul!nsAppShell::Run+0x17
+0f 0018f1e4 1514975a xul!nsAppStartup::Run+0x6f
+10 0018f5e8 15146527 xul!XREMain::XRE_mainRun+0x146a
+11 0018f650 1514c04a xul!XREMain::XRE_main+0x327
+12 0018f768 00215c1e xul!XRE_main+0x3a
+13 0018f940 00214dbd firefox!do_main+0x5ae
+14 0018f9e4 0021662e firefox!NS_internal_main+0x18d
+15 0018fa18 0021a269 firefox!wmain+0x12e
+16 0018fa60 76e338f4 firefox!__tmainCRTStartup+0xfe
+17 0018fa74 77d656c3 KERNEL32!BaseThreadInitThunk+0x24
+18 0018fabc 77d6568e ntdll!__RtlUserThreadStart+0x2f
+19 0018facc 00000000 ntdll!_RtlUserThreadStart+0x1b
+</samp></pre>
+
+
+<p>Let us examine the code at frame 3:</p>
+
+<pre><samp>
+14069042 6a04            push    4
+14069044 68ff1d0000      push    1DFFh
+14069049 8b5508          mov     edx,dword ptr [ebp+8]
+1406904c 2b55f8          sub     edx,dword ptr [ebp-8]
+1406904f 52              push    edx
+14069050 6a00            push    0
+14069052 6a00            push    0
+14069054 ff159cc57d19    call    dword ptr [xul!_imp__MsgWaitForMultipleObjectsEx (197dc59c)]
+1406905a 8945f4          mov     dword ptr [ebp-0Ch],eax
+</samp></pre>
+
+
+<p>Notice the function call to <code>MsgWaitForMultipleObjectsEx</code> occurs indirectly;
+the call instruction is referencing a pointer within the <code>xul.dll</code> binary
+itself. This is the IAT entry that corresponds to that function.</p>
+
+<p>Now, if I load <code>mozdbgext</code>, I can take the address of that IAT entry and execute
+the following command:</p>
+
+<pre><samp>
+0:000> !iat 0x197dc59c
+Expected target: USER32.dll!MsgWaitForMultipleObjectsEx
+Actual target: USER32!MsgWaitForMultipleObjectsEx+0x0
+</samp></pre>
+
+
+<p><code>!iat</code> has done two things for us:</p>
+
+<ol>
+<li>It did a reverse lookup to determine the module and function name for the
+import that corresponds to that particular IAT entry; and</li>
+<li>It followed the IAT pointer and determined the symbol at the target address.</li>
+</ol>
+
+
+<p>Normally we want both the expected and actual targets to match. If they don&rsquo;t,
+we should investigate further, as this mismatch may indicate that the IAT has
+been patched by a third party.</p>
+
+<p>Note that <code>!iat</code> command is breakpad aware (provided that you&rsquo;ve already
+loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Microsoft
+symbol engine as necessary.</p>
+
+<p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
+names for the IAT entries, you need to enter the hexadeicmal representation of
+the pointer.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Announcing mozdbgext]]></title>
@@ -594,101 +702,6 @@ Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desk
 allocates a kernel handle that becomes signalled when physical memory is running
 low. Gecko already has facilities for handling memory pressure events on other
 platforms, so we should probably add this to the Win32 port.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
-    <link href="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/"/>
-    <updated>2015-03-12T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful</id>
-    <content type="html"><![CDATA[<p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
-
-<p>Today I want to talk about some code that we imported from Chromium some time
-ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
-
-<p><figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
-<span class='line-number'>262</span>
-<span class='line-number'>263</span>
-<span class='line-number'>264</span>
-<span class='line-number'>265</span>
-<span class='line-number'>266</span>
-<span class='line-number'>267</span>
-<span class='line-number'>268</span>
-<span class='line-number'>269</span>
-<span class='line-number'>270</span>
-<span class='line-number'>271</span>
-<span class='line-number'>272</span>
-<span class='line-number'>273</span>
-<span class='line-number'>274</span>
-<span class='line-number'>275</span>
-<span class='line-number'>276</span>
-<span class='line-number'>277</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
-</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
-</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
-</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
-</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
-</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
-</span><span class='line'>    <span class="c1">// capture).</span>
-</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
-</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
-</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
-</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
-</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>This code is wrong. <strong>Very</strong> wrong.</p>
-
-<p>Let us start with the calls to <code>GetQueueStatus</code> and <code>PeekMessage</code>. Those APIs
-mark any messages already in the thread&rsquo;s message queue as having been seen,
-such that they are no longer considered &ldquo;new.&rdquo; Even though those function calls
-do not remove messages from the queue, any messages that were in the queue at
-this point are considered to be &ldquo;old.&rdquo;</p>
-
-<p>The logic in this code snippet is essentially saying, &ldquo;if the queue contains
-mouse messages that do not belong to this thread, then they must belong to an
-attached thread.&rdquo; The code then calls <code>WaitMessage</code> in an effort to give the
-other thread(s) a chance to process their mouse messages. This is where the code
-goes off the rails.</p>
-
-<p>The <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms644956%28v=vs.85%29.aspx">documentation</a>
-for <code>WaitMessage</code> states the following:</p>
-
-<blockquote><p>Note that <code>WaitMessage</code> does not return if there is unread input in the message
-queue after the thread has called a function to check the queue. This is
-because functions such as <code>PeekMessage</code>, <code>GetMessage</code>, <code>GetQueueStatus</code>,
-<code>WaitMessage</code>, <code>MsgWaitForMultipleObjects</code>, and <code>MsgWaitForMultipleObjectsEx</code>
-check the queue and then change the state information for the queue so that
-the input is no longer considered new. A subsequent call to <code>WaitMessage</code> will
-not return until new input of the specified type arrives. The existing unread
-input (received prior to the last time the thread checked the queue) is ignored.</p></blockquote>
-
-<p><code>WaitMessage</code> will only return if there is <em>a new</em> (as opposed to <em>any</em>) message
-in the queue for the calling thread. Any messages for the calling thread that
-were already in there at the time of the <code>GetQueueStatus</code> and <code>PeekMessage</code> calls
-are no longer new, so they are ignored.</p>
-
-<p>There might very well be a message at the head of that queue that should be
-processed by the current thread. Instead it is ignored while we wait for other
-threads. Here is the crux of the problem: we&rsquo;re waiting on other threads whose
-input queues are attached to our own! That other thread can&rsquo;t process its
-messages because our thread has messages in front of its messages; on the other
-hand, our thread has blocked itself!</p>
-
-<p>The only way to break this deadlock is for new messages to be added to the queue.
-That is a big reason why we&rsquo;re seeing things like <a title="Page doesn't load/render if the mouse is not moving" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1105386">bug 1105386</a>: Moving the
-mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</p>
-
-<p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
-going to be getting rid of this code in third-party binaries that attach their
-own windows to Firefox&rsquo;s windows.</p>
 ]]></content>
   </entry>
   

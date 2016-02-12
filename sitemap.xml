@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/</loc>
+    <lastmod>2016-02-11T18:30:00-07:00</lastmod>
+  </url>
+  <url>
     <loc>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/</loc>
     <lastmod>2016-01-26T12:45:00-07:00</lastmod>
   </url>
@@ -96,5 +100,8 @@
   </url>
   <url>
     <loc>http://dblohm7.ca/blog/categories/dll-injection/</loc>
+  </url>
+  <url>
+    <loc>http://dblohm7.ca/blog/categories/mozdbgext/</loc>
   </url>
 </urlset>

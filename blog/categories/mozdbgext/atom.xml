@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: mozdbgext | Aaron Klotz at Mozilla]]></title>
+  <link href="http://dblohm7.ca/blog/categories/mozdbgext/atom.xml" rel="self"/>
+  <link href="http://dblohm7.ca/"/>
+  <updated>2016-02-11T18:34:47-07:00</updated>
+  <id>http://dblohm7.ca/</id>
+  <author>
+    <name><![CDATA[Aaron Klotz]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
+    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
+    <updated>2016-02-11T18:30:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
+    <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
+
+<p>The syntax is pretty simple:</p>
+
+<p><code>!iat &lt;hexadecimal address&gt;</code></p>
+
+<p>This address shouldn&rsquo;t be just any pointer; it should be the address of an
+entry in the current module&rsquo;s import address table (IAT). These addresses
+are typically very identifiable by the <code>_imp_</code> prefix in their symbol names.</p>
+
+<p>The purpose of this extension is to look up the name of the DLL from whom the
+function is being imported. Furthermore, the extension checks the expected
+target address of the import with the actual target address of the import. This
+allows us to detect API hooking via IAT patching.</p>
+
+<h3>An Example Session</h3>
+
+<p>I fired up a local copy of Nightly, attached a debugger to it, and dumped the
+call stack of its main thread:</p>
+
+<pre><samp>
+ # ChildEBP RetAddr
+00 0018ecd0 765aa32a ntdll!NtWaitForMultipleObjects+0xc
+01 0018ee64 761ec47b KERNELBASE!WaitForMultipleObjectsEx+0x10a
+02 0018eecc 1406905a USER32!MsgWaitForMultipleObjectsEx+0x17b
+03 0018ef18 1408e2c8 xul!mozilla::widget::WinUtils::WaitForMessage+0x5a
+04 0018ef84 13fdae56 xul!nsAppShell::ProcessNextNativeEvent+0x188
+05 0018ef9c 13fe3778 xul!nsBaseAppShell::DoProcessNextNativeEvent+0x36
+06 0018efbc 10329001 xul!nsBaseAppShell::OnProcessNextEvent+0x158
+07 0018f0e0 1038e612 xul!nsThread::ProcessNextEvent+0x401
+08 0018f0fc 1095de03 xul!NS_ProcessNextEvent+0x62
+09 0018f130 108e493d xul!mozilla::ipc::MessagePump::Run+0x273
+0a 0018f154 108e48b2 xul!MessageLoop::RunInternal+0x4d
+0b 0018f18c 108e448d xul!MessageLoop::RunHandler+0x82
+0c 0018f1ac 13fe78f0 xul!MessageLoop::Run+0x1d
+0d 0018f1b8 14090f07 xul!nsBaseAppShell::Run+0x50
+0e 0018f1c8 1509823f xul!nsAppShell::Run+0x17
+0f 0018f1e4 1514975a xul!nsAppStartup::Run+0x6f
+10 0018f5e8 15146527 xul!XREMain::XRE_mainRun+0x146a
+11 0018f650 1514c04a xul!XREMain::XRE_main+0x327
+12 0018f768 00215c1e xul!XRE_main+0x3a
+13 0018f940 00214dbd firefox!do_main+0x5ae
+14 0018f9e4 0021662e firefox!NS_internal_main+0x18d
+15 0018fa18 0021a269 firefox!wmain+0x12e
+16 0018fa60 76e338f4 firefox!__tmainCRTStartup+0xfe
+17 0018fa74 77d656c3 KERNEL32!BaseThreadInitThunk+0x24
+18 0018fabc 77d6568e ntdll!__RtlUserThreadStart+0x2f
+19 0018facc 00000000 ntdll!_RtlUserThreadStart+0x1b
+</samp></pre>
+
+
+<p>Let us examine the code at frame 3:</p>
+
+<pre><samp>
+14069042 6a04            push    4
+14069044 68ff1d0000      push    1DFFh
+14069049 8b5508          mov     edx,dword ptr [ebp+8]
+1406904c 2b55f8          sub     edx,dword ptr [ebp-8]
+1406904f 52              push    edx
+14069050 6a00            push    0
+14069052 6a00            push    0
+14069054 ff159cc57d19    call    dword ptr [xul!_imp__MsgWaitForMultipleObjectsEx (197dc59c)]
+1406905a 8945f4          mov     dword ptr [ebp-0Ch],eax
+</samp></pre>
+
+
+<p>Notice the function call to <code>MsgWaitForMultipleObjectsEx</code> occurs indirectly;
+the call instruction is referencing a pointer within the <code>xul.dll</code> binary
+itself. This is the IAT entry that corresponds to that function.</p>
+
+<p>Now, if I load <code>mozdbgext</code>, I can take the address of that IAT entry and execute
+the following command:</p>
+
+<pre><samp>
+0:000> !iat 0x197dc59c
+Expected target: USER32.dll!MsgWaitForMultipleObjectsEx
+Actual target: USER32!MsgWaitForMultipleObjectsEx+0x0
+</samp></pre>
+
+
+<p><code>!iat</code> has done two things for us:</p>
+
+<ol>
+<li>It did a reverse lookup to determine the module and function name for the
+import that corresponds to that particular IAT entry; and</li>
+<li>It followed the IAT pointer and determined the symbol at the target address.</li>
+</ol>
+
+
+<p>Normally we want both the expected and actual targets to match. If they don&rsquo;t,
+we should investigate further, as this mismatch may indicate that the IAT has
+been patched by a third party.</p>
+
+<p>Note that <code>!iat</code> command is breakpad aware (provided that you&rsquo;ve already
+loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Microsoft
+symbol engine as necessary.</p>
+
+<p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
+names for the IAT entries, you need to enter the hexadeicmal representation of
+the pointer.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Announcing mozdbgext]]></title>
+    <link href="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
+    <updated>2016-01-26T12:45:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
+    <content type="html"><![CDATA[<p>A well-known problem at Mozilla is that, while most of our desktop users run
+Windows, most of Mozilla&rsquo;s developers do not. There are a lot of problems that
+result from that, but one of the most frustrating to me is that sometimes
+those of us that actually use Windows for development find ourselves at a
+disadvantage when it comes to tooling or other productivity enhancers.</p>
+
+<p>In many ways this problem is also a Catch-22: People don&rsquo;t want to use Windows
+for many reasons, but tooling is big part of the problem. OTOH, nobody is
+motivated to improve the tooling situation if nobody is actually going to
+use them.</p>
+
+<p>A couple of weeks ago my frustrations with the situation boiled over when I
+learned that our <code>Cpp</code> unit test suite could not log symbolicated call stacks,
+resulting in my filing of <a title="cppunittests do not look up breakpad symbols for logged stack traces" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1238305">bug 1238305</a> and <a title="Set _NT_SYMBOL_PATH on Windows test machines" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1240605">bug 1240605</a>. Not only could we
+not log those stacks, in many situations we could not view them in a debugger
+either.</p>
+
+<p>Due to the fact that PDB files consume a large amount of disk space, we don&rsquo;t
+keep those when building from integration or try repositories. Unfortunately
+they are be quite useful to have when there is a build failure. Most of our
+integration builds, however, do include breakpad symbols. Developers may also
+explicitly <a href="https://wiki.mozilla.org/ReleaseEngineering/TryServer#Getting_debug_symbols">request symbols</a>
+for their try builds.</p>
+
+<p>A couple of years ago I had begun working on a WinDbg debugger extension that
+was tailored to Mozilla development. It had mostly bitrotted over time, but I
+decided to resurrect it for a new purpose: to help WinDbg<sup><a href="#fn1" id="r1">*</a></sup>
+grok breakpad.</p>
+
+<h2>Enter mozdbgext</h2>
+
+<p><a href="https://github.com/dblohm7/mozdbgext"><code>mozdbgext</code></a> is the result. This extension
+adds a few commands that makes Win32 debugging with breakpad a little bit easier.</p>
+
+<p>The original plan was that I wanted <code>mozdbgext</code> to load breakpad symbols and then
+insert them into the debugger&rsquo;s symbol table via the <a href="https://msdn.microsoft.com/en-us/library/windows/hardware/ff537943%28v=vs.85%29.aspx"><code>IDebugSymbols3::AddSyntheticSymbol</code></a>
+API. Unfortunately the design of this API is not well equipped for bulk loading
+of synthetic symbols: each individual symbol insertion causes the debugger to
+re-sort its entire symbol table. Since <code>xul.dll</code>&rsquo;s quantity of symbols is in the
+six-figure range, using this API to load that quantity of symbols is
+prohibitively expensive. I tweeted a Microsoft PM who works on Debugging Tools
+for Windows, asking if there would be any improvements there, but it sounds like
+this is not going to be happening any time soon.</p>
+
+<p>My original plan would have been ideal from a UX perspective: the breakpad
+symbols would look just like any other symbols in the debugger and could be
+accessed and manipulated using the same set of commands. Since synthetic symbols
+would not work for me in this case, I went for &ldquo;Plan B:&rdquo; Extension commands that
+are separate from, but analagous to, regular WinDbg commands.</p>
+
+<p>I plan to continuously improve the commands that are available. Until I have a
+proper README checked in, I&rsquo;ll introduce the commands here.</p>
+
+<h3>Loading the Extension</h3>
+
+<ol>
+<li>Use the <code>.load</code> command: <code>.load &lt;path_to_mozdbgext_dll&gt;</code></li>
+</ol>
+
+
+<h3>Loading the Breakpad Symbols</h3>
+
+<ol>
+<li>Extract the breakpad symbols into a directory.</li>
+<li>In the debugger, enter <code>!bploadsyms &lt;path_to_breakpad_symbol_directory&gt;</code></li>
+<li>Note that this command will take some time to load all the relevant symbols.</li>
+</ol>
+
+
+<h3>Working with Breakpad Symbols</h3>
+
+<p><strong>Note: You must have successfully run the <code>!bploadsyms</code> command first!</strong></p>
+
+<p>As a general guide, I am attempting to name each breakpad command similarly to
+the native WinDbg command, except that the command name is prefixed by <code>!bp</code>.</p>
+
+<ul>
+<li>Stack trace: <code>!bpk</code></li>
+<li>Find nearest symbol to address: <code>!bpln &lt;address&gt;</code> where <em>address</em> is specified
+as a hexadecimal value.</li>
+</ul>
+
+
+<h3>Downloading windbgext</h3>
+
+<p>I have pre-built a <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/mozdbgext.dll?raw=true">32-bit binary</a>
+(which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
+but the code should be source compatible.</p>
+
+<p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
+and do not work correctly yet. Please stick to the documented commands at this
+time.</p>
+
+<hr />
+
+<p><sup><a href="#r1" id="fn1">*</a></sup> When I write &ldquo;WinDbg&rdquo;, I am really
+referring to any debugger in the <em>Debugging Tools for Windows</em> package,
+including <code>cdb</code>.</p>
+]]></content>
+  </entry>
+  
+</feed>
