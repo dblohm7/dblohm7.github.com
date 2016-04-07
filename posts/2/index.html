@@ -9,8 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="I have spent a lot of time this quarter working on bug 998863, &ldquo;Asynchronous
-Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
+  <meta name="description" content="Something that I&rsquo;ve been noticing on numerous social media and discussion forum
+sites is that whenever Firefox comes up, inevitably there are &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -52,7 +52,7 @@ Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
   
-    <h2>My adventures as a member of Mozilla&#8217;s Desktop Performance Team</h2>
+    <h2>My adventures as a member of Mozilla&#8217;s Platform Integration Team</h2>
   
 </hgroup>
 
@@ -79,6 +79,173 @@ Initialization of Out-of-process Plugins.&rdquo; While the bug &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-08-14T14:00:00-06:00" pubdate data-updated="true"></time>
+        
+           | <a href="/blog/2014/08/14/diffusion-of-responsibility/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Something that I&rsquo;ve been noticing on numerous social media and discussion forum
+sites is that whenever Firefox comes up, inevitably there are comments in those
+threads about Firefox performance. Given my role at Mozilla, these comments are
+of particular interest to me.</p>
+
+<p>The reaction to roc&rsquo;s <a href="http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html">recent blog post</a>
+has motivated me enough to respond to a specific subset of comments. These
+comments all exhibit a certain pattern: their authors are experiencing problems
+with Firefox, they are very dissatisfied, but they are not discussing them in a
+way that is actionable by Mozilla.</p>
+
+<h2>How Mozilla Finds Problems</h2>
+
+<p>Mozilla encourages our contributors to run prerelease versions of Firefox,
+especially <a href="http://nightly.mozilla.org">Nightly</a> builds. This allows us to do
+some good old-fashioned dogfooding during the development of a Firefox release.</p>
+
+<p>We also have many tools that run as part of our continuous integration
+infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
+tracking, deadlock detection, assertions, Talos performance tests, and xperf are
+some of the various tools that we apply to our builds. I do not claim that this
+list is exhaustive! :-)</p>
+
+<p>We use numerous technologies to discover problems that occur while running on
+our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
+reports <a href="https://crash-stats.mozilla.com/home/products/Firefox">data</a> about the
+crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">Telemetry</a>
+that, when consented to, send us useful information for discovering problems.</p>
+
+<p>Our ability to analyze crash report/FHR/telemetry data is limited to those users
+who consent to share it with us. As much as I am proud of the fact that we
+respect the privacy of our users, this means that we only receive data from a
+fraction of them; many users who are experiencing problems are not included in
+this data.</p>
+
+<p>Despite the fact that we have all of these wonderful tools to help us deliver
+quality releases, the fact is that they cannot exhaustively catch every possible
+bug that is encountered out in the wild. There are too many combinations of
+extensions and configurations out there to possibly allow us to catch
+everything before release.</p>
+
+<p>That&rsquo;s where you, our users, come in!</p>
+
+<h2>If You See Something, Say Something!</h2>
+
+<p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
+I should know &ndash; I do it with the best of them! Having said that, they are also
+terrible for the purposes of bug reporting!</p>
+
+<p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
+problems and report them. Unfortunately that is not always the case, especially
+with a browser that is as configurable as Firefox.</p>
+
+<h3>Reporting Bugs</h3>
+
+<p>If you are experiencing a bug, the best way to ensure that something can be done
+about your bug is to <a href="https://bugzilla.mozilla.org/enter_bug.cgi?format=guided">report it</a>
+in Bugzilla. This might seem a little bit intimidating for somebody who is new
+to bug reporting, but I assure you, Mozillians are really nice! As long as you
+follow the <a href="https://bugzilla.mozilla.org/page.cgi?id=etiquette.html">etiquette guidelines</a>,
+you&rsquo;ll be fine! One suggestion though: try to follow our
+<a href="https://developer.mozilla.org/en-US/docs/Mozilla/QA/Bug_writing_guidelines">bug writing guidelines</a>.
+Doing so will maximize the likelihood of a contributor being able to reproduce
+your problem. In addition to these suggestions for bug filing, I also suggest
+including certain types of data for specific types of problems:</p>
+
+<h3>Reporting a Bug for High Memory Usage</h3>
+
+<p>If you&rsquo;re experiencing problems with Firefox&rsquo;s memory use, open a tab, and
+point your browser to <code>about:memory</code>. This nifty feature provides a breakdown
+of Firefox memory consumption. Save that report and attach it to the bug that
+you&rsquo;ve filed.</p>
+
+<h3>Reporting a Bug for Slowness or Heavy CPU Usage</h3>
+
+<p>If you want report a problem with Firefox being slow and/or mysteriously
+consuming large amounts of CPU time, the best way to help us is
+is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
+[<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
+user profile that stores your settings and browser history &ndash; they are different
+things with the same name.</em>] This tool tracks how Firefox uses your CPU over
+time. If you are able to attach a profile that was taken during a period of time
+where Firefox was running poorly, it will help us understand what exactly Firefox
+was doing. Unfortunately this is tool requires a bit of technical savvy, but
+attaching the URL of an uploaded profile to your performance bug can be very helpful.</p>
+
+<h3>Reporting a Bug for a Persistent, Reproducable Crash</h3>
+
+<p>As you can see in our <a href="https://crash-stats.mozilla.com/home/products/Firefox">crash report data</a>,
+crashes reported to Mozilla are ranked by frequency. As you might expect, this
+implies that it&rsquo;s often the squeaky wheels that get the grease.</p>
+
+<p>If you have an easily reproducable crash and you are sending your reports to
+Mozilla, you can help us by pointing Firefox to <code>about:crashes</code>. This page lists
+all of the crash reports that have been generated on your computer. If the crash
+that you are experiencing isn&rsquo;t on our list of top crashers, you can still help
+us to fix it: filing a bug that includes multiple crash report URLs from your
+<code>about:crashes</code> screen will help tremendously.</p>
+
+<h3>Reporting a Bug for a Website that Looks Wrong in Firefox</h3>
+
+<p>I&rsquo;d suggest reporting your problem over at <a href="http://webcompat.com">webcompat.com</a>.
+Volunteers will review your report and determine whether your problem is caused
+by the website or by Firefox, and file a bug with the appropriate entity.</p>
+
+<h3>I have a problem that isn&rsquo;t listed here. What should I do?</h3>
+
+<p>Send us <a href="https://input.mozilla.org/en-US/feedback">feedback</a>!</p>
+
+<h2>In Conclusion</h2>
+
+<p>If there is one idea that you can take away from this post (a TL;DR, if you will),
+it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</em></p>
+
+<p>Taking an active role in the Mozilla community by reporting your issues through
+the proper channels is the best way to ensure that your problems can be fixed.</p>
+
+<p><strong>EDIT:</strong> To be clear: What I am suggesting is that users who are enthusiastic
+enough to post a comment to Hacker News (for example) should also be savvy
+enough to be able to file a proper bug report. Please do not misconstrue this
+post as a demand that novice users start filing bugs.</p>
+
+<p><strong>EDIT August 15, 2014:</strong> Nick Nethercote just <a href="https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/">blogged</a>
+about a tricky memory bug that couldn&rsquo;t have been diagnosed without the help of
+a Redditor whose complaint we steered to Bugzilla.</p>
+
+<p><strong>EDIT August 23, 2014:</strong> Wow, this has blown up. More edits to update this post
+with additional information in repose to some of the questions posted in the
+comments. Thanks for reading!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -599,7 +766,7 @@ there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchroniz
 <span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='cpp'><span class='line'>      <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
 </span><span class='line'>      <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
-</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">),</span>
 </span><span class='line'>                        <span class="n">FALSE</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -629,6 +796,10 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
       </li>
     
@@ -642,10 +813,6 @@ window underneath.</p>
     
       <li class="post">
         <a href="/blog/2015/08/30/on-webextensions/">On WebExtensions</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a>
       </li>
     
   </ul>

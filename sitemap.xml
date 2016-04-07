@@ -1,107 +1,114 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/</loc>
-    <lastmod>2016-02-11T18:30:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/</loc>
-    <lastmod>2016-01-26T12:45:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/</loc>
-    <lastmod>2016-01-11T13:00:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2015/08/30/on-webextensions/</loc>
-    <lastmod>2015-08-30T02:00:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/</loc>
-    <lastmod>2015-07-28T11:30:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/</loc>
-    <lastmod>2015-03-12T15:00:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/</loc>
-    <lastmod>2015-03-03T17:28:06-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/</loc>
-    <lastmod>2014-12-31T12:00:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/</loc>
-    <lastmod>2014-08-21T10:00:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/</loc>
-    <lastmod>2014-08-14T14:00:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/</loc>
-    <lastmod>2014-06-17T02:30:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/</loc>
-    <lastmod>2013-06-12T18:00:00-06:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/</loc>
-    <lastmod>2013-02-15T17:00:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/</loc>
-    <lastmod>2012-11-22T10:22:00-07:00</lastmod>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/archives/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/win32/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/plugins/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/new-features/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/mozilla/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/sps/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/main-thread-i-slash-o/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/async/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/shutdown/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/undocumented-windows/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/chromium/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/philosophizing/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/debugging/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/dll-injection/</loc>
-  </url>
-  <url>
-    <loc>http://dblohm7.ca/blog/categories/mozdbgext/</loc>
-  </url>
+<url>
+<loc>http://dblohm7.ca/blog/2016/04/06/new-team-new-project/</loc>
+<lastmod>2016-04-06T21:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/</loc>
+<lastmod>2016-02-11T18:30:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/</loc>
+<lastmod>2016-01-26T12:45:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/</loc>
+<lastmod>2016-01-11T13:00:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2015/08/30/on-webextensions/</loc>
+<lastmod>2015-08-30T02:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/</loc>
+<lastmod>2015-07-28T11:30:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/</loc>
+<lastmod>2015-03-12T15:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/</loc>
+<lastmod>2015-03-03T17:28:06-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/</loc>
+<lastmod>2014-12-31T12:00:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/</loc>
+<lastmod>2014-08-21T10:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/</loc>
+<lastmod>2014-08-14T14:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/</loc>
+<lastmod>2014-06-17T02:30:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/</loc>
+<lastmod>2013-06-12T18:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/</loc>
+<lastmod>2013-02-15T17:00:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/</loc>
+<lastmod>2012-11-22T10:22:00-07:00</lastmod>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/archives/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/win32/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/plugins/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/new-features/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/mozilla/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/sps/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/main-thread-i-slash-o/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/async/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/shutdown/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/undocumented-windows/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/chromium/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/philosophizing/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/debugging/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/dll-injection/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/mozdbgext/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/a11y/</loc>
+</url>
 </urlset>

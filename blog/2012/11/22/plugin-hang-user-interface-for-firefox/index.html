@@ -54,7 +54,7 @@ an out-of-process plugin &hellip;">
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
   
-    <h2>My adventures as a member of Mozilla&#8217;s Desktop Performance Team</h2>
+    <h2>My adventures as a member of Mozilla&#8217;s Platform Integration Team</h2>
   
 </hgroup>
 
@@ -191,7 +191,7 @@ there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchroniz
 <span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='cpp'><span class='line'>      <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
 </span><span class='line'>      <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
-</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">),</span>
 </span><span class='line'>                        <span class="n">FALSE</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure>
 
@@ -268,6 +268,10 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
       </li>
     
@@ -281,10 +285,6 @@ window underneath.</p>
     
       <li class="post">
         <a href="/blog/2015/08/30/on-webextensions/">On WebExtensions</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a>
       </li>
     
   </ul>

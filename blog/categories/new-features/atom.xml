@@ -4,7 +4,7 @@
   <title><![CDATA[Category: new features | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/new-features/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-02-11T20:14:24-07:00</updated>
+  <updated>2016-04-06T20:50:24-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -130,7 +130,7 @@ there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchroniz
 <span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='cpp'><span class='line'>      <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
 </span><span class='line'>      <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
-</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">),</span>
 </span><span class='line'>                        <span class="n">FALSE</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
