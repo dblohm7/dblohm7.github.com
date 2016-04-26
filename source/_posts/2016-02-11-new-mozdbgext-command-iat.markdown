@@ -97,5 +97,5 @@ loaded the symbols using `!bploadsyms`) but can fall back to the Microsoft
 symbol engine as necessary.
 
 Further note that the `!iat` command does not yet accept the `_imp_` symbolic
-names for the IAT entries, you need to enter the hexadeicmal representation of
+names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.
