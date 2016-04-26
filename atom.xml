@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-04-26T15:14:07-06:00</updated>
+  <updated>2016-04-26T15:17:35-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -275,9 +275,7 @@ as a hexadecimal value.</li>
 
 <h3>Downloading windbgext</h3>
 
-<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>)
-(which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
-but the code should be source compatible.</p>
+<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>) available for download.</p>
 
 <p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
 and do not work correctly yet. Please stick to the documented commands at this
