@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-04-06T20:50:24-06:00</updated>
+  <updated>2016-04-26T15:14:07-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -180,7 +180,7 @@ loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Micr
 symbol engine as necessary.</p>
 
 <p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadeicmal representation of
+names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.</p>
 ]]></content>
   </entry>
