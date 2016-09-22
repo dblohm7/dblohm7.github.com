@@ -3,7 +3,7 @@ layout: post
 title: "New Team, New Project"
 date: 2016-04-06 21:00:00 -0600
 comments: true
-categories: [Mozilla, Win32, a11y]
+categories: [Mozilla, Win32, COM, a11y]
 ---
 In February of this year I switched teams: After 3+ years on Mozilla's 
 Performance Team, and after having the word "performance" in my job description
