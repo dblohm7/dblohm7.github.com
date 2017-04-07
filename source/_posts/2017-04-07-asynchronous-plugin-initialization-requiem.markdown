@@ -22,18 +22,18 @@ plugin had not yet completed its asynchronous initialization.
 As [described on MDN](https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins), 
 the DOM queries a plugin for scriptability by calling `NPP_GetValue` with the 
 `NPPVpluginScriptableNPObject` constant. With async plugin init, we did not 
-return the true scriptable object back to the browser. Instead, we returned 
+return the true scriptable object back to the browser. Instead we returned 
 a surrogate object. This meant that we did not need to synchronously wait for 
 the plugin to initialize before returning a scriptable object to the DOM.
 
 If the DOM subsequently called into the surrogate object, the surrogate would 
 be forced to synchronize with the plugin. There was a limit on how much fakery 
-the async surrogate could do until eventually an API call would force the 
-browser to synchronize with the plugin -- after all, the NPAPI itself is entirely 
-synchronous. While you may wonder whether that design actually bought us anything, 
-performance profiles that I took at the time did indeed demonstrate that the 
-asynchronous surrogate scripting object did buy us enough additional concurrency 
-to make it worthwhile.
+the async surrogate could do once an API call forced the browser to synchronize 
+with the plugin -- after all, the NPAPI itself is entirely synchronous. While 
+you may question whether that design actually bought us anything, performance 
+profiles that I took at the time did indeed demonstrate that the asynchronous 
+surrogate scripting object did buy us enough additional concurrency to make it 
+worthwhile.
 
 Once the surrogate object had synchronized with the plugin, it would then mostly 
 act as a pass-through to the plugin's true scriptable object, with one notable
