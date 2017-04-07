@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>New Team, New Project - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-36293908-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s Platform Integration Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">New Team, New Project</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-04-06T21:00:00-06:00" pubdate data-updated="true"></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
+in some form or another for several years prior to that, I decided that it was
+time for me to move on to new challenges. Fortunately the Platform org was
+willing to have me set up shop under the (e10s|sandboxing|platform integration)
+umbrella.</p>
+
+<p>I am pretty excited about this new role!</p>
+
+<p>My first project is to sort out the accessibility situation under Windows e10s.
+This started back at Mozlando last December. A number of engineers from across
+the Platform org, plus me, got together to brainstorm. Not too long after we had
+all returned home, I ended up making a suggestion on an email thread that has
+evolved into the core concept that I am currently attempting. As is typical at
+Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
+An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+
+<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
+in time for our London all-hands at the end of Q2. Hopefully we will be able to
+deliver on that!</p>
+
+<h2>Some Additional Notes</h2>
+
+<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
+feel that these ideas are strong enough to commit to a wiki yet, but I do want
+them to be publicly available.</p>
+
+<p>Once concern that our colleagues at NVAccess have identified is that the
+current COM interfaces are too chatty; this is a major reason why screen
+readers frequently inject libraries into the Firefox address space. If we serve
+our content a11y objects as remote COM objects, there is concern that performance
+would suffer. This concern is not due to latency, but rather due to frequency
+of calls; one function call does not provide sufficient information to the a11y
+client. As a result, multiple round trips are required to fetch all of the
+information that is required for a particular DOM node.</p>
+
+<p>My gut feeling about this is that this is probably a legitimate concern, however
+we cannot make good decisions without quantifying the performance. My plan going
+forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
+followed by work on reducing round trips as necessary.</p>
+
+<h2>Smart Proxies</h2>
+
+<p>One idea that was discussed is the idea of the content process speculatively
+sending information to the chrome process that might be needed in the future.
+For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
+will be queried off that interface. A smart proxy could ship that data across
+the RPC channel during marshaling so that querying that additional information
+does not require additional round trips.</p>
+
+<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
+information about how to do this and am posting it here for posterity:</p>
+
+<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
+Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-04-06T21:00:00-06:00" pubdate data-updated="true"></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/a11y/'>a11y</a>, <a class='category' href='/blog/categories/com/'>com</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/win32/'>win32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/02/11/new-mozdbgext-command-iat/" title="Previous Post: New mozdbgext command: !iat">&laquo; New mozdbgext command: !iat</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/" title="Next Post: Asynchronous Plugin Initialization: Requiem">Asynchronous Plugin Initialization: Requiem &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/">Asynchronous Plugin Initialization: Requiem</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/26/announcing-mozdbgext/">Announcing Mozdbgext</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">Bugs From Hell: Injected Third-party Code + Detours = a Bad Time</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2016/04/06/new-team-new-project/';
+        var disqus_url = 'http://dblohm7.ca/blog/2016/04/06/new-team-new-project/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

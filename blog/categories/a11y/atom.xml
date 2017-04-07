@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: a11y | Aaron Klotz at Mozilla]]></title>
+  <link href="http://dblohm7.ca/blog/categories/a11y/atom.xml" rel="self"/>
+  <link href="http://dblohm7.ca/"/>
+  <updated>2017-04-07T15:11:54-06:00</updated>
+  <id>http://dblohm7.ca/</id>
+  <author>
+    <name><![CDATA[Aaron Klotz]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[New Team, New Project]]></title>
+    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
+    <updated>2016-04-06T21:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
+    <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
+in some form or another for several years prior to that, I decided that it was
+time for me to move on to new challenges. Fortunately the Platform org was
+willing to have me set up shop under the (e10s|sandboxing|platform integration)
+umbrella.</p>
+
+<p>I am pretty excited about this new role!</p>
+
+<p>My first project is to sort out the accessibility situation under Windows e10s.
+This started back at Mozlando last December. A number of engineers from across
+the Platform org, plus me, got together to brainstorm. Not too long after we had
+all returned home, I ended up making a suggestion on an email thread that has
+evolved into the core concept that I am currently attempting. As is typical at
+Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
+An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+
+<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
+in time for our London all-hands at the end of Q2. Hopefully we will be able to
+deliver on that!</p>
+
+<h2>Some Additional Notes</h2>
+
+<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
+feel that these ideas are strong enough to commit to a wiki yet, but I do want
+them to be publicly available.</p>
+
+<p>Once concern that our colleagues at NVAccess have identified is that the
+current COM interfaces are too chatty; this is a major reason why screen
+readers frequently inject libraries into the Firefox address space. If we serve
+our content a11y objects as remote COM objects, there is concern that performance
+would suffer. This concern is not due to latency, but rather due to frequency
+of calls; one function call does not provide sufficient information to the a11y
+client. As a result, multiple round trips are required to fetch all of the
+information that is required for a particular DOM node.</p>
+
+<p>My gut feeling about this is that this is probably a legitimate concern, however
+we cannot make good decisions without quantifying the performance. My plan going
+forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
+followed by work on reducing round trips as necessary.</p>
+
+<h2>Smart Proxies</h2>
+
+<p>One idea that was discussed is the idea of the content process speculatively
+sending information to the chrome process that might be needed in the future.
+For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
+will be queried off that interface. A smart proxy could ship that data across
+the RPC channel during marshaling so that querying that additional information
+does not require additional round trips.</p>
+
+<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
+information about how to do this and am posting it here for posterity:</p>
+
+<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
+Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
+]]></content>
+  </entry>
+  
+</feed>
