@@ -69,10 +69,11 @@ situation where it must absolutely produce a definitive result, so this would
 trigger synchronization with the plugin. At this point the plugin would be 
 guaranteed to have finished initializing.
 
-Now we have a problem: JS is already examining the NPAPI scriptable object, 
-however the plugin has completed initializing and set its properties (including 
-the one that we're interested in) on the WebIDL object. JS is already looking too 
-far up the prototype chain!
+Now we have a problem: JS was already examining the NPAPI scriptable object when 
+it blocked to synchronize with the plugin. Meanwhile, the plugin went ahead and 
+set properties (including the one that we're interested in) on the WebIDL object. 
+By the time that JS execution resumes, it would already be looking too far up the 
+prototype chain to see those new properties!
 
 The surrogate needed to be aware of this when it synchronized with the plugin 
 during a property access. If the plugin had already completed its initialization 
@@ -80,7 +81,7 @@ during a property access. If the plugin had already completed its initialization
 property access on to the real NPAPI scriptable object. On the other hand, if a 
 synchronization was performed, the surrogate would first retry the WebIDL object 
 by querying for the WebIDL object's "own" properties, and return the own property
-if it now existed. If no own property exists on the WebIDL object, then the 
+if it now existed. If no own property existed on the WebIDL object, then the 
 surrogate would revert to its "pass through all the things" behaviour.
 
 If I hadn't made the asynchronous surrogate scriptable object do that, we would 
