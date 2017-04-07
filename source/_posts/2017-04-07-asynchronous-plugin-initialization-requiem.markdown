@@ -78,9 +78,10 @@ The surrogate needed to be aware of this when it synchronized with the plugin
 during a property access. If the plugin had already completed its initialization 
 (thus rendering synchronization unnecessary), the surrogate would simply pass the 
 property access on to the real NPAPI scriptable object. On the other hand, if a 
-synchronization was performed, the surrogate would retry the WebIDL object by 
-querying for the WebIDL object's "own" properties, and return the own property
-if it now existed.
+synchronization was performed, the surrogate would first retry the WebIDL object 
+by querying for the WebIDL object's "own" properties, and return the own property
+if it now existed. If no own property exists on the WebIDL object, then the 
+surrogate would revert to its "pass through all the things" behaviour.
 
 If I hadn't made the asynchronous surrogate scriptable object do that, we would 
 have ended up with a strange situation where the DOM's initial property access 
