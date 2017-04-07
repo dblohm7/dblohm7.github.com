@@ -22,22 +22,23 @@ plugin had not yet completed its asynchronous initialization.
 As [described on MDN](https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins), 
 the DOM queries a plugin for scriptability by calling `NPP_GetValue` with the 
 `NPPVpluginScriptableNPObject` constant. With async plugin init, we did not 
-return the true scriptable object back to the browser. Instead we returned 
+return the true NPAPI scriptable object back to the DOM. Instead we returned 
 a surrogate object. This meant that we did not need to synchronously wait for 
-the plugin to initialize before returning a scriptable object to the DOM.
+the plugin to initialize before returning a result back to the DOM.
 
-If the DOM subsequently called into the surrogate object, the surrogate would 
+If the DOM subsequently called into that surrogate object, the surrogate would 
 be forced to synchronize with the plugin. There was a limit on how much fakery 
-the async surrogate could do once an API call forced the browser to synchronize 
-with the plugin -- after all, the NPAPI itself is entirely synchronous. While 
-you may question whether that design actually bought us anything, performance 
-profiles that I took at the time did indeed demonstrate that the asynchronous 
-surrogate scripting object did buy us enough additional concurrency to make it 
-worthwhile.
+the async surrogate could do once the DOM needed a definitive answer -- after 
+all, the NPAPI itself is entirely synchronous. While you may question whether 
+the asynchronous surrogate actually bought us any responsiveness, performance 
+profiles and measurements that I took at the time did indeed demonstrate that 
+the asynchronous surrogate did buy us enough additional concurrency to make it 
+worthwhile. A good number of plugin instantiations were able to complete in 
+time before the DOM made a single invocation was on the surrogate.
 
 Once the surrogate object had synchronized with the plugin, it would then mostly 
-act as a pass-through to the plugin's true scriptable object, with one notable
-exception: property accesses.
+act as a pass-through to the plugin's real NPAPI scriptable object, with one 
+notable exception: property accesses.
 
 The reason for this is not necessarily obvious, so allow me to elaborate:
 
@@ -61,9 +62,12 @@ plugin's initialization might still be in progress, so that property might not
 yet exist.
 
 In the case where the property does not yet exist on the WebIDL object, JavaScript 
-then moves onto the first prototype, which would actually be the async surrogate. 
-The async surrogate now synchronizes with the plugin. At this point the plugin is 
-guaranteed to have finished its initialization.
+fails to retrieve an "own" property. It then moves on to the first prototype 
+and attempts to resolve the property on that. As outlined above, this prototype 
+would actually be the async surrogate. The async surrogate would then be in a 
+situation where it must absolutely produce a definitive result, so this would 
+trigger synchronization with the plugin. At this point the plugin would be 
+guaranteed to have finished initializing.
 
 Now we have a problem: JS is already examining the NPAPI scriptable object, 
 however the plugin has completed initializing and set its properties (including 
@@ -72,7 +76,7 @@ far up the prototype chain!
 
 The surrogate needed to be aware of this when it synchronized with the plugin 
 during a property access. If the plugin had already completed its initialization 
-(rendering synchronization unnecessary), the surrogate would simply pass the 
+(thus rendering synchronization unnecessary), the surrogate would simply pass the 
 property access on to the real NPAPI scriptable object. On the other hand, if a 
 synchronization was performed, the surrogate would retry the WebIDL object by 
 querying for the WebIDL object's "own" properties, and return the own property
@@ -80,7 +84,7 @@ if it now existed.
 
 If I hadn't made the asynchronous surrogate scriptable object do that, we would 
 have ended up with a strange situation where the DOM's initial property access 
-on an embed could fail non-deterministically.
+on an embed could fail non-deterministically during page load.
 
 That's enough chatter for today. I enjoy blogging about my crazy hacks that make 
 the impossible, umm... possible, so maybe I'll write some more of these in the 
