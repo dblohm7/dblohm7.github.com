@@ -46,7 +46,7 @@ The DOM usually sets up a scriptable object as follows:
 <pre><samp>
 this.__proto__.__proto__.__proto__
 </samp></pre>
-* Where `this` is the WebIDL object (ie, content's `&lt;embed&gt;` element);
+* Where `this` is the WebIDL object (ie, content's `<embed>` element);
 * Whose prototype is the NPAPI scriptable object;
 * Whose prototype is the shared WebIDL prototype;
 * Whose prototype is `Object.prototype`.
