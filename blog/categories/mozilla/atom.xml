@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-04-07T16:07:06-06:00</updated>
+  <updated>2017-04-07T16:24:41-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -40,19 +40,19 @@ a surrogate object. This meant that we did not need to synchronously wait for
 the plugin to initialize before returning a scriptable object to the DOM.</p>
 
 <p>If the DOM subsequently called into the surrogate object, the surrogate would
-be forced to synchronize with the plugin. After all, the NPAPI itself is
-entirely synchronous. I could only do so much fakery until eventually I had
-to force the browser to synchronize with the plugin. While you may look at that
-design and wonder whether it actually bought us anything, performance profiles
-that I took at the time did indeed demonstrate that the asynchronous surrogate
-scripting object did buy us enough additional concurrency to make the change
-worthwhile.</p>
+be forced to synchronize with the plugin. There was a limit on how much fakery
+the async surrogate could do until eventually an API call would force the
+browser to synchronize with the plugin &ndash; after all, the NPAPI itself is entirely
+synchronous. While you may wonder whether that design actually bought us anything,
+performance profiles that I took at the time did indeed demonstrate that the
+asynchronous surrogate scripting object did buy us enough additional concurrency
+to make it worthwhile.</p>
 
 <p>Once the surrogate object had synchronized with the plugin, it would then mostly
 act as a pass-through to the plugin&rsquo;s true scriptable object, with one notable
 exception: property accesses.</p>
 
-<p>The reason for this is not necessarily obvious, so allow me to explain:</p>
+<p>The reason for this is not necessarily obvious, so allow me to elaborate:</p>
 
 <p>The DOM usually sets up a scriptable object as follows:</p>
 
