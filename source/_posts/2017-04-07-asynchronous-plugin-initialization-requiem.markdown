@@ -27,19 +27,19 @@ a surrogate object. This meant that we did not need to synchronously wait for
 the plugin to initialize before returning a scriptable object to the DOM.
 
 If the DOM subsequently called into the surrogate object, the surrogate would 
-be forced to synchronize with the plugin. After all, the NPAPI itself is 
-entirely synchronous. I could only do so much fakery until eventually I had 
-to force the browser to synchronize with the plugin. While you may look at that 
-design and wonder whether it actually bought us anything, performance profiles 
-that I took at the time did indeed demonstrate that the asynchronous surrogate 
-scripting object did buy us enough additional concurrency to make the change 
-worthwhile.
+be forced to synchronize with the plugin. There was a limit on how much fakery 
+the async surrogate could do until eventually an API call would force the 
+browser to synchronize with the plugin -- after all, the NPAPI itself is entirely 
+synchronous. While you may wonder whether that design actually bought us anything, 
+performance profiles that I took at the time did indeed demonstrate that the 
+asynchronous surrogate scripting object did buy us enough additional concurrency 
+to make it worthwhile.
 
 Once the surrogate object had synchronized with the plugin, it would then mostly 
 act as a pass-through to the plugin's true scriptable object, with one notable
 exception: property accesses.
 
-The reason for this is not necessarily obvious, so allow me to explain:
+The reason for this is not necessarily obvious, so allow me to elaborate:
 
 The DOM usually sets up a scriptable object as follows:
 
