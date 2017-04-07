@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-04-07T17:04:18-06:00</updated>
+  <updated>2017-04-07T17:06:18-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -47,7 +47,7 @@ the asynchronous surrogate actually bought us any responsiveness, performance
 profiles and measurements that I took at the time did indeed demonstrate that
 the asynchronous surrogate did buy us enough additional concurrency to make it
 worthwhile. A good number of plugin instantiations were able to complete in
-time before the DOM made a single invocation was on the surrogate.</p>
+time before the DOM had made a single invocation on the surrogate.</p>
 
 <p>Once the surrogate object had synchronized with the plugin, it would then mostly
 act as a pass-through to the plugin&rsquo;s real NPAPI scriptable object, with one
