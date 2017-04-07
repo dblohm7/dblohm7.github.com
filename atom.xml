@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-09-22T14:36:17-06:00</updated>
+  <updated>2017-04-07T15:02:54-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -14,654 +14,95 @@
 
   
   <entry>
-    <title type="html"><![CDATA[New Team, New Project]]></title>
-    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
-    <updated>2016-04-06T21:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
-    <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
-Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
-in some form or another for several years prior to that, I decided that it was
-time for me to move on to new challenges. Fortunately the Platform org was
-willing to have me set up shop under the (e10s|sandboxing|platform integration)
-umbrella.</p>
+    <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
+    <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
+    <updated>2017-04-07T15:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
+    <content type="html"><![CDATA[<p>My colleague bsmedberg is going to be removing asynchronous plugin
+initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
+to remain enabled on release, so we cut our losses and cancelled the project
+early in 2016. Now that code is just a bunch of dead weight. With the
+deprecation of non-Flash NPAPI plugins in Firefox 52, our developers are now
+working on simplifying the remaining NPAPI code as much as possible.</p>
 
-<p>I am pretty excited about this new role!</p>
+<p>Obviously the removal of that code does not prevent me from discussing some of
+the more interesting facets of that work.</p>
 
-<p>My first project is to sort out the accessibility situation under Windows e10s.
-This started back at Mozlando last December. A number of engineers from across
-the Platform org, plus me, got together to brainstorm. Not too long after we had
-all returned home, I ended up making a suggestion on an email thread that has
-evolved into the core concept that I am currently attempting. As is typical at
-Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
-An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+<p>Today I am going to talk about how async plugin init worked when web content
+attempted to access a property on a plugin&rsquo;s scriptable object, when that
+plugin had not yet completed its asynchronous initialization.</p>
 
-<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
-in time for our London all-hands at the end of Q2. Hopefully we will be able to
-deliver on that!</p>
+<p>As <a href="https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins">described on MDN</a>,
+the DOM queries a plugin for scriptability by calling <code>NPP_GetValue</code> with the
+<code>NPPVpluginScriptableNPObject</code> constant. With async plugin init, we did not
+return the true scriptable object back to the browser. Instead, we returned
+a surrogate object. This meant that we did not need to synchronously wait for
+the plugin to initialize before returning a scriptable object to the DOM.</p>
 
-<h2>Some Additional Notes</h2>
+<p>If the DOM subsequently called into the surrogate object, the surrogate would
+be forced to synchronize with the plugin. After all, the NPAPI itself is
+entirely synchronous. I could only do so much fakery until eventually I had
+to force the browser to synchronize with the plugin. While you may look at that
+design and wonder whether it actually bought us anything, performance profiles
+that I took at the time did indeed demonstrate that the asynchronous surrogate
+scripting object did buy us enough additional concurrency to make the change
+worthwhile.</p>
 
-<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
-feel that these ideas are strong enough to commit to a wiki yet, but I do want
-them to be publicly available.</p>
+<p>Once the surrogate object had synchronized with the plugin, it would then mostly
+act as a pass-through to the plugin&rsquo;s true scriptable object, with one notable
+exception: property accesses.</p>
 
-<p>Once concern that our colleagues at NVAccess have identified is that the
-current COM interfaces are too chatty; this is a major reason why screen
-readers frequently inject libraries into the Firefox address space. If we serve
-our content a11y objects as remote COM objects, there is concern that performance
-would suffer. This concern is not due to latency, but rather due to frequency
-of calls; one function call does not provide sufficient information to the a11y
-client. As a result, multiple round trips are required to fetch all of the
-information that is required for a particular DOM node.</p>
+<p>The reason for this is not necessarily obvious, so allow me to explain:</p>
 
-<p>My gut feeling about this is that this is probably a legitimate concern, however
-we cannot make good decisions without quantifying the performance. My plan going
-forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
-followed by work on reducing round trips as necessary.</p>
-
-<h2>Smart Proxies</h2>
-
-<p>One idea that was discussed is the idea of the content process speculatively
-sending information to the chrome process that might be needed in the future.
-For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
-will be queried off that interface. A smart proxy could ship that data across
-the RPC channel during marshaling so that querying that additional information
-does not require additional round trips.</p>
-
-<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
-information about how to do this and am posting it here for posterity:</p>
-
-<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
-<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
-Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[New Mozdbgext Command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
-    <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
-    <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
-
-<p>The syntax is pretty simple:</p>
-
-<p><code>!iat &lt;hexadecimal address&gt;</code></p>
-
-<p>This address shouldn&rsquo;t be just any pointer; it should be the address of an
-entry in the current module&rsquo;s import address table (IAT). These addresses
-are typically very identifiable by the <code>_imp_</code> prefix in their symbol names.</p>
-
-<p>The purpose of this extension is to look up the name of the DLL from whom the
-function is being imported. Furthermore, the extension checks the expected
-target address of the import with the actual target address of the import. This
-allows us to detect API hooking via IAT patching.</p>
-
-<h3>An Example Session</h3>
-
-<p>I fired up a local copy of Nightly, attached a debugger to it, and dumped the
-call stack of its main thread:</p>
+<p>The DOM usually sets up a scriptable object as follows:</p>
 
 <pre><samp>
- # ChildEBP RetAddr
-00 0018ecd0 765aa32a ntdll!NtWaitForMultipleObjects+0xc
-01 0018ee64 761ec47b KERNELBASE!WaitForMultipleObjectsEx+0x10a
-02 0018eecc 1406905a USER32!MsgWaitForMultipleObjectsEx+0x17b
-03 0018ef18 1408e2c8 xul!mozilla::widget::WinUtils::WaitForMessage+0x5a
-04 0018ef84 13fdae56 xul!nsAppShell::ProcessNextNativeEvent+0x188
-05 0018ef9c 13fe3778 xul!nsBaseAppShell::DoProcessNextNativeEvent+0x36
-06 0018efbc 10329001 xul!nsBaseAppShell::OnProcessNextEvent+0x158
-07 0018f0e0 1038e612 xul!nsThread::ProcessNextEvent+0x401
-08 0018f0fc 1095de03 xul!NS_ProcessNextEvent+0x62
-09 0018f130 108e493d xul!mozilla::ipc::MessagePump::Run+0x273
-0a 0018f154 108e48b2 xul!MessageLoop::RunInternal+0x4d
-0b 0018f18c 108e448d xul!MessageLoop::RunHandler+0x82
-0c 0018f1ac 13fe78f0 xul!MessageLoop::Run+0x1d
-0d 0018f1b8 14090f07 xul!nsBaseAppShell::Run+0x50
-0e 0018f1c8 1509823f xul!nsAppShell::Run+0x17
-0f 0018f1e4 1514975a xul!nsAppStartup::Run+0x6f
-10 0018f5e8 15146527 xul!XREMain::XRE_mainRun+0x146a
-11 0018f650 1514c04a xul!XREMain::XRE_main+0x327
-12 0018f768 00215c1e xul!XRE_main+0x3a
-13 0018f940 00214dbd firefox!do_main+0x5ae
-14 0018f9e4 0021662e firefox!NS_internal_main+0x18d
-15 0018fa18 0021a269 firefox!wmain+0x12e
-16 0018fa60 76e338f4 firefox!__tmainCRTStartup+0xfe
-17 0018fa74 77d656c3 KERNEL32!BaseThreadInitThunk+0x24
-18 0018fabc 77d6568e ntdll!__RtlUserThreadStart+0x2f
-19 0018facc 00000000 ntdll!_RtlUserThreadStart+0x1b
+this.__proto__.__proto__.__proto__
 </samp></pre>
 
-
-<p>Let us examine the code at frame 3:</p>
-
-<pre><samp>
-14069042 6a04            push    4
-14069044 68ff1d0000      push    1DFFh
-14069049 8b5508          mov     edx,dword ptr [ebp+8]
-1406904c 2b55f8          sub     edx,dword ptr [ebp-8]
-1406904f 52              push    edx
-14069050 6a00            push    0
-14069052 6a00            push    0
-14069054 ff159cc57d19    call    dword ptr [xul!_imp__MsgWaitForMultipleObjectsEx (197dc59c)]
-1406905a 8945f4          mov     dword ptr [ebp-0Ch],eax
-</samp></pre>
-
-
-<p>Notice the function call to <code>MsgWaitForMultipleObjectsEx</code> occurs indirectly;
-the call instruction is referencing a pointer within the <code>xul.dll</code> binary
-itself. This is the IAT entry that corresponds to that function.</p>
-
-<p>Now, if I load <code>mozdbgext</code>, I can take the address of that IAT entry and execute
-the following command:</p>
-
-<pre><samp>
-0:000> !iat 0x197dc59c
-Expected target: USER32.dll!MsgWaitForMultipleObjectsEx
-Actual target: USER32!MsgWaitForMultipleObjectsEx+0x0
-</samp></pre>
-
-
-<p><code>!iat</code> has done two things for us:</p>
-
-<ol>
-<li>It did a reverse lookup to determine the module and function name for the
-import that corresponds to that particular IAT entry; and</li>
-<li>It followed the IAT pointer and determined the symbol at the target address.</li>
-</ol>
-
-
-<p>Normally we want both the expected and actual targets to match. If they don&rsquo;t,
-we should investigate further, as this mismatch may indicate that the IAT has
-been patched by a third party.</p>
-
-<p>Note that <code>!iat</code> command is breakpad aware (provided that you&rsquo;ve already
-loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Microsoft
-symbol engine as necessary.</p>
-
-<p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadecimal representation of
-the pointer.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Announcing Mozdbgext]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
-    <updated>2016-01-26T12:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
-    <content type="html"><![CDATA[<p>A well-known problem at Mozilla is that, while most of our desktop users run
-Windows, most of Mozilla&rsquo;s developers do not. There are a lot of problems that
-result from that, but one of the most frustrating to me is that sometimes
-those of us that actually use Windows for development find ourselves at a
-disadvantage when it comes to tooling or other productivity enhancers.</p>
-
-<p>In many ways this problem is also a Catch-22: People don&rsquo;t want to use Windows
-for many reasons, but tooling is big part of the problem. OTOH, nobody is
-motivated to improve the tooling situation if nobody is actually going to
-use them.</p>
-
-<p>A couple of weeks ago my frustrations with the situation boiled over when I
-learned that our <code>Cpp</code> unit test suite could not log symbolicated call stacks,
-resulting in my filing of <a title="cppunittests do not look up breakpad symbols for logged stack traces" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1238305">bug 1238305</a> and <a title="Set _NT_SYMBOL_PATH on Windows test machines" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1240605">bug 1240605</a>. Not only could we
-not log those stacks, in many situations we could not view them in a debugger
-either.</p>
-
-<p>Due to the fact that PDB files consume a large amount of disk space, we don&rsquo;t
-keep those when building from integration or try repositories. Unfortunately
-they are be quite useful to have when there is a build failure. Most of our
-integration builds, however, do include breakpad symbols. Developers may also
-explicitly <a href="https://wiki.mozilla.org/ReleaseEngineering/TryServer#Getting_debug_symbols">request symbols</a>
-for their try builds.</p>
-
-<p>A couple of years ago I had begun working on a WinDbg debugger extension that
-was tailored to Mozilla development. It had mostly bitrotted over time, but I
-decided to resurrect it for a new purpose: to help WinDbg<sup><a href="#fn1" id="r1">*</a></sup>
-grok breakpad.</p>
-
-<h2>Enter mozdbgext</h2>
-
-<p><a href="https://github.com/dblohm7/mozdbgext"><code>mozdbgext</code></a> is the result. This extension
-adds a few commands that makes Win32 debugging with breakpad a little bit easier.</p>
-
-<p>The original plan was that I wanted <code>mozdbgext</code> to load breakpad symbols and then
-insert them into the debugger&rsquo;s symbol table via the <a href="https://msdn.microsoft.com/en-us/library/windows/hardware/ff537943%28v=vs.85%29.aspx"><code>IDebugSymbols3::AddSyntheticSymbol</code></a>
-API. Unfortunately the design of this API is not well equipped for bulk loading
-of synthetic symbols: each individual symbol insertion causes the debugger to
-re-sort its entire symbol table. Since <code>xul.dll</code>&rsquo;s quantity of symbols is in the
-six-figure range, using this API to load that quantity of symbols is
-prohibitively expensive. I tweeted a Microsoft PM who works on Debugging Tools
-for Windows, asking if there would be any improvements there, but it sounds like
-this is not going to be happening any time soon.</p>
-
-<p>My original plan would have been ideal from a UX perspective: the breakpad
-symbols would look just like any other symbols in the debugger and could be
-accessed and manipulated using the same set of commands. Since synthetic symbols
-would not work for me in this case, I went for &ldquo;Plan B:&rdquo; Extension commands that
-are separate from, but analagous to, regular WinDbg commands.</p>
-
-<p>I plan to continuously improve the commands that are available. Until I have a
-proper README checked in, I&rsquo;ll introduce the commands here.</p>
-
-<h3>Loading the Extension</h3>
-
-<ol>
-<li>Use the <code>.load</code> command: <code>.load &lt;path_to_mozdbgext_dll&gt;</code></li>
-</ol>
-
-
-<h3>Loading the Breakpad Symbols</h3>
-
-<ol>
-<li>Extract the breakpad symbols into a directory.</li>
-<li>In the debugger, enter <code>!bploadsyms &lt;path_to_breakpad_symbol_directory&gt;</code></li>
-<li>Note that this command will take some time to load all the relevant symbols.</li>
-</ol>
-
-
-<h3>Working with Breakpad Symbols</h3>
-
-<p><strong>Note: You must have successfully run the <code>!bploadsyms</code> command first!</strong></p>
-
-<p>As a general guide, I am attempting to name each breakpad command similarly to
-the native WinDbg command, except that the command name is prefixed by <code>!bp</code>.</p>
 
 <ul>
-<li>Stack trace: <code>!bpk</code></li>
-<li>Find nearest symbol to address: <code>!bpln &lt;address&gt;</code> where <em>address</em> is specified
-as a hexadecimal value.</li>
+<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&amp;lt;embed&amp;gt;</code> element);</li>
+<li>Whose prototype is the NPAPI scriptable object;</li>
+<li>Whose prototype is the shared WebIDL prototype;</li>
+<li>Whose prototype is <code>Object.prototype</code>.</li>
 </ul>
 
 
-<h3>Downloading windbgext</h3>
-
-<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>) available for download.</p>
-
-<p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
-and do not work correctly yet. Please stick to the documented commands at this
-time.</p>
-
-<hr />
-
-<p><sup><a href="#r1" id="fn1">*</a></sup> When I write &ldquo;WinDbg&rdquo;, I am really
-referring to any debugger in the <em>Debugging Tools for Windows</em> package,
-including <code>cdb</code>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Bugs From Hell: Injected Third-party Code + Detours = a Bad Time]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/"/>
-    <updated>2016-01-11T13:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time</id>
-    <content type="html"><![CDATA[<p>Happy New Year!</p>
-
-<p>I&rsquo;m finally getting &lsquo;round to writing about a nasty bug that I had to spend a
-bunch of time with in Q4 2015. It&rsquo;s one of the more challenging problems that
-I&rsquo;ve had to break and I&rsquo;ve been asked a lot of questions about it. I&rsquo;m talking
-about <a title="Crash spike in CreateWindowEx with Firefox 42.0b9 on Optimus" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473">bug 1218473</a>.</p>
-
-<h2>How This All Began</h2>
-
-<p>In <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a> I had landed a patch to intercept calls to <code>CreateWindowEx</code>.
-This was necessary because it was apparent in that bug that window subclassing
-was occurring while a window was neutered (&ldquo;neutering&rdquo; is terminology that is
-specific to Mozilla&rsquo;s Win32 IPC code).</p>
-
-<p>While I&rsquo;ll save a discussion on the specifics of window neutering for another
-day, for our purposes it is sufficient for me to point out that subclassing a
-neutered window is bad because it creates an infinite recursion scenario with
-window procedures that will eventually overflow the stack.</p>
-
-<p>Neutering is triggered during certain types of IPC calls as soon as a message is
-sent to an unneutered window on the thread making the IPC call. Unfortunately in
-the case of <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, the message triggering the neutering was
-<code>WM_CREATE</code>. Shortly after creating that window, the code responsible would
-subclass said window. Since <code>WM_CREATE</code> had already triggered neutering, this
-would result in the pathological case that triggers the stack overflow.</p>
-
-<p>For a fix, what I wanted to do is to prevent messages that were sent immediately
-during the execution of <code>CreateWindow</code> (such as <code>WM_CREATE</code>) from triggering
-neutering prematurely. By intercepting calls to <code>CreateWindowEx</code>, I could wrap
-those calls with a RAII object that temporarily suppresses the neutering. Since
-the subclassing occurs immediately after window creation, this meant that
-this subclassing operation was now safe.</p>
-
-<p>Unfortunately, shortly after landing <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, <a title="Crash spike in CreateWindowEx with Firefox 42.0b9 on Optimus" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473">bug 1218473</a> was filed.</p>
-
-<h2>Where to Start</h2>
-
-<p>It wasn&rsquo;t obvious where to start debugging this. While a crash spike was clearly
-correlated with the landing of <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, the crashes were occurring in
-code that had nothing to do with IPC or Win32. For example, the first stack that
-I looked at was <code>js::CreateRegExpMatchResult</code>!</p>
-
-<p>When it is just not clear where to begin, I like to start by looking at our
-correlation data in Socorro &ndash; you&rsquo;d be surprised how often they can bring
-problems into sharp relief!</p>
-
-<p>In this case, the correlation data didn&rsquo;t disappoint: there
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473#c10">was</a> 100% correlation
-with a module called <code>_etoured.dll</code>. There was also correlation with the
-presence of both NVIDIA video drivers <em>and</em> Intel video drivers. Clearly this
-was a concern only when NVIDIA Optimus technology was enabled.</p>
-
-<p>I also had a pretty strong hypothesis about what <code>_etoured.dll</code> was: For many
-years, Microsoft Research has shipped a package called
-<a href="http://research.microsoft.com/en-us/projects/detours/">Detours</a>. Detours is a
-library that is used for intercepting Win32 API calls. While the changelog for
-Detours 3.0 points out that it has &ldquo;Removed [the] requirement for including
-<code>detoured.dll</code> in processes,&rdquo; in previous versions of the package, this library
-was required to be injected into the target process.</p>
-
-<p>I concluded that <code>_etoured.dll</code> was most likely a renamed version of
-<code>detoured.dll</code> from Detours 2.x.</p>
-
-<h2>Following The Trail</h2>
-
-<p>Now that I knew the likely culprit, I needed to know how it was getting there.
-During a November trip to the Mozilla Toronto office, I spent some time
-debugging a test laptop that was configured with Optimus.</p>
-
-<p>Knowing that the presence of Detours was somehow interfering with our own API
-interception, I decided to find out whether it was also trying to intercept
-<code>CreateWindowExW</code>. I launched <code>windbg</code>, started Firefox with it, and then told
-it to break as soon as <code>user32.dll</code> was loaded:</p>
-
-<pre><samp>
-sxe ld:user32.dll
-</samp></pre>
-
-
-<p>Then I pressed <code>F5</code> to resume execution. When the debugger broke again, this
-time <code>user32</code> was now in memory. I wanted the debugger to break as soon as
-<code>CreateWindowExW</code> was touched:</p>
-
-<pre><samp>
-ba w 4 user32!CreateWindowExW
-</samp></pre>
-
-
-<p>Once again I resumed execution. Then the debugger broke on the memory access and
-gave me this call stack:</p>
-
-<pre><samp>
-nvd3d9wrap!setDeviceHandle+0x1c91
-nvd3d9wrap!initialise+0x373
-nvd3d9wrap!setDeviceHandle+0x467b
-nvd3d9wrap!setDeviceHandle+0x4602
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-KERNELBASE!LoadLibraryExA+0x26
-kernel32!LoadLibraryA+0xba
-nvinit+0x11cb
-nvinit+0x5477
-nvinit!nvCoprocThunk+0x6e94
-nvinit!nvCoprocThunk+0x6e1a
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-kernel32!BasepLoadAppInitDlls+0x167
-kernel32!LoadAppInitDlls+0x82
-USER32!ClientThreadSetup+0x1f9
-USER32!__ClientThreadSetup+0x5
-ntdll!KiUserCallbackDispatcher+0x2e
-GDI32!GdiDllInitialize+0x1c
-USER32!_UserClientDllInitialize+0x32f
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-firefox!XPCOMGlueLoad+0x23c
-firefox!XPCOMGlueStartup+0x1d
-firefox!InitXPCOMGlue+0xba
-firefox!NS_internal_main+0x5c
-firefox!wmain+0xbe
-firefox!__tmainCRTStartup+0xfe
-kernel32!BaseThreadInitThunk+0xe
-ntdll!__RtlUserThreadStart+0x70
-ntdll!_RtlUserThreadStart+0x1b
-</samp></pre>
-
-
-<p>This stack is a gold mine of information. In particular, it tells us the
-following:</p>
-
-<ol>
-<li><p>The offending DLLs are being injected by <code>AppInit_DLLs</code> (and in fact, Raymond
-Chen <a href="https://blogs.msdn.microsoft.com/oldnewthing/20140422-00/?p=1173">has blogged about</a>
-this exact case in the past).</p></li>
-<li><p><code>nvinit.dll</code> is the name of the DLL that is injected by step 1.</p></li>
-<li><p><code>nvinit.dll</code> loads <code>nvd3d9wrap.dll</code> which then uses Detours to patch
-our copy of <code>CreateWindowExW</code>.</p></li>
-</ol>
-
-
-<p>I then became curious as to which other functions they were patching.</p>
-
-<p>Since Detours is patching executable code, we know that at some point it is
-going to need to call <code>VirtualProtect</code> to make the target code writable. In the
-worst case, <code>VirtualProtect</code>&rsquo;s caller is going to pass the address of the page
-where the target code resides. In the best case, the caller will pass in the
-address of the target function itself!</p>
-
-<p>I restarted <code>windbg</code>, but this time I set a breakpoint on <code>VirtualProtect</code>:</p>
-
-<pre><samp>
-bp kernel32!VirtualProtect
-</samp></pre>
-
-
-<p>I then resumed the debugger and examined the call stack every time it broke.
-While not every single <code>VirtualProtect</code> call would correspond to a detour, it
-would be obvious when it was, as the NVIDIA DLLs would be on the call stack.</p>
-
-<p>The first time I caught a detour, I examined the address being passed to
-<code>VirtualProtect</code>: I ended up with the best possible case: the address was
-pointing to the actual target function! From there I was able to distill a
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473#c39">list</a> of other
-functions being hooked by the injected NVIDIA DLLs.</p>
-
-<h2>Putting it all Together</h2>
-
-<p>By this point I knew who was hooking our code and knew how it was getting there.
-I also noticed that <code>CreateWindowEx</code> is the only function that the NVIDIA DLLs
-and our own code were both trying to intercept. Clearly there was some kind of
-bad interaction occurring between the two interception mechanisms, but what was
-it?</p>
-
-<p>I decided to go back and examine a
-<a href="https://crash-stats.mozilla.com/report/index/e884dc17-957f-4270-86ab-f59742151113">specific</a>
-crash dump. In particular, I wanted to examine three different memory locations:</p>
-
-<ol>
-<li>The first few instructions of <code>user32!CreateWindowExW</code>;</li>
-<li>The first few instructions of <code>xul!CreateWindowExWHook</code>; and</li>
-<li>The site of the call to <code>user32!CreateWindowExW</code> that triggered the crash.</li>
-</ol>
-
-
-<p>Of those three locations, the only one that looked off was location 2:</p>
-
-<pre><samp>
-6b1f6611 56              push    esi
-6b1f6612 ff15f033e975    call    dword ptr [combase!CClassCache::CLSvrClassEntry::GetDDEInfo+0x41 (75e933f0)]
-6b1f6618 c3              ret
-6b1f6619 7106            jno     xul!`anonymous namespace'::CreateWindowExWHook+0x6 (6b1f6621)
-xul!`anonymous namespace'::CreateWindowExWHook:
-6b1f661b cc              int     3
-6b1f661c cc              int     3
-6b1f661d cc              int     3
-6b1f661e cc              int     3
-6b1f661f cc              int     3
-6b1f6620 cc              int     3
-6b1f6621 ff              ???
-</samp></pre>
-
-
-<p><em>Why the hell were the first six bytes filled with breakpoint instructions?</em></p>
-
-<p>I decided at this point to look at some source code. Fortunately Microsoft
-publishes the 32-bit source code for Detours, licensed for non-profit use,
-under the name &ldquo;Detours Express.&rdquo;</p>
-
-<p>I found a copy of Detours Express 2.1 and checked out the code. First I wanted
-to know where all of these <code>0xcc</code> bytes were coming from. A quick <code>grep</code> turned
-up what I was looking for:</p>
-
-<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kr">inline</span> <span class="n">PBYTE</span> <span class="nf">detour_gen_brk</span><span class="p">(</span><span class="n">PBYTE</span> <span class="n">pbCode</span><span class="p">,</span> <span class="n">PBYTE</span> <span class="n">pbLimit</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">pbCode</span> <span class="o">&lt;</span> <span class="n">pbLimit</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="o">*</span><span class="n">pbCode</span><span class="o">++</span> <span class="o">=</span> <span class="mh">0xcc</span><span class="p">;</span>   <span class="c1">// brk;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">pbCode</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now that I knew which function was generating the <code>int 3</code> instructions, I then
-wanted to find its callers. Soon I found:</p>
-
-<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1247</span>
-<span class='line-number'>1248</span>
-<span class='line-number'>1249</span>
-<span class='line-number'>1250</span>
-<span class='line-number'>1251</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#ifdef DETOURS_X86</span>
-</span><span class='line'>    <span class="n">pbSrc</span> <span class="o">=</span> <span class="n">detour_gen_jmp_immediate</span><span class="p">(</span><span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span> <span class="o">+</span> <span class="n">cbTarget</span><span class="p">,</span> <span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">pbRemain</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">pbSrc</span> <span class="o">=</span> <span class="n">detour_gen_brk</span><span class="p">(</span><span class="n">pbSrc</span><span class="p">,</span>
-</span><span class='line'>                           <span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span><span class="p">));</span>
-</span><span class='line'><span class="cp">#endif </span><span class="c1">// DETOURS_X86</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Okay, so Detours writes the breakpoints out immediately after it has written a
-<code>jmp</code> pointing to its trampoline.</p>
-
-<p><em>Why is our hook function being trampolined?</em></p>
-
-<p>The reason must be because our hook was installed first! Detours has
-detected that and has decided that the best place to trampoline to the NVIDIA
-hook is at the beginning of our hook function.</p>
-
-<p><em>But Detours is using the wrong address!</em></p>
-
-<p>We can see that because the <code>int 3</code> instructions are written out at the
-<em>beginning</em> of <code>CreateWindowExWHook</code>, even though there should be a <code>jmp</code>
-instruction first.</p>
-
-<p><strong>Detours is calculating the wrong address to write its <code>jmp</code>!</strong></p>
-
-<h2>Finding a Workaround</h2>
-
-<p>Once I knew <em>what</em> the problem was, I needed to know more about the <em>why</em> &ndash;
-only then would I be able to come up with a way to work around this problem.</p>
-
-<p>I decided to reconstruct the scenario where both our code and Detours are trying
-to hook the same function, but our hook was installed first. I would then
-follow along through the Detours code to determine how it calculated the wrong
-address to install its <code>jmp</code>.</p>
-
-<p>The first thing to keep in mind is that Mozilla&rsquo;s function interception code
-takes advantage of <a href="https://blogs.msdn.microsoft.com/oldnewthing/20110921-00/?p=9583">hot-patch points</a>
-in Windows. If the target function begins with a <code>mov edi, edi</code> prolog, we
-use a hot-patch style hook instead of a trampoline hook. I am not going to go
-into detail about hot-patch hooks here &ndash; the above Raymond Chen link contains
-enough details to answer your questions. For the purposes of this blog post, the
-important point is that Mozilla&rsquo;s code patches the <code>mov edi, edi</code>, so NVIDIA&rsquo;s
-Detours library would need to recognize and follow the <code>jmp</code>s that our code
-patched in, in order to write its own <code>jmp</code> at <code>CreateWindowExWHook</code>.</p>
-
-<p>Tracing through the Detours code, I found the place where it checks for a
-hot-patch hook and follows the <code>jmp</code> if necessary. While examining a function
-called <code>detour_skip_jmp</code>, I found the bug:</p>
-
-<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>124</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>        <span class="n">pbNew</span> <span class="o">=</span> <span class="n">pbCode</span> <span class="o">+</span> <span class="o">*</span><span class="p">(</span><span class="n">INT32</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pbCode</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This code is supposed to be telling Detours where the target address of a <code>jmp</code>
-is, so that Detours can follow it. <code>pbNew</code> is supposed to be the target address
-of the <code>jmp</code>. <code>pbCode</code> is referencing the address <em>of the beginning of the <code>jmp</code>
-instruction itself</em>. Unfortunately, with this type of <code>jmp</code> instruction, target
-addresses are always relative to the address of the <em>next</em> instruction, not
-the <em>current</em> instruction! Since the current <code>jmp</code> instruction is five bytes
-long, Detours ends up writing its <code>jmp</code> <em>five bytes prior</em> to the intended
-target address!</p>
-
-<p>I went and checked the source code for Detours Express 3.0 to see if this had
-been fixed, and indeed it had:</p>
-
-<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>163</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>        <span class="n">PBYTE</span> <span class="n">pbNew</span> <span class="o">=</span> <span class="n">pbCode</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="o">*</span><span class="p">(</span><span class="n">INT32</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pbCode</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>That doesn&rsquo;t do much for me right now, however, since the NVIDIA stuff is still
-using Detours 2.x.</p>
-
-<p>In the case of Mozilla&rsquo;s code, there is legitimate executable code at that
-incorrect address that Detours writes to. It is corrupting the last few
-instructions of that function, thus explaining those mysterious crashes that
-were seemingly unrelated code.</p>
-
-<p>I confirmed this by downloading the binaries from the build that was associated
-with the crash dump that I was analyzing. [As an aside, I should point out that
-you need to grab the <em>identical</em> binaries for this exercise; you cannot build
-from the same source revision and expect this to work due to variability that
-is introduced into builds by things like PGO.]</p>
-
-<p>The five bytes preceeding <code>CreateWindowExHookW</code> in the crash dump diverged from
-those same bytes in the original binaries. I could also make out that the
-overwritten bytes consisted of a <code>jmp</code> instruction.</p>
-
-<h3>In Summary</h3>
-
-<p>Let us now review what we know at this point:</p>
-
-<ul>
-<li>Detours 2.x doesn&rsquo;t correctly follow <code>jmp</code>s from hot-patch hooks;</li>
-<li>If Detours tries to hook something that has already been hot-patched
-(including legitimate hot patches from Microsoft), it will write bytes at
-incorrect addresses;</li>
-<li>NVIDIA Optimus injects this buggy code into everybody&rsquo;s address spaces via an
-<code>AppInit_DLLs</code> entry for <code>nvinit.dll</code>.</li>
-</ul>
-
-
-<p>How can we best distill this into a suitable workaround?</p>
-
-<p>One option could be to block the NVIDIA DLLs outright. In most cases this would
-probably be the simplest option, but I was hesitant to do so this time. I was
-concerned about the unintended consequences of blocking what, for better or
-worse, is a user-mode component of NVIDIA video drivers.</p>
-
-<p>Instead I decided to take advantage of the fact that we now know how this bug is
-triggered. I have modified our API interception code such that if it detects
-the presence of NVIDIA Optimus, it disables hot-patch style hooks.</p>
-
-<p>Not only will this take care of the crash spike that started when I landed
-<a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, I also expect it to take care of other crash signatures
-whose relationship to this bug was not obvious.</p>
-
-<p>That concludes this episode of <em>Bugs from Hell</em>. Until next time&hellip;</p>
+<p>NPAPI is reentrant (some might say <em>insanely</em> reentrant). It is possible (and
+indeed common) for a plugin to set properties on the WebIDL object from within
+the plugin&rsquo;s <code>NPP_New</code>.</p>
+
+<p>Suppose that the DOM tries to access a property on the plugin&rsquo;s WebIDL object
+that is normally set by the plugin&rsquo;s <code>NPP_New</code>. In the asynchronous case, the
+plugin&rsquo;s initialization might still be in progress, so that property might not
+yet exist.</p>
+
+<p>In the case where the property does not yet exist on the WebIDL object, JavaScript
+then moves onto the first prototype, which would actually be the async surrogate.
+The async surrogate now synchronizes with the plugin. At this point the plugin is
+guaranteed to have finished its initialization.</p>
+
+<p>Now we have a problem: JS is already examining the NPAPI scriptable object,
+however the plugin has completed initializing and set its properties (including
+the one that we&rsquo;re interested in) on the WebIDL object. JS is already looking too
+far up the prototype chain!</p>
+
+<p>The surrogate needed to be aware of this when it synchronized with the plugin
+during a property access. If the plugin had already completed its initialization
+(rendering synchronization unnecessary), the surrogate would simply pass the
+property access on to the real NPAPI scriptable object. On the other hand, if a
+synchronization was performed, the surrogate would retry the WebIDL object by
+querying for the WebIDL object&rsquo;s &ldquo;own&rdquo; properties, and return the own property
+if it now existed.</p>
+
+<p>If I hadn&rsquo;t made the asynchronous surrogate scriptable object do that, we would
+have ended up with a strange situation where the DOM&rsquo;s initial property access
+on an embed could fail non-deterministically.</p>
+
+<p>That&rsquo;s enough chatter for today. I enjoy blogging about my crazy hacks that make
+the impossible, umm&hellip; possible, so maybe I&rsquo;ll write some more of these in the
+future.</p>
 ]]></content>
   </entry>
   

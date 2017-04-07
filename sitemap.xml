@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>http://dblohm7.ca/blog/2016/04/06/new-team-new-project/</loc>
-<lastmod>2016-04-06T21:00:00-06:00</lastmod>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/</loc>
-<lastmod>2016-02-11T18:30:00-07:00</lastmod>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/</loc>
-<lastmod>2016-01-26T12:45:00-07:00</lastmod>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/</loc>
-<lastmod>2016-01-11T13:00:00-07:00</lastmod>
+<loc>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/</loc>
+<lastmod>2017-04-07T15:00:00-06:00</lastmod>
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/2015/08/30/on-webextensions/</loc>
@@ -100,18 +88,6 @@
 <loc>http://dblohm7.ca/blog/categories/philosophizing/</loc>
 </url>
 <url>
-<loc>http://dblohm7.ca/blog/categories/debugging/</loc>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/categories/dll-injection/</loc>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/categories/mozdbgext/</loc>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/categories/com/</loc>
-</url>
-<url>
-<loc>http://dblohm7.ca/blog/categories/a11y/</loc>
+<loc>http://dblohm7.ca/posts/2/</loc>
 </url>
 </urlset>

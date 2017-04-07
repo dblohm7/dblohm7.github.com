@@ -9,8 +9,9 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="Something that I&rsquo;ve been noticing on numerous social media and discussion forum
-sites is that whenever Firefox comes up, inevitably there are &hellip;">
+  <meta name="description" content="The UI Has Landed The Plugin Hang UI
+landed in mozilla-central in time for January&rsquo;s merge. This means that it is
+now available on both Nightly &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,350 +79,6 @@ sites is that whenever Firefox comes up, inevitably there are &hellip;">
     <div id="content">
       <div class="blog-index">
   
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-08-14T14:00:00-06:00" pubdate data-updated="true"></time>
-        
-           | <a href="/blog/2014/08/14/diffusion-of-responsibility/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Something that I&rsquo;ve been noticing on numerous social media and discussion forum
-sites is that whenever Firefox comes up, inevitably there are comments in those
-threads about Firefox performance. Given my role at Mozilla, these comments are
-of particular interest to me.</p>
-
-<p>The reaction to roc&rsquo;s <a href="http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html">recent blog post</a>
-has motivated me enough to respond to a specific subset of comments. These
-comments all exhibit a certain pattern: their authors are experiencing problems
-with Firefox, they are very dissatisfied, but they are not discussing them in a
-way that is actionable by Mozilla.</p>
-
-<h2>How Mozilla Finds Problems</h2>
-
-<p>Mozilla encourages our contributors to run prerelease versions of Firefox,
-especially <a href="http://nightly.mozilla.org">Nightly</a> builds. This allows us to do
-some good old-fashioned dogfooding during the development of a Firefox release.</p>
-
-<p>We also have many tools that run as part of our continuous integration
-infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
-tracking, deadlock detection, assertions, Talos performance tests, and xperf are
-some of the various tools that we apply to our builds. I do not claim that this
-list is exhaustive! :-)</p>
-
-<p>We use numerous technologies to discover problems that occur while running on
-our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
-reports <a href="https://crash-stats.mozilla.com/home/products/Firefox">data</a> about the
-crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">Telemetry</a>
-that, when consented to, send us useful information for discovering problems.</p>
-
-<p>Our ability to analyze crash report/FHR/telemetry data is limited to those users
-who consent to share it with us. As much as I am proud of the fact that we
-respect the privacy of our users, this means that we only receive data from a
-fraction of them; many users who are experiencing problems are not included in
-this data.</p>
-
-<p>Despite the fact that we have all of these wonderful tools to help us deliver
-quality releases, the fact is that they cannot exhaustively catch every possible
-bug that is encountered out in the wild. There are too many combinations of
-extensions and configurations out there to possibly allow us to catch
-everything before release.</p>
-
-<p>That&rsquo;s where you, our users, come in!</p>
-
-<h2>If You See Something, Say Something!</h2>
-
-<p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
-I should know &ndash; I do it with the best of them! Having said that, they are also
-terrible for the purposes of bug reporting!</p>
-
-<p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
-problems and report them. Unfortunately that is not always the case, especially
-with a browser that is as configurable as Firefox.</p>
-
-<h3>Reporting Bugs</h3>
-
-<p>If you are experiencing a bug, the best way to ensure that something can be done
-about your bug is to <a href="https://bugzilla.mozilla.org/enter_bug.cgi?format=guided">report it</a>
-in Bugzilla. This might seem a little bit intimidating for somebody who is new
-to bug reporting, but I assure you, Mozillians are really nice! As long as you
-follow the <a href="https://bugzilla.mozilla.org/page.cgi?id=etiquette.html">etiquette guidelines</a>,
-you&rsquo;ll be fine! One suggestion though: try to follow our
-<a href="https://developer.mozilla.org/en-US/docs/Mozilla/QA/Bug_writing_guidelines">bug writing guidelines</a>.
-Doing so will maximize the likelihood of a contributor being able to reproduce
-your problem. In addition to these suggestions for bug filing, I also suggest
-including certain types of data for specific types of problems:</p>
-
-<h3>Reporting a Bug for High Memory Usage</h3>
-
-<p>If you&rsquo;re experiencing problems with Firefox&rsquo;s memory use, open a tab, and
-point your browser to <code>about:memory</code>. This nifty feature provides a breakdown
-of Firefox memory consumption. Save that report and attach it to the bug that
-you&rsquo;ve filed.</p>
-
-<h3>Reporting a Bug for Slowness or Heavy CPU Usage</h3>
-
-<p>If you want report a problem with Firefox being slow and/or mysteriously
-consuming large amounts of CPU time, the best way to help us is
-is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
-[<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
-user profile that stores your settings and browser history &ndash; they are different
-things with the same name.</em>] This tool tracks how Firefox uses your CPU over
-time. If you are able to attach a profile that was taken during a period of time
-where Firefox was running poorly, it will help us understand what exactly Firefox
-was doing. Unfortunately this is tool requires a bit of technical savvy, but
-attaching the URL of an uploaded profile to your performance bug can be very helpful.</p>
-
-<h3>Reporting a Bug for a Persistent, Reproducable Crash</h3>
-
-<p>As you can see in our <a href="https://crash-stats.mozilla.com/home/products/Firefox">crash report data</a>,
-crashes reported to Mozilla are ranked by frequency. As you might expect, this
-implies that it&rsquo;s often the squeaky wheels that get the grease.</p>
-
-<p>If you have an easily reproducable crash and you are sending your reports to
-Mozilla, you can help us by pointing Firefox to <code>about:crashes</code>. This page lists
-all of the crash reports that have been generated on your computer. If the crash
-that you are experiencing isn&rsquo;t on our list of top crashers, you can still help
-us to fix it: filing a bug that includes multiple crash report URLs from your
-<code>about:crashes</code> screen will help tremendously.</p>
-
-<h3>Reporting a Bug for a Website that Looks Wrong in Firefox</h3>
-
-<p>I&rsquo;d suggest reporting your problem over at <a href="http://webcompat.com">webcompat.com</a>.
-Volunteers will review your report and determine whether your problem is caused
-by the website or by Firefox, and file a bug with the appropriate entity.</p>
-
-<h3>I have a problem that isn&rsquo;t listed here. What should I do?</h3>
-
-<p>Send us <a href="https://input.mozilla.org/en-US/feedback">feedback</a>!</p>
-
-<h2>In Conclusion</h2>
-
-<p>If there is one idea that you can take away from this post (a TL;DR, if you will),
-it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</em></p>
-
-<p>Taking an active role in the Mozilla community by reporting your issues through
-the proper channels is the best way to ensure that your problems can be fixed.</p>
-
-<p><strong>EDIT:</strong> To be clear: What I am suggesting is that users who are enthusiastic
-enough to post a comment to Hacker News (for example) should also be savvy
-enough to be able to file a proper bug report. Please do not misconstrue this
-post as a demand that novice users start filing bugs.</p>
-
-<p><strong>EDIT August 15, 2014:</strong> Nick Nethercote just <a href="https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/">blogged</a>
-about a tricky memory bug that couldn&rsquo;t have been diagnosed without the help of
-a Redditor whose complaint we steered to Bugzilla.</p>
-
-<p><strong>EDIT August 23, 2014:</strong> Wow, this has blown up. More edits to update this post
-with additional information in repose to some of the questions posted in the
-comments. Thanks for reading!</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Asynchronous Plugin Initialization: An Introduction</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-06-17T02:30:00-06:00" pubdate data-updated="true"></time>
-        
-           | <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I have spent a lot of time this quarter working on <a title="Asynchronous Initialization of Out-of-process Plugins" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998863">bug 998863</a>, &ldquo;Asynchronous
-Initialization of Out-of-process Plugins.&rdquo; While the bug summary is fairly self
-explanatory, I would like to provide some more details about why I am doing this
-and what kind of work it entails. I would also like to wrap up the post with an
-early demonstration of this feature and present some profiles to illustrate the
-potential performance improvement.</p>
-
-<h2>Rationale</h2>
-
-<p>The reason that I am undertaking this project is because NPAPI plugin startup
-is our most frequent cause of jank. In fact, at the time of this writing, our
-<a href="http://telemetry.mozilla.org/chromehangs/">Chrome Hangs telemetry</a> is showing
-that 4 out of our top 10 most frequent offending call stacks are related to
-plugin initialization and instantiation. Furthermore, creating the
-plugin-container.exe child process is the #1 most frequent chrome hang offender
-(Note that our Chrome Hang telemetry consists entirely of Windows builds, where
-process creation is quite expensive).</p>
-
-<h2>A High-level Breakdown of NPAPI Initialization and Instantiation</h2>
-
-<p>The typical steps involved can be broken down as follows:</p>
-
-<ol>
-<li>Launch the <code>plugin-container</code> process;</li>
-<li>Call <code>NP_Initialize</code> to load the plugin;</li>
-<li>Create instances by calling <code>NPP_New</code>;</li>
-<li>Call <code>NPP_NewStream</code> for instances that load stream data;</li>
-<li>If an instance is scriptable, call <code>NPP_GetValue</code> to obtain information
-about the plugin&rsquo;s scriptable object.</li>
-</ol>
-
-
-<p>The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case &ndash; we asynchronously return a proxy object, but if a
-synchronous JS method is called on that object, we must wait for the plugin to
-initialize (if it has not yet done so). My hope is that if we have to call a
-synchronous JS method on the proxy object, plugin initialization will be far
-enough along that the wait will be minimal.</p>
-
-<h2>A Brief Demonstration</h2>
-
-<p>The following video compares two locally-built Nightlies that are identical
-except for the asynchronous initialization patch. After loading the browser
-with a page containing several embedded Flash objects, we can profile and
-observe the effects of this patch.</p>
-
-<iframe width="420" height="315" src="//www.youtube-nocookie.com/embed/HZ8Z2Drv8uI?rel-0" frameborder="0" allowfullscreen></iframe>
-
-
-<p>Here are links to some profiles:</p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=a5a96119742fa75b64ab7d12566eede68468ef3c">Synchronous Plugin Initialization</a></p>
-
-<p><a href="http://people.mozilla.org/~bgirard/cleopatra/#report=282e372d3357316307c182607f26c00f4f41011e">Asynchronous Plugin Initialization</a></p>
-
-<h2>Disclaimer</h2>
-
-<p>This patch requires some further work on scripting and stabilization. The
-information in this post is subject to change. :-)</p>
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Detecting Main Thread I/O With SPS</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-06-12T18:00:00-06:00" pubdate data-updated="true"></time>
-        
-           | <a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867762">bug 867762</a> I am landing I/O
-interpose facilities for SPS. This feature will allow main thread I/O to be
-displayed in the profiler UI.</p>
-
-<p>There are a few components to this patch. Classes that implement the
-<code>IOInterposerModule</code> interface are responsible for hooking into an arbitrary I/O
-facility and calling into <code>IOInterposer</code> with those events.</p>
-
-<p>The <code>IOInterposer</code> receives those events and then dispatches them to any registered
-observers. For the purposes of SPS there is only one observer,
-<code>ProfilerIOInterposeObserver</code>, however I wrote this keeping in mind that we
-may eventually want to use the I/O interpose facilities for other purposes (such
-as shutdown write poisioning).</p>
-
-<p>For bug 867762 I have implemented two modules. <code>NSPRInterposer</code> hooks into NSPR
-file I/O and generates events whenever a <code>PR_Read</code>, <code>PR_Write</code>, or <code>PR_Sync</code> occurs.
-The second module, <code>SQLiteInterposer</code>, leverages the SQLite VFS that we use for
-telemetry to tap into reads, writes, and fsyncs generated by SQLite. In the future
-we expect to expand this into several additional modules. Some ideas include a module
-that uses Event Tracing for Windows to read events from the Windows kernel and a
-module that interposes calls to <code>read</code>, <code>write</code>, and <code>fsync</code> on Linux.</p>
-
-<p>On the observer side of things, for now we simply insert a marker into the profiler
-timeline whenever main thread I/O is reported. Here is a sample screenshot of the
-markers in action (the pink stuff for readers who are unfamiliar with SPS markers):</p>
-
-<p><a href="http://dblohm7.ca/images/iomarkers.png"><img src="http://dblohm7.ca/images/iomarkers.png"></a></p>
-
-<p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867757">bug 867757</a> (under review)
-this will become more sophisticated, as SPS will immediately sample the callstack of
-the thread whose I/O has been intercepted. This annotated stack will be inserted
-directly into the timeline.</p>
-
-<p>There will need to be some UI changes for this to be presented in a reasonable way,
-but with both existing patches applied the data is already useful. By firing up
-Cleopatra and filtering on either <code>NSPRInterposer</code> or <code>SQLiteInterposer</code>, you can
-isolate and view the main thread I/O stacks:</p>
-
-<p><a href="http://dblohm7.ca/images/iofilteredstacks.png"><img src="http://dblohm7.ca/images/iofilteredstacks.png"></a></p>
-
-<p>Hopefully these patches will prove to be beneficial to our efforts to eliminate
-main thread I/O.</p>
-</div>
-  
-  
-
-
-    </article>
   
   
     <article>
@@ -795,23 +452,23 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/01/26/announcing-mozdbgext/">Announcing Mozdbgext</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">Bugs From Hell: Injected Third-party Code + Detours = a Bad Time</a>
+        <a href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/">Asynchronous Plugin Initialization: Requiem</a>
       </li>
     
       <li class="post">
         <a href="/blog/2015/08/30/on-webextensions/">On WebExtensions</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/03/12/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/">Attached Input Queues on Firefox for Windows</a>
       </li>
     
   </ul>
@@ -865,7 +522,7 @@ window underneath.</p>
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2016 - Aaron Klotz -
+  Copyright &copy; 2017 - Aaron Klotz -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
