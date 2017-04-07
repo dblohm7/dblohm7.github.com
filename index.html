@@ -127,18 +127,18 @@ plugin had not yet completed its asynchronous initialization.</p>
 <p>As <a href="https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins">described on MDN</a>,
 the DOM queries a plugin for scriptability by calling <code>NPP_GetValue</code> with the
 <code>NPPVpluginScriptableNPObject</code> constant. With async plugin init, we did not
-return the true scriptable object back to the browser. Instead, we returned
+return the true scriptable object back to the browser. Instead we returned
 a surrogate object. This meant that we did not need to synchronously wait for
 the plugin to initialize before returning a scriptable object to the DOM.</p>
 
 <p>If the DOM subsequently called into the surrogate object, the surrogate would
 be forced to synchronize with the plugin. There was a limit on how much fakery
-the async surrogate could do until eventually an API call would force the
-browser to synchronize with the plugin &ndash; after all, the NPAPI itself is entirely
-synchronous. While you may wonder whether that design actually bought us anything,
-performance profiles that I took at the time did indeed demonstrate that the
-asynchronous surrogate scripting object did buy us enough additional concurrency
-to make it worthwhile.</p>
+the async surrogate could do once an API call forced the browser to synchronize
+with the plugin &ndash; after all, the NPAPI itself is entirely synchronous. While
+you may question whether that design actually bought us anything, performance
+profiles that I took at the time did indeed demonstrate that the asynchronous
+surrogate scripting object did buy us enough additional concurrency to make it
+worthwhile.</p>
 
 <p>Once the surrogate object had synchronized with the plugin, it would then mostly
 act as a pass-through to the plugin&rsquo;s true scriptable object, with one notable
