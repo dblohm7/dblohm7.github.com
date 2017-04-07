@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-04-07T15:02:54-06:00</updated>
+  <updated>2017-04-07T15:07:57-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -62,7 +62,7 @@ this.__proto__.__proto__.__proto__
 
 
 <ul>
-<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&amp;lt;embed&amp;gt;</code> element);</li>
+<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&lt;embed&gt;</code> element);</li>
 <li>Whose prototype is the NPAPI scriptable object;</li>
 <li>Whose prototype is the shared WebIDL prototype;</li>
 <li>Whose prototype is <code>Object.prototype</code>.</li>
