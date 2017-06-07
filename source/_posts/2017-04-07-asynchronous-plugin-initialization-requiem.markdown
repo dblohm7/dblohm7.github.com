@@ -5,7 +5,7 @@ date: 2017-04-07 15:00:00 -0600
 comments: true
 categories: [async, mozilla, plugins]
 ---
-My colleague bsmedberg is going to be removing asynchronous plugin 
+My colleague ~~bsmedberg~~ njn is going to be removing asynchronous plugin 
 initialization in {%bug 1352575%}. Sadly the feature never became solid enough 
 to remain enabled on release, so we cut our losses and cancelled the project 
 early in 2016. Now that code is just a bunch of dead weight. With the 
