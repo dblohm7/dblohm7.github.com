@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-04-19T16:18:00-06:00</updated>
+  <updated>2017-06-07T15:59:53-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -18,7 +18,7 @@
     <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
     <updated>2017-04-07T15:00:00-06:00</updated>
     <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
-    <content type="html"><![CDATA[<p>My colleague bsmedberg is going to be removing asynchronous plugin
+    <content type="html"><![CDATA[<p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
 initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
 to remain enabled on release, so we cut our losses and cancelled the project
 early in 2016. Now that code is just a bunch of dead weight. With the
