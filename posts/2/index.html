@@ -9,9 +9,9 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="Today&rsquo;s Nightly 34 build includes the work I did
-for bug 286355: a profile unlocker for our Windows users. This should be very
-helpful to those &hellip;">
+  <meta name="description" content="As of today&rsquo;s Nightly, Asynchronous Plugin
+Initialization is available for testing. It is deactivated by default, so in
+order to try it out you &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -80,6 +80,51 @@ helpful to those &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Asynchronous Plugin Initialization: Nightly</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2014-12-31T00:00:00-07:00" pubdate data-updated="true">Dec 31st, 2014</time>
+        
+           | <a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asynchronous Plugin
+Initialization is available for testing. It is deactivated by default, so in
+order to try it out you will need to navigate to <code>about:config</code> and toggle the
+<code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
+
+<p>If you experience any problems, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Plug-ins&amp;blocked=1116806">file a bug</a> that blocks <a title="Let Asynchronous Plugin Initialization ride the train" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1116806">bug 1116806</a>.</p>
+
+<p>Happy New Year!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -852,6 +897,10 @@ window underneath.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/">Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/">Asynchronous Plugin Initialization: Requiem</a>
       </li>
     
@@ -865,10 +914,6 @@ window underneath.</p>
     
       <li class="post">
         <a href="/blog/2016/01/26/announcing-mozdbgext/">Announcing Mozdbgext</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">Bugs From Hell: Injected Third-party Code + Detours = a Bad Time</a>
       </li>
     
   </ul>

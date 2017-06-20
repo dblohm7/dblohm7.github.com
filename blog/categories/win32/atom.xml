@@ -4,7 +4,7 @@
   <title><![CDATA[Category: win32 | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-06-07T15:59:53-06:00</updated>
+  <updated>2017-06-20T14:27:53-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds]]></title>
+    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <updated>2017-06-12T15:50:43-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
+use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
+<code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
+
+<h2>They enable more utility in WinDbg extensions</h2>
+
+<p>Every time you initialize a <code>CRITICAL_SECTION</code>, Windows inserts the CS&rsquo;s
+debug info into a process-wide linked list. This enables their discovery by
+the Windows debugging engine, and makes the <code>!cs</code>, <code>!critsec</code>, and <code>!locks</code>
+commands more useful.</p>
+
+<h2>They enable profiling of their initialization and acquisition</h2>
+
+<p>When the &ldquo;Create user mode stack trace database&rdquo; gflag is enabled, Windows
+records the call stack of the thread that called <code>InitializeCriticalSection</code>
+on that CS. Windows also records the call stack of the owning thread once
+it has acquired the CS. This can be very useful for debugging deadlocks.</p>
+
+<h2>They track their contention counts</h2>
+
+<p>Since every CS has been placed in a process-wide linked list, we may now ask
+the debugger to dump statistics about every live CS in the process. In
+particular, we can ask the debugger to output the contention counts for each
+CS in the process. After running a workload against Nightly, we may then take
+the contention output, sort it descendingly, and be able to determine which
+<code>CRITICAL_SECTION</code>s are the most contended in the process.</p>
+
+<p>We may then want to more closely inspect the hottest CSes to determine whether
+there is anything that we can do to reduce contention and all of the extra
+context switching that entails.</p>
+
+<h2>In Summary</h2>
+
+<p>When we use <code>SRWLOCK</code>s or initialize our <code>CRITICAL_SECTION</code>s with the
+<code>CRITICAL_SECTION_NO_DEBUG_INFO</code> flag, we are denying ourselves access to this
+information. That&rsquo;s fine on release builds, but on Nightly I think it is worth
+having around. While I realize that most Mozilla developers have not used this
+until now (otherwise I would not be writing this blog post), this rich debugger
+info is one of those things that you do not miss until you do not have it.</p>
+
+<p>For further reading about critical section debug info, check out
+<a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
+archived article from MSDN Magazine.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[New Team, New Project]]></title>
@@ -644,60 +695,6 @@ the presence of NVIDIA Optimus, it disables hot-patch style hooks.</p>
 whose relationship to this bug was not obvious.</p>
 
 <p>That concludes this episode of <em>Bugs from Hell</em>. Until next time&hellip;</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Interesting Win32 APIs]]></title>
-    <link href="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
-    <updated>2015-07-28T11:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
-    <content type="html"><![CDATA[<p>Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
-changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
-many changes, but the ones that were there are quite exciting IMHO. While
-researching these new APIs, I also stumbled across some others that were
-added during the Windows 8 timeframe that we should be considering as well.</p>
-
-<h2>Volatile Ranges</h2>
-
-<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
-claim that these APIs are actually new for the Windows 8.1 Update. Using the
-<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
-and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
-functions, we can now specify ranges of virtual memory that are safe to
-discarded under memory pressure. Later on, should we request that access be
-restored to that memory, the kernel will either return that virtual memory to us
-unmodified, or advise us that the associated pages have been discarded.</p>
-
-<p>A couple of years ago we had an intern on the Perf Team who was working on
-bringing this capability to Linux. I am pleasantly surprised that this is now
-offered on Windows.</p>
-
-<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
-
-<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
-API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
-files when we want the kernel to read ahead. On Win32, we were opening the
-backing file and then doing a series of sequential reads through the file to
-force the kernel to cache the file data. As of Windows 8, we can now call
-<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
-for a similar effect.</p>
-
-<h2>Operation Recorder: An API for SuperFetch</h2>
-
-<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
-and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
-APIs are intended to record access patterns during a file I/O operation.
-SuperFetch will then create prefetch files for the operation, enabling prefetch
-capabilities above and beyond the use case of initial process startup.</p>
-
-<h2>Memory Pressure Notifications</h2>
-
-<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
-Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
-allocates a kernel handle that becomes signalled when physical memory is running
-low. Gecko already has facilities for handling memory pressure events on other
-platforms, so we should probably add this to the Win32 port.</p>
 ]]></content>
   </entry>
   

@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-06-07T15:59:53-06:00</updated>
+  <updated>2017-06-20T14:27:53-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,57 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds]]></title>
+    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <updated>2017-06-12T15:50:43-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
+use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
+<code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
+
+<h2>They enable more utility in WinDbg extensions</h2>
+
+<p>Every time you initialize a <code>CRITICAL_SECTION</code>, Windows inserts the CS&rsquo;s
+debug info into a process-wide linked list. This enables their discovery by
+the Windows debugging engine, and makes the <code>!cs</code>, <code>!critsec</code>, and <code>!locks</code>
+commands more useful.</p>
+
+<h2>They enable profiling of their initialization and acquisition</h2>
+
+<p>When the &ldquo;Create user mode stack trace database&rdquo; gflag is enabled, Windows
+records the call stack of the thread that called <code>InitializeCriticalSection</code>
+on that CS. Windows also records the call stack of the owning thread once
+it has acquired the CS. This can be very useful for debugging deadlocks.</p>
+
+<h2>They track their contention counts</h2>
+
+<p>Since every CS has been placed in a process-wide linked list, we may now ask
+the debugger to dump statistics about every live CS in the process. In
+particular, we can ask the debugger to output the contention counts for each
+CS in the process. After running a workload against Nightly, we may then take
+the contention output, sort it descendingly, and be able to determine which
+<code>CRITICAL_SECTION</code>s are the most contended in the process.</p>
+
+<p>We may then want to more closely inspect the hottest CSes to determine whether
+there is anything that we can do to reduce contention and all of the extra
+context switching that entails.</p>
+
+<h2>In Summary</h2>
+
+<p>When we use <code>SRWLOCK</code>s or initialize our <code>CRITICAL_SECTION</code>s with the
+<code>CRITICAL_SECTION_NO_DEBUG_INFO</code> flag, we are denying ourselves access to this
+information. That&rsquo;s fine on release builds, but on Nightly I think it is worth
+having around. While I realize that most Mozilla developers have not used this
+until now (otherwise I would not be writing this blog post), this rich debugger
+info is one of those things that you do not miss until you do not have it.</p>
+
+<p>For further reading about critical section debug info, check out
+<a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
+archived article from MSDN Magazine.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
