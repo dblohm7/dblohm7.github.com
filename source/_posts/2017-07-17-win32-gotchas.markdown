@@ -1,0 +1,99 @@
+---
+layout: post
+title: "Win32 Gotchas"
+date: 2017-07-17 12:00:00 -0600
+comments: true
+categories: [Mozilla, Win32]
+---
+For the second time since I have been at Mozilla I have encountered a situation 
+where hooks are called for notifications of a newly created window, but that 
+window has not yet been initialized properly, causing the hooks to behave badly.
+
+The first time was inside our window neutering code in IPC, while the second 
+time was in our accessibility code.
+
+Every time I have seen this, there is code that follows this pattern:
+
+``` c++
+HWND hwnd = CreateWindowEx(/* ... */);
+if (hwnd) {
+  // Do some follow-up initialization to hwnd (Using SetProp as an example):
+  SetProp(hwnd, "Foo", bar);
+}
+```
+
+This seems innocuous enough, right?
+
+The problem is that `CreateWindowEx` calls hooks. If those hooks then try to do
+something like `GetProp(hwnd, "Foo")`, that call is going to fail because the 
+"Foo" prop has not yet been set.
+
+The key takeaway from this is that, if you are creating a new window, you must 
+do any follow-up initialization from within your window proc's `WM_CREATE` 
+handler. This will guarantee that your window's initialization will have 
+completed before any hooks are called.
+
+You might be thinking, "But I don't set any hooks!" While this may be true, you 
+must not forget about hooks set by third-party code.
+
+"But those hooks won't know anything about my program's internals, right?"
+
+Perhaps, perhaps not. But when those hooks fire, they give third-party software 
+the opportunity to run. In some cases, those hooks might even cause the thread 
+to *reenter your own code*. Your window had better be completely initialized 
+when this happens!
+
+In the case of my latest discovery of this issue in {%bug 1380471%}, I made it 
+possible to use a C++11 lambda to simplify this pattern.
+
+[`CreateWindowEx`](https://msdn.microsoft.com/en-us/library/windows/desktop/ms632680.aspx) 
+accepts a `lpParam` parameter which is then passed to the `WM_CREATE` handler 
+as the `lpCreateParams` member of a [`CREATESTRUCT`](https://msdn.microsoft.com/en-us/library/windows/desktop/ms632603.aspx).
+
+By setting `lpParam` to a pointer to a `std::function<void(HWND)>`, we may then 
+supply any callable that we wish for follow-up window initialization.
+
+Using the previous code sample as a baseline, this allows me to revise the code 
+to safely set a property like this:
+
+``` c++
+std::function<void(HWND)> onCreate([](HWND aHwnd) -> void {
+  SetProp(aHwnd, "Foo", bar);
+});
+
+HWND hwnd = CreateWindowEx(/* ... */, &onCreate);
+// At this point is already too late to further initialize hwnd!
+```
+
+Note that since `lpParam` is always passed during `WM_CREATE`, which always fires 
+before `CreateWindowEx` returns, it is safe for `onCreate` to live on the stack.
+
+I liked this solution for the a11y case because it preserved the locality of 
+the initialization code within the function that called `CreateWindowEx`; the 
+window proc for this window is implemented in another source file and the 
+follow-up initialization depends on the context surrounding the `CreateWindowEx` 
+call.
+
+Speaking of window procs, here is how that window's `WM_CREATE` handler invokes 
+the callable:
+
+``` c++
+switch (uMsg) {
+  case WM_CREATE: {
+    auto createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
+    auto createProc = reinterpret_cast<std::function<void(HWND)>*>(
+      createStruct->lpCreateParams);
+
+    if (createProc && *createProc) {
+      (*createProc)(hwnd);
+    }
+
+    return 0;
+  }
+  // ...
+```
+
+**TL;DR:** If you see a pattern where further initialization work is being done 
+on an `HWND` after a `CreateWindowEx` call, move that initialization code to your 
+window's `WM_CREATE` handler instead.
+
