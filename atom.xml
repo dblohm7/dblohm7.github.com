@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-06-20T14:27:53-06:00</updated>
+  <updated>2017-07-17T12:03:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,129 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Win32 Gotchas]]></title>
+    <link href="http://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
+    <updated>2017-07-17T12:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
+    <content type="html"><![CDATA[<p>For the second time since I have been at Mozilla I have encountered a situation
+where hooks are called for notifications of a newly created window, but that
+window has not yet been initialized properly, causing the hooks to behave badly.</p>
+
+<p>The first time was inside our window neutering code in IPC, while the second
+time was in our accessibility code.</p>
+
+<p>Every time I have seen this, there is code that follows this pattern:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">HWND</span> <span class="n">hwnd</span> <span class="o">=</span> <span class="n">CreateWindowEx</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">hwnd</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Do some follow-up initialization to hwnd (Using SetProp as an example):</span>
+</span><span class='line'>  <span class="n">SetProp</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="s">&quot;Foo&quot;</span><span class="p">,</span> <span class="n">bar</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This seems innocuous enough, right?</p>
+
+<p>The problem is that <code>CreateWindowEx</code> calls hooks. If those hooks then try to do
+something like <code>GetProp(hwnd, "Foo")</code>, that call is going to fail because the
+&ldquo;Foo&rdquo; prop has not yet been set.</p>
+
+<p>The key takeaway from this is that, if you are creating a new window, you must
+do any follow-up initialization from within your window proc&rsquo;s <code>WM_CREATE</code>
+handler. This will guarantee that your window&rsquo;s initialization will have
+completed before any hooks are called.</p>
+
+<p>You might be thinking, &ldquo;But I don&rsquo;t set any hooks!&rdquo; While this may be true, you
+must not forget about hooks set by third-party code.</p>
+
+<p>&ldquo;But those hooks won&rsquo;t know anything about my program&rsquo;s internals, right?&rdquo;</p>
+
+<p>Perhaps, perhaps not. But when those hooks fire, they give third-party software
+the opportunity to run. In some cases, those hooks might even cause the thread
+to <em>reenter your own code</em>. Your window had better be completely initialized
+when this happens!</p>
+
+<p>In the case of my latest discovery of this issue in <a title="Window emulation needs to SetProp inside WM_CREATE" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1380471">bug 1380471</a>, I made it
+possible to use a C++11 lambda to simplify this pattern.</p>
+
+<p><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632680.aspx"><code>CreateWindowEx</code></a>
+accepts a <code>lpParam</code> parameter which is then passed to the <code>WM_CREATE</code> handler
+as the <code>lpCreateParams</code> member of a <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632603.aspx"><code>CREATESTRUCT</code></a>.</p>
+
+<p>By setting <code>lpParam</code> to a pointer to a <code>std::function&lt;void(HWND)&gt;</code>, we may then
+supply any callable that we wish for follow-up window initialization.</p>
+
+<p>Using the previous code sample as a baseline, this allows me to revise the code
+to safely set a property like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">onCreate</span><span class="p">([](</span><span class="n">HWND</span> <span class="n">aHwnd</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">SetProp</span><span class="p">(</span><span class="n">aHwnd</span><span class="p">,</span> <span class="s">&quot;Foo&quot;</span><span class="p">,</span> <span class="n">bar</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">HWND</span> <span class="n">hwnd</span> <span class="o">=</span> <span class="n">CreateWindowEx</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">onCreate</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// At this point is already too late to further initialize hwnd!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that since <code>lpParam</code> is always passed during <code>WM_CREATE</code>, which always fires
+before <code>CreateWindowEx</code> returns, it is safe for <code>onCreate</code> to live on the stack.</p>
+
+<p>I liked this solution for the a11y case because it preserved the locality of
+the initialization code within the function that called <code>CreateWindowEx</code>; the
+window proc for this window is implemented in another source file and the
+follow-up initialization depends on the context surrounding the <code>CreateWindowEx</code>
+call.</p>
+
+<p>Speaking of window procs, here is how that window&rsquo;s <code>WM_CREATE</code> handler invokes
+the callable:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">switch</span> <span class="p">(</span><span class="n">uMsg</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">case</span> <span class="nl">WM_CREATE</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">createStruct</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">CREATESTRUCT</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">lParam</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">createProc</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="o">&gt;*&gt;</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">createStruct</span><span class="o">-&gt;</span><span class="n">lpCreateParams</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">createProc</span> <span class="o">&amp;&amp;</span> <span class="o">*</span><span class="n">createProc</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="p">(</span><span class="o">*</span><span class="n">createProc</span><span class="p">)(</span><span class="n">hwnd</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>TL;DR:</strong> If you see a pattern where further initialization work is being done
+on an <code>HWND</code> after a <code>CreateWindowEx</code> call, move that initialization code to your
+window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds]]></title>
