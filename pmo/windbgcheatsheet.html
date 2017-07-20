@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>
+Aaron's shitty windbg cheat sheet
+</title>
+<style>
+table
+{
+  border-collapse: collapse;
+  border-spacing: 0px;
+  empty-cells: hide;
+}
+table, th, td
+{
+  padding: 5px;
+  border: 1px solid black;
+}
+td:empty {
+  border-width: 0px;
+}
+</style>
+</head>
+<body>
+<h3>Setting up Debugging Tools for Windows</h3>
+<ul>
+  <li><a href="http://people.mozilla.org/~aklotz/windbg32.msi">Debugging Tools for Windows (32-bit)</a></li>
+  <li><a href="http://people.mozilla.org/~aklotz/windbg64.msi">Debugging Tools for Windows (64-bit)</a></li>
+  <li>The 64-bit version can debug 32-bit processes, however it tends to also 
+  display goop from Windows' 32-bit to 64-bit translation layer; using 32-bit 
+  Windbg to debug 32-bit processes is a bit cleaner IMHO.</li>
+</ul>
+<p>Once installed, <a href="https://developer.mozilla.org/en-US/docs/Using_the_Mozilla_symbol_server">set</a> 
+the <code>_NT_SYMBOL_PATH</code> environment variable. I also recommend that 
+you add the Windbg installation directory to your <code>PATH</code>.</p>
+<p>If you're feeling ambitious, you could grab <a href="https://github.com/mozilla/moz-dev-contrib/blob/master/windows/Gecko.natvis">this file</a>
+and save it to a location that is easy to type. You'll need to type its path 
+when you try to load it later.</p>
+
+<h3>Running the debugger</h3>
+<ul>
+  <li>Run <code>cdb</code> for text mode debugging or <code>windbg</code> for GUI</li>
+  <li>You may either run a new process by specifying the target executable 
+      followed by its command line options, or you may attach to an existing 
+      process with the <code>-p &lt;pid&gt;</code> command line option.
+    <ul>
+      <li>Running a new process may be better when possible because then you 
+      will see thread names</li>
+    </ul>
+  </li>
+  <li>
+    Use <code>-z &lt;path-to-dump&gt;</code> to examine a minidump
+  </li>
+  <li>
+    Use <code>-o</code> to debug multiple processes with a single debugger
+  </li>
+</ul>
+
+<h3>GDB to WinDbg Rosetta Stone</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>gdb</th>
+      <th>windbg</th>
+      <th>windbg keyboard accelerator</th>
+      <th>windbg toolbar button</th>
+      <th>notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Continue Execution</td>
+      <td><code>c</code></td>
+      <td><code>g</code></td>
+      <td><kbd>F5</kbd></td>
+      <td><img src="g.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Set breakpoint (address)</td>
+      <td><code>break &lt;address&gt;</code></td>
+      <td><code>bp &lt;address&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Set breakpoint (unresolved symbol)</td>
+      <td><code>break &lt;location&gt;</code></td>
+      <td><code>bu &lt;location&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Set breakpoint (source line)</td>
+      <td><code>break &lt;source line&gt;</code></td>
+      <td><code>bp `&lt;source line&gt;`</code></td>
+      <td><kbd>F9</kbd> at caret location</td>
+      <td><img src="bp.gif" alt="toolbar button">&nbsp;(toggle)</td>
+    </tr>
+    <tr>
+      <td>Set watchpoint</td>
+      <td><code>watch/rwatch/awatch</code></td>
+      <td><code>ba w/r/r</code></td>
+    </tr>
+    <tr>
+      <td>Step over</td>
+      <td><code>next</code></td>
+      <td><code>p</code></td>
+      <td><kbd>F10</kbd></td>
+      <td><img src="p.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Step into</td>
+      <td><code>step</code></td>
+      <td><code>t</code></td>
+      <td><kbd>F11</kbd></td>
+      <td><img src="t.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Step out</td>
+      <td><code>finish</code></td>
+      <td><code>gu</code></td>
+      <td><kbd>Shift</kbd> + <kbd>F11</kbd></td>
+      <td><img src="gu.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>List breakpoints</td>
+      <td><code>info breakpoints</code></td>
+      <td><code>bl</code></td>
+    </tr>
+    <tr>
+      <td>Disable breakpoint</td>
+      <td><code>disable</code></td>
+      <td><code>bd</code></td>
+    </tr>
+    <tr>
+      <td>Enable breakpoint</td>
+      <td><code>enable</code></td>
+      <td><code>be</code></td>
+    </tr>
+    <tr>
+      <td>Clear breakpoint</td>
+      <td><code>clear</code></td>
+      <td><code>bc</code></td>
+      <td><kbd>F9</kbd> at caret location</td>
+      <td><img src="bp.gif" alt="toolbar button">&nbsp;(toggle)</td>
+    </tr>
+    <tr>
+      <td>Run to location</td>
+      <td><code>advance</code></td>
+      <td><code>pa</code></td>
+      <td><kbd>F7</kbd> at caret location</td>
+      <td><img src="pa.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Current Thread Backtrace</td>
+      <td><code>bt</code></td>
+      <td><code>k</code></td>
+      <td><kbd>Alt</kbd> + <kbd>6</kbd></td>
+      <td><img src="k.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Switch non-volatile register context to frame</td>
+      <td><code>f &lt;frame number&gt;</code></td>
+      <td><code>.frame /r /c &lt;frame number&gt;</code></td>
+    </tr>
+    <tr>
+      <td>List so/dll</td>
+      <td><code>info sharedlibrary</code></td>
+      <td><code>lm</code></td>
+    </tr>
+    <tr>
+      <td>List processes</td>
+      <td></td>
+      <td><code><a href="#procsyntax">|*</a></code></td>
+      <td><kbd>Alt</kbd> + <kbd>9</kbd></td>
+      <td><img src="threads.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>List threads</td>
+      <td><code>info threads</code></td>
+      <td><code><a href="#threadsyntax">~*</a></code></td>
+      <td><kbd>Alt</kbd> + <kbd>9</kbd></td>
+      <td><img src="threads.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Switch current thread</td>
+      <td><code>thread &lt;thread number&gt;</code></td>
+      <td><code>~&lt;thread number&gt; s</code></td>
+    </tr>
+    <tr>
+      <td>Break on .so/.dll load</td>
+      <td><code>catch load &lt;regex&gt;</code></td>
+      <td><code>sxe ld:&lt;module&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Ignore signal/exception</td>
+      <td><code>handle &lt;signal&gt; nostop</code></td>
+      <td><code>sxd av</code></td>
+    </tr>
+    <tr>
+      <td>Load symbols for module</td>
+      <td><code>add-symbol-file</code></td>
+      <td><code>.reload &lt;module&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Local variables in current stack frame</td>
+      <td><code>info locals</code></td>
+      <td><code>dv</code></td>
+      <td><kbd>Alt</kbd> + <kbd>3</kbd></td>
+      <td><img src="dv.gif" alt="toolbar button"></td>
+    </tr>
+    <tr>
+      <td>Arguments for current stack frame</td>
+      <td><code>info args</code></td>
+      <td><code>kb 1</code></td>
+    </tr>
+    <tr>
+      <td>Symbol lookup</td>
+      <td><code>info (functions|variables) &lt;regexp&gt;</code></td>
+      <td><code>x &lt;module!symbol&gt;</code></td>
+      <td></td>
+      <td></td>
+      <td>May use <code>*</code> and <code>?</code> as glob-style wildcards</td>
+    </tr>
+    <tr>
+      <td>Registers</td>
+      <td><code>info registers</code></td>
+      <td><code>r</code></td>
+      <td><kbd>Alt</kbd> + <kbd>4</kbd></td>
+      <td><img src="r.gif" alt="toolbar button"></td>
+    </tr>
+    <!--
+    <tr>
+      <td></td>
+      <td><code></code></td>
+      <td><code></code></td>
+      <td><kbd></kbd></td>
+      <td><img src="foo.gif" alt="toolbar button"></td>
+      <td></td>
+    </tr>
+    -->
+  </tbody>
+</table>
+<a name="procsyntax"><h3>Process syntax:</h3></a>
+<table>
+  <tr>
+    <td><code>|.</code></td>
+    <td>Current process</td>
+  </tr>
+  <tr>
+    <td><code>|#</code></td>
+    <td>Faulting process</td>
+  </tr>
+  <tr>
+    <td><code>|*</code></td>
+    <td>All processes</td>
+  </tr>
+  <tr>
+    <td><code>|&lt;index&gt;</code></td>
+    <td>Process at index</td>
+  </tr>
+  <tr>
+    <td><code>|~&lt;pid&gt;</code></td>
+    <td>Process by ID</td>
+  </tr>
+</table>
+<p>Note that this syntax is identical to thread syntax except for the fact that it uses <code>|</code> instead of <code>~</code></p>
+
+<a name="threadsyntax"><h3>Thread syntax:</h3></a>
+<table>
+  <tr>
+    <td><code>~.</code></td>
+    <td>Current thread</td>
+  </tr>
+  <tr>
+    <td><code>~#</code></td>
+    <td>Faulting thread</td>
+  </tr>
+  <tr>
+    <td><code>~*</code></td>
+    <td>All threads</td>
+  </tr>
+  <tr>
+    <td><code>~&lt;index&gt;</code></td>
+    <td>Thread at index</td>
+  </tr>
+  <tr>
+    <td><code>~~&lt;tid&gt;</code></td>
+    <td>Thread by ID</td>
+  </tr>
+</table>
+<p>Note that this syntax is identical to process syntax except for the fact that it uses <code>~</code> instead of <code>|</code></p>
+
+<p>This syntax may be used as a prefix to restrict the scope of certain subcommands:</p>
+<table>
+  <tr>
+    <th>Command</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>f</code></td>
+    <td>Freeze thread</td>
+  </tr>
+  <tr>
+    <td><code>u</code></td>
+    <td>Thaw thread</td>
+  </tr>
+  <tr>
+    <td><code>s</code></td>
+    <td>Switch current thread</td>
+  </tr>
+  <tr>
+    <td><code>~0 bp &lt;address&gt;</code></td>
+    <td>Set a breakpoint to fire only for the main thread</td>
+  </tr>
+  <!--
+  <tr>
+    <td><code></code></td>
+    <td></td>
+  </tr>
+  -->
+</table>
+
+<p class="warning"><strong>WARNING:</strong> Some thread subcommands may use the
+same abbreviation as regular commands but have a significantly different meaning!</p>
+
+<p>Example: Freeze all threads except for main thread</p>
+<code>
+~* f<br>
+~0 u
+</code>
+<p>(The <code>f</code> command is "fill memory" in non-thread command contexts)</p>
+
+<h3>Other useful commands</h3>
+<table>
+  <tr>
+    <th>Command</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><code>!gle</code></td>
+    <td>Get the current thread's "last error" value (Win32 <code>errno</code>)</td>
+  </tr>
+  <tr>
+    <td><code>!error &lt;code&gt;</code></td>
+    <td>Look up the human-readable description of error <code>code</code></td>
+  </tr>
+  <tr>
+    <td><code>!sym noisy</code></td>
+    <td>Debug logging for symbol resolver</td>
+  </tr>
+  <tr>
+    <td><code>!sym quiet</code></td>
+    <td>Revert to quiet symbol resolution</td>
+  </tr>
+  <tr>
+    <td><code>!wow64exts.sw</code></td>
+    <td>Switch between 32-bit and 64-bit modes (Windbg 64-bit only)</td>
+  </tr>
+  <tr>
+    <td><code>.nvload &lt;path-to-natvis-file&gt;</code></td>
+    <td>Load natvis definitions (requires WinDbg 10)</td>
+  </tr>
+  <tr>
+    <td><code>.dump /mfh &lt;path-to-dump-file&gt;</code></td>
+    <td>Save current debugging state to minidump</td>
+  </tr>
+  <tr>
+    <td><code>!analyze -hang -v</code></td>
+    <td>Query the kernel to find out why the currently selected thread is hung</td>
+  </tr>
+  <!--
+  <tr>
+    <td><code></code></td>
+    <td></td>
+  </tr>
+  -->
+</table>
+<h3>Expression Evaluation</h3>
+<p>There are three expression evaluators: MASM, C++ and NatVis. MASM is the default. To change the default, see the <code>.expr</code> command.</p>
+<p>NatVis is only available with the <code>dx</code> command (see <a href="#data">below</a>).
+<p>You can also override on a per-expression basis by wrapping your expression with <code>@@masm(...)</code> or <code>@@c++(...)</code>.
+<p>To immediately evaluate an expression on the command line, use <code>?</code> for MASM or <code>??</code> for C++. References to register names must be prefixed by <code>@</code>. For example:</p>
+<p><code>?? (@eax + 0n15)</code><p>
+<p>Prints the value of <code>eax</code> + 15 (Use <code>0n</code> prefix for decimal literals)</p>
+<a name="data"><h3>Examining Data</h3></a>
+<p>Old and busted: <code>dt &lt;module!name&gt; &lt;address&gt;</code></p>
+<p>New hotness (WinDbg 10): <code>dx &lt;C++ expression&gt;</code></p>
+<ul>
+  <li>Better C++ expression parser</li>
+  <li>NatVis output: XML data that describes complex data structures for debugger visualization. Use the <code>.nvload</code> command to load visualizers.</li>
+  <li>Hypertext output using debugger markup language, makes it easier to drill down into deep data structures</li>
+</ul>
+</body>
+</html>
