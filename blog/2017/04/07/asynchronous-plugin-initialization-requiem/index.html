@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Asynchronous Plugin Initialization: Requiem - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="My colleague bsmedberg njn is going to be removing asynchronous plugin
+initialization in bug 1352575. Sadly the feature never became solid enough
+to &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-36293908-1', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+
+
+  <link href="http://static.teamohms.org/img/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s Platform Integration Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Asynchronous Plugin Initialization: Requiem</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2017-04-07T00:00:00-06:00" pubdate data-updated="true">Apr 7th, 2017</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
+initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
+to remain enabled on release, so we cut our losses and cancelled the project
+early in 2016. Now that code is just a bunch of dead weight. With the
+deprecation of non-Flash NPAPI plugins in Firefox 52, our developers are now
+working on simplifying the remaining NPAPI code as much as possible.</p>
+
+<p>Obviously the removal of that code does not prevent me from discussing some of
+the more interesting facets of that work.</p>
+
+<p>Today I am going to talk about how async plugin init worked when web content
+attempted to access a property on a plugin&rsquo;s scriptable object, when that
+plugin had not yet completed its asynchronous initialization.</p>
+
+<p>As <a href="https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins">described on MDN</a>,
+the DOM queries a plugin for scriptability by calling <code>NPP_GetValue</code> with the
+<code>NPPVpluginScriptableNPObject</code> constant. With async plugin init, we did not
+return the true NPAPI scriptable object back to the DOM. Instead we returned
+a surrogate object. This meant that we did not need to synchronously wait for
+the plugin to initialize before returning a result back to the DOM.</p>
+
+<p>If the DOM subsequently called into that surrogate object, the surrogate would
+be forced to synchronize with the plugin. There was a limit on how much fakery
+the async surrogate could do once the DOM needed a definitive answer &ndash; after
+all, the NPAPI itself is entirely synchronous. While you may question whether
+the asynchronous surrogate actually bought us any responsiveness, performance
+profiles and measurements that I took at the time did indeed demonstrate that
+the asynchronous surrogate did buy us enough additional concurrency to make it
+worthwhile. A good number of plugin instantiations were able to complete in
+time before the DOM had made a single invocation on the surrogate.</p>
+
+<p>Once the surrogate object had synchronized with the plugin, it would then mostly
+act as a pass-through to the plugin&rsquo;s real NPAPI scriptable object, with one
+notable exception: property accesses.</p>
+
+<p>The reason for this is not necessarily obvious, so allow me to elaborate:</p>
+
+<p>The DOM usually sets up a scriptable object as follows:</p>
+
+<pre><samp>
+this.__proto__.__proto__.__proto__
+</samp></pre>
+
+
+<ul>
+<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&lt;embed&gt;</code> element);</li>
+<li>Whose prototype is the NPAPI scriptable object;</li>
+<li>Whose prototype is the shared WebIDL prototype;</li>
+<li>Whose prototype is <code>Object.prototype</code>.</li>
+</ul>
+
+
+<p>NPAPI is reentrant (some might say <em>insanely</em> reentrant). It is possible (and
+indeed common) for a plugin to set properties on the WebIDL object from within
+the plugin&rsquo;s <code>NPP_New</code>.</p>
+
+<p>Suppose that the DOM tries to access a property on the plugin&rsquo;s WebIDL object
+that is normally set by the plugin&rsquo;s <code>NPP_New</code>. In the asynchronous case, the
+plugin&rsquo;s initialization might still be in progress, so that property might not
+yet exist.</p>
+
+<p>In the case where the property does not yet exist on the WebIDL object, JavaScript
+fails to retrieve an &ldquo;own&rdquo; property. It then moves on to the first prototype
+and attempts to resolve the property on that. As outlined above, this prototype
+would actually be the async surrogate. The async surrogate would then be in a
+situation where it must absolutely produce a definitive result, so this would
+trigger synchronization with the plugin. At this point the plugin would be
+guaranteed to have finished initializing.</p>
+
+<p>Now we have a problem: JS was already examining the NPAPI scriptable object when
+it blocked to synchronize with the plugin. Meanwhile, the plugin went ahead and
+set properties (including the one that we&rsquo;re interested in) on the WebIDL object.
+By the time that JS execution resumes, it would already be looking too far up the
+prototype chain to see those new properties!</p>
+
+<p>The surrogate needed to be aware of this when it synchronized with the plugin
+during a property access. If the plugin had already completed its initialization
+(thus rendering synchronization unnecessary), the surrogate would simply pass the
+property access on to the real NPAPI scriptable object. On the other hand, if a
+synchronization was performed, the surrogate would first retry the WebIDL object
+by querying for the WebIDL object&rsquo;s &ldquo;own&rdquo; properties, and return the own property
+if it now existed. If no own property existed on the WebIDL object, then the
+surrogate would revert to its &ldquo;pass through all the things&rdquo; behaviour.</p>
+
+<p>If I hadn&rsquo;t made the asynchronous surrogate scriptable object do that, we would
+have ended up with a strange situation where the DOM&rsquo;s initial property access
+on an embed could fail non-deterministically during page load.</p>
+
+<p>That&rsquo;s enough chatter for today. I enjoy blogging about my crazy hacks that make
+the impossible, umm&hellip; possible, so maybe I&rsquo;ll write some more of these in the
+future.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2017-04-07T15:00:00-06:00" pubdate data-updated="true">2017-04-07 15:00:00 -0600</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/async/'>async</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/plugins/'>plugins</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/" >Tweet</a>
+  
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/04/06/new-team-new-project/" title="Previous Post: New Team, New Project">&laquo; New Team, New Project</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/" title="Next Post: Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds">Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/07/17/win32-gotchas/">Win32 Gotchas</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/">Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/">Asynchronous Plugin Initialization: Requiem</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/dblohm7">@dblohm7</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'dblohm7',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+<section class="googleplus googleplus-hidden">
+  <h1>
+    <a href="https://plus.google.com/klotzy?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/';
+        var disqus_url = 'http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id; js.async = true;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

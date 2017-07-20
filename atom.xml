@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-02-11T20:14:24-07:00</updated>
+  <updated>2017-07-17T12:03:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,343 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Win32 Gotchas]]></title>
+    <link href="http://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
+    <updated>2017-07-17T12:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
+    <content type="html"><![CDATA[<p>For the second time since I have been at Mozilla I have encountered a situation
+where hooks are called for notifications of a newly created window, but that
+window has not yet been initialized properly, causing the hooks to behave badly.</p>
+
+<p>The first time was inside our window neutering code in IPC, while the second
+time was in our accessibility code.</p>
+
+<p>Every time I have seen this, there is code that follows this pattern:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">HWND</span> <span class="n">hwnd</span> <span class="o">=</span> <span class="n">CreateWindowEx</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">);</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">hwnd</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Do some follow-up initialization to hwnd (Using SetProp as an example):</span>
+</span><span class='line'>  <span class="n">SetProp</span><span class="p">(</span><span class="n">hwnd</span><span class="p">,</span> <span class="s">&quot;Foo&quot;</span><span class="p">,</span> <span class="n">bar</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This seems innocuous enough, right?</p>
+
+<p>The problem is that <code>CreateWindowEx</code> calls hooks. If those hooks then try to do
+something like <code>GetProp(hwnd, "Foo")</code>, that call is going to fail because the
+&ldquo;Foo&rdquo; prop has not yet been set.</p>
+
+<p>The key takeaway from this is that, if you are creating a new window, you must
+do any follow-up initialization from within your window proc&rsquo;s <code>WM_CREATE</code>
+handler. This will guarantee that your window&rsquo;s initialization will have
+completed before any hooks are called.</p>
+
+<p>You might be thinking, &ldquo;But I don&rsquo;t set any hooks!&rdquo; While this may be true, you
+must not forget about hooks set by third-party code.</p>
+
+<p>&ldquo;But those hooks won&rsquo;t know anything about my program&rsquo;s internals, right?&rdquo;</p>
+
+<p>Perhaps, perhaps not. But when those hooks fire, they give third-party software
+the opportunity to run. In some cases, those hooks might even cause the thread
+to <em>reenter your own code</em>. Your window had better be completely initialized
+when this happens!</p>
+
+<p>In the case of my latest discovery of this issue in <a title="Window emulation needs to SetProp inside WM_CREATE" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1380471">bug 1380471</a>, I made it
+possible to use a C++11 lambda to simplify this pattern.</p>
+
+<p><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632680.aspx"><code>CreateWindowEx</code></a>
+accepts a <code>lpParam</code> parameter which is then passed to the <code>WM_CREATE</code> handler
+as the <code>lpCreateParams</code> member of a <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632603.aspx"><code>CREATESTRUCT</code></a>.</p>
+
+<p>By setting <code>lpParam</code> to a pointer to a <code>std::function&lt;void(HWND)&gt;</code>, we may then
+supply any callable that we wish for follow-up window initialization.</p>
+
+<p>Using the previous code sample as a baseline, this allows me to revise the code
+to safely set a property like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">onCreate</span><span class="p">([](</span><span class="n">HWND</span> <span class="n">aHwnd</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">void</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">SetProp</span><span class="p">(</span><span class="n">aHwnd</span><span class="p">,</span> <span class="s">&quot;Foo&quot;</span><span class="p">,</span> <span class="n">bar</span><span class="p">);</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">HWND</span> <span class="n">hwnd</span> <span class="o">=</span> <span class="n">CreateWindowEx</span><span class="p">(</span><span class="cm">/* ... */</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">onCreate</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// At this point is already too late to further initialize hwnd!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Note that since <code>lpParam</code> is always passed during <code>WM_CREATE</code>, which always fires
+before <code>CreateWindowEx</code> returns, it is safe for <code>onCreate</code> to live on the stack.</p>
+
+<p>I liked this solution for the a11y case because it preserved the locality of
+the initialization code within the function that called <code>CreateWindowEx</code>; the
+window proc for this window is implemented in another source file and the
+follow-up initialization depends on the context surrounding the <code>CreateWindowEx</code>
+call.</p>
+
+<p>Speaking of window procs, here is how that window&rsquo;s <code>WM_CREATE</code> handler invokes
+the callable:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="k">switch</span> <span class="p">(</span><span class="n">uMsg</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">case</span> <span class="nl">WM_CREATE</span><span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">createStruct</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">CREATESTRUCT</span><span class="o">*&gt;</span><span class="p">(</span><span class="n">lParam</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">createProc</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">HWND</span><span class="p">)</span><span class="o">&gt;*&gt;</span><span class="p">(</span>
+</span><span class='line'>      <span class="n">createStruct</span><span class="o">-&gt;</span><span class="n">lpCreateParams</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">createProc</span> <span class="o">&amp;&amp;</span> <span class="o">*</span><span class="n">createProc</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="p">(</span><span class="o">*</span><span class="n">createProc</span><span class="p">)(</span><span class="n">hwnd</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// ...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>TL;DR:</strong> If you see a pattern where further initialization work is being done
+on an <code>HWND</code> after a <code>CreateWindowEx</code> call, move that initialization code to your
+window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds]]></title>
+    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <updated>2017-06-12T15:50:43-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
+use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
+<code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
+
+<h2>They enable more utility in WinDbg extensions</h2>
+
+<p>Every time you initialize a <code>CRITICAL_SECTION</code>, Windows inserts the CS&rsquo;s
+debug info into a process-wide linked list. This enables their discovery by
+the Windows debugging engine, and makes the <code>!cs</code>, <code>!critsec</code>, and <code>!locks</code>
+commands more useful.</p>
+
+<h2>They enable profiling of their initialization and acquisition</h2>
+
+<p>When the &ldquo;Create user mode stack trace database&rdquo; gflag is enabled, Windows
+records the call stack of the thread that called <code>InitializeCriticalSection</code>
+on that CS. Windows also records the call stack of the owning thread once
+it has acquired the CS. This can be very useful for debugging deadlocks.</p>
+
+<h2>They track their contention counts</h2>
+
+<p>Since every CS has been placed in a process-wide linked list, we may now ask
+the debugger to dump statistics about every live CS in the process. In
+particular, we can ask the debugger to output the contention counts for each
+CS in the process. After running a workload against Nightly, we may then take
+the contention output, sort it descendingly, and be able to determine which
+<code>CRITICAL_SECTION</code>s are the most contended in the process.</p>
+
+<p>We may then want to more closely inspect the hottest CSes to determine whether
+there is anything that we can do to reduce contention and all of the extra
+context switching that entails.</p>
+
+<h2>In Summary</h2>
+
+<p>When we use <code>SRWLOCK</code>s or initialize our <code>CRITICAL_SECTION</code>s with the
+<code>CRITICAL_SECTION_NO_DEBUG_INFO</code> flag, we are denying ourselves access to this
+information. That&rsquo;s fine on release builds, but on Nightly I think it is worth
+having around. While I realize that most Mozilla developers have not used this
+until now (otherwise I would not be writing this blog post), this rich debugger
+info is one of those things that you do not miss until you do not have it.</p>
+
+<p>For further reading about critical section debug info, check out
+<a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
+archived article from MSDN Magazine.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
+    <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
+    <updated>2017-04-07T15:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
+    <content type="html"><![CDATA[<p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
+initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
+to remain enabled on release, so we cut our losses and cancelled the project
+early in 2016. Now that code is just a bunch of dead weight. With the
+deprecation of non-Flash NPAPI plugins in Firefox 52, our developers are now
+working on simplifying the remaining NPAPI code as much as possible.</p>
+
+<p>Obviously the removal of that code does not prevent me from discussing some of
+the more interesting facets of that work.</p>
+
+<p>Today I am going to talk about how async plugin init worked when web content
+attempted to access a property on a plugin&rsquo;s scriptable object, when that
+plugin had not yet completed its asynchronous initialization.</p>
+
+<p>As <a href="https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins">described on MDN</a>,
+the DOM queries a plugin for scriptability by calling <code>NPP_GetValue</code> with the
+<code>NPPVpluginScriptableNPObject</code> constant. With async plugin init, we did not
+return the true NPAPI scriptable object back to the DOM. Instead we returned
+a surrogate object. This meant that we did not need to synchronously wait for
+the plugin to initialize before returning a result back to the DOM.</p>
+
+<p>If the DOM subsequently called into that surrogate object, the surrogate would
+be forced to synchronize with the plugin. There was a limit on how much fakery
+the async surrogate could do once the DOM needed a definitive answer &ndash; after
+all, the NPAPI itself is entirely synchronous. While you may question whether
+the asynchronous surrogate actually bought us any responsiveness, performance
+profiles and measurements that I took at the time did indeed demonstrate that
+the asynchronous surrogate did buy us enough additional concurrency to make it
+worthwhile. A good number of plugin instantiations were able to complete in
+time before the DOM had made a single invocation on the surrogate.</p>
+
+<p>Once the surrogate object had synchronized with the plugin, it would then mostly
+act as a pass-through to the plugin&rsquo;s real NPAPI scriptable object, with one
+notable exception: property accesses.</p>
+
+<p>The reason for this is not necessarily obvious, so allow me to elaborate:</p>
+
+<p>The DOM usually sets up a scriptable object as follows:</p>
+
+<pre><samp>
+this.__proto__.__proto__.__proto__
+</samp></pre>
+
+
+<ul>
+<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&lt;embed&gt;</code> element);</li>
+<li>Whose prototype is the NPAPI scriptable object;</li>
+<li>Whose prototype is the shared WebIDL prototype;</li>
+<li>Whose prototype is <code>Object.prototype</code>.</li>
+</ul>
+
+
+<p>NPAPI is reentrant (some might say <em>insanely</em> reentrant). It is possible (and
+indeed common) for a plugin to set properties on the WebIDL object from within
+the plugin&rsquo;s <code>NPP_New</code>.</p>
+
+<p>Suppose that the DOM tries to access a property on the plugin&rsquo;s WebIDL object
+that is normally set by the plugin&rsquo;s <code>NPP_New</code>. In the asynchronous case, the
+plugin&rsquo;s initialization might still be in progress, so that property might not
+yet exist.</p>
+
+<p>In the case where the property does not yet exist on the WebIDL object, JavaScript
+fails to retrieve an &ldquo;own&rdquo; property. It then moves on to the first prototype
+and attempts to resolve the property on that. As outlined above, this prototype
+would actually be the async surrogate. The async surrogate would then be in a
+situation where it must absolutely produce a definitive result, so this would
+trigger synchronization with the plugin. At this point the plugin would be
+guaranteed to have finished initializing.</p>
+
+<p>Now we have a problem: JS was already examining the NPAPI scriptable object when
+it blocked to synchronize with the plugin. Meanwhile, the plugin went ahead and
+set properties (including the one that we&rsquo;re interested in) on the WebIDL object.
+By the time that JS execution resumes, it would already be looking too far up the
+prototype chain to see those new properties!</p>
+
+<p>The surrogate needed to be aware of this when it synchronized with the plugin
+during a property access. If the plugin had already completed its initialization
+(thus rendering synchronization unnecessary), the surrogate would simply pass the
+property access on to the real NPAPI scriptable object. On the other hand, if a
+synchronization was performed, the surrogate would first retry the WebIDL object
+by querying for the WebIDL object&rsquo;s &ldquo;own&rdquo; properties, and return the own property
+if it now existed. If no own property existed on the WebIDL object, then the
+surrogate would revert to its &ldquo;pass through all the things&rdquo; behaviour.</p>
+
+<p>If I hadn&rsquo;t made the asynchronous surrogate scriptable object do that, we would
+have ended up with a strange situation where the DOM&rsquo;s initial property access
+on an embed could fail non-deterministically during page load.</p>
+
+<p>That&rsquo;s enough chatter for today. I enjoy blogging about my crazy hacks that make
+the impossible, umm&hellip; possible, so maybe I&rsquo;ll write some more of these in the
+future.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New Team, New Project]]></title>
+    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
+    <updated>2016-04-06T21:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
+    <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
+in some form or another for several years prior to that, I decided that it was
+time for me to move on to new challenges. Fortunately the Platform org was
+willing to have me set up shop under the (e10s|sandboxing|platform integration)
+umbrella.</p>
+
+<p>I am pretty excited about this new role!</p>
+
+<p>My first project is to sort out the accessibility situation under Windows e10s.
+This started back at Mozlando last December. A number of engineers from across
+the Platform org, plus me, got together to brainstorm. Not too long after we had
+all returned home, I ended up making a suggestion on an email thread that has
+evolved into the core concept that I am currently attempting. As is typical at
+Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
+An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+
+<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
+in time for our London all-hands at the end of Q2. Hopefully we will be able to
+deliver on that!</p>
+
+<h2>Some Additional Notes</h2>
+
+<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
+feel that these ideas are strong enough to commit to a wiki yet, but I do want
+them to be publicly available.</p>
+
+<p>Once concern that our colleagues at NVAccess have identified is that the
+current COM interfaces are too chatty; this is a major reason why screen
+readers frequently inject libraries into the Firefox address space. If we serve
+our content a11y objects as remote COM objects, there is concern that performance
+would suffer. This concern is not due to latency, but rather due to frequency
+of calls; one function call does not provide sufficient information to the a11y
+client. As a result, multiple round trips are required to fetch all of the
+information that is required for a particular DOM node.</p>
+
+<p>My gut feeling about this is that this is probably a legitimate concern, however
+we cannot make good decisions without quantifying the performance. My plan going
+forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
+followed by work on reducing round trips as necessary.</p>
+
+<h2>Smart Proxies</h2>
+
+<p>One idea that was discussed is the idea of the content process speculatively
+sending information to the chrome process that might be needed in the future.
+For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
+will be queried off that interface. A smart proxy could ship that data across
+the RPC channel during marshaling so that querying that additional information
+does not require additional round trips.</p>
+
+<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
+information about how to do this and am posting it here for posterity:</p>
+
+<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
+Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[New Mozdbgext Command: !iat]]></title>
@@ -116,7 +453,7 @@ loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Micr
 symbol engine as necessary.</p>
 
 <p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadeicmal representation of
+names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.</p>
 ]]></content>
   </entry>
@@ -211,9 +548,7 @@ as a hexadecimal value.</li>
 
 <h3>Downloading windbgext</h3>
 
-<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>)
-(which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
-but the code should be source compatible.</p>
+<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>) available for download.</p>
 
 <p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
 and do not work correctly yet. Please stick to the documented commands at this
@@ -1507,7 +1842,7 @@ there&rsquo;s no reason why we can&rsquo;t then <em>explicitly</em> desynchroniz
 <span class='line-number'>4</span>
 </pre></td><td class='code'><pre><code class='cpp'><span class='line'>      <span class="c1">// Disentangle our input queue from the hung Firefox process</span>
 </span><span class='line'>      <span class="n">AttachThreadInput</span><span class="p">(</span><span class="n">GetCurrentThreadId</span><span class="p">(),</span>
-</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="n">nullptr</span><span class="p">),</span>
+</span><span class='line'>                        <span class="n">GetWindowThreadProcessId</span><span class="p">(</span><span class="n">mParentWindow</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">),</span>
 </span><span class='line'>                        <span class="n">FALSE</span><span class="p">);</span>
 </span></code></pre></td></tr></table></div></figure>
 

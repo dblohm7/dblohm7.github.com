@@ -4,7 +4,7 @@
   <title><![CDATA[Category: win32 | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-02-11T20:14:24-07:00</updated>
+  <updated>2017-07-17T12:03:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,217 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Win32 Gotchas]]></title>
+    <link href="http://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
+    <updated>2017-07-17T12:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
+    <content type="html"><![CDATA[<p>For the second time since I have been at Mozilla I have encountered a situation
+where hooks are called for notifications of a newly created window, but that
+window has not yet been initialized properly, causing the hooks to behave badly.</p>
+
+<p>The first time was inside our window neutering code in IPC, while the second
+time was in our accessibility code.</p>
+
+<p>Every time I have seen this, there is code that follows this pattern:</p>
+
+<pre><code class="c++">HWND hwnd = CreateWindowEx(/* ... */);
+if (hwnd) {
+  // Do some follow-up initialization to hwnd (Using SetProp as an example):
+  SetProp(hwnd, "Foo", bar);
+}
+</code></pre>
+
+<p>This seems innocuous enough, right?</p>
+
+<p>The problem is that <code>CreateWindowEx</code> calls hooks. If those hooks then try to do
+something like <code>GetProp(hwnd, "Foo")</code>, that call is going to fail because the
+&ldquo;Foo&rdquo; prop has not yet been set.</p>
+
+<p>The key takeaway from this is that, if you are creating a new window, you must
+do any follow-up initialization from within your window proc&rsquo;s <code>WM_CREATE</code>
+handler. This will guarantee that your window&rsquo;s initialization will have
+completed before any hooks are called.</p>
+
+<p>You might be thinking, &ldquo;But I don&rsquo;t set any hooks!&rdquo; While this may be true, you
+must not forget about hooks set by third-party code.</p>
+
+<p>&ldquo;But those hooks won&rsquo;t know anything about my program&rsquo;s internals, right?&rdquo;</p>
+
+<p>Perhaps, perhaps not. But when those hooks fire, they give third-party software
+the opportunity to run. In some cases, those hooks might even cause the thread
+to <em>reenter your own code</em>. Your window had better be completely initialized
+when this happens!</p>
+
+<p>In the case of my latest discovery of this issue in <a title="Window emulation needs to SetProp inside WM_CREATE" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1380471">bug 1380471</a>, I made it
+possible to use a C++11 lambda to simplify this pattern.</p>
+
+<p><a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632680.aspx"><code>CreateWindowEx</code></a>
+accepts a <code>lpParam</code> parameter which is then passed to the <code>WM_CREATE</code> handler
+as the <code>lpCreateParams</code> member of a <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms632603.aspx"><code>CREATESTRUCT</code></a>.</p>
+
+<p>By setting <code>lpParam</code> to a pointer to a <code>std::function&lt;void(HWND)&gt;</code>, we may then
+supply any callable that we wish for follow-up window initialization.</p>
+
+<p>Using the previous code sample as a baseline, this allows me to revise the code
+to safely set a property like this:</p>
+
+<pre><code class="c++">std::function&lt;void(HWND)&gt; onCreate([](HWND aHwnd) -&gt; void {
+  SetProp(aHwnd, "Foo", bar);
+});
+
+HWND hwnd = CreateWindowEx(/* ... */, &amp;onCreate);
+// At this point is already too late to further initialize hwnd!
+</code></pre>
+
+<p>Note that since <code>lpParam</code> is always passed during <code>WM_CREATE</code>, which always fires
+before <code>CreateWindowEx</code> returns, it is safe for <code>onCreate</code> to live on the stack.</p>
+
+<p>I liked this solution for the a11y case because it preserved the locality of
+the initialization code within the function that called <code>CreateWindowEx</code>; the
+window proc for this window is implemented in another source file and the
+follow-up initialization depends on the context surrounding the <code>CreateWindowEx</code>
+call.</p>
+
+<p>Speaking of window procs, here is how that window&rsquo;s <code>WM_CREATE</code> handler invokes
+the callable:</p>
+
+<pre><code class="c++">switch (uMsg) {
+  case WM_CREATE: {
+    auto createStruct = reinterpret_cast&lt;CREATESTRUCT*&gt;(lParam);
+    auto createProc = reinterpret_cast&lt;std::function&lt;void(HWND)&gt;*&gt;(
+      createStruct-&gt;lpCreateParams);
+
+    if (createProc &amp;&amp; *createProc) {
+      (*createProc)(hwnd);
+    }
+
+    return 0;
+  }
+  // ...
+</code></pre>
+
+<p><strong>TL;DR:</strong> If you see a pattern where further initialization work is being done
+on an <code>HWND</code> after a <code>CreateWindowEx</code> call, move that initialization code to your
+window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds]]></title>
+    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <updated>2017-06-12T15:50:43-06:00</updated>
+    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
+use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
+<code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
+
+<h2>They enable more utility in WinDbg extensions</h2>
+
+<p>Every time you initialize a <code>CRITICAL_SECTION</code>, Windows inserts the CS&rsquo;s
+debug info into a process-wide linked list. This enables their discovery by
+the Windows debugging engine, and makes the <code>!cs</code>, <code>!critsec</code>, and <code>!locks</code>
+commands more useful.</p>
+
+<h2>They enable profiling of their initialization and acquisition</h2>
+
+<p>When the &ldquo;Create user mode stack trace database&rdquo; gflag is enabled, Windows
+records the call stack of the thread that called <code>InitializeCriticalSection</code>
+on that CS. Windows also records the call stack of the owning thread once
+it has acquired the CS. This can be very useful for debugging deadlocks.</p>
+
+<h2>They track their contention counts</h2>
+
+<p>Since every CS has been placed in a process-wide linked list, we may now ask
+the debugger to dump statistics about every live CS in the process. In
+particular, we can ask the debugger to output the contention counts for each
+CS in the process. After running a workload against Nightly, we may then take
+the contention output, sort it descendingly, and be able to determine which
+<code>CRITICAL_SECTION</code>s are the most contended in the process.</p>
+
+<p>We may then want to more closely inspect the hottest CSes to determine whether
+there is anything that we can do to reduce contention and all of the extra
+context switching that entails.</p>
+
+<h2>In Summary</h2>
+
+<p>When we use <code>SRWLOCK</code>s or initialize our <code>CRITICAL_SECTION</code>s with the
+<code>CRITICAL_SECTION_NO_DEBUG_INFO</code> flag, we are denying ourselves access to this
+information. That&rsquo;s fine on release builds, but on Nightly I think it is worth
+having around. While I realize that most Mozilla developers have not used this
+until now (otherwise I would not be writing this blog post), this rich debugger
+info is one of those things that you do not miss until you do not have it.</p>
+
+<p>For further reading about critical section debug info, check out
+<a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
+archived article from MSDN Magazine.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[New Team, New Project]]></title>
+    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
+    <updated>2016-04-06T21:00:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
+    <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
+in some form or another for several years prior to that, I decided that it was
+time for me to move on to new challenges. Fortunately the Platform org was
+willing to have me set up shop under the (e10s|sandboxing|platform integration)
+umbrella.</p>
+
+<p>I am pretty excited about this new role!</p>
+
+<p>My first project is to sort out the accessibility situation under Windows e10s.
+This started back at Mozlando last December. A number of engineers from across
+the Platform org, plus me, got together to brainstorm. Not too long after we had
+all returned home, I ended up making a suggestion on an email thread that has
+evolved into the core concept that I am currently attempting. As is typical at
+Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
+An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+
+<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
+in time for our London all-hands at the end of Q2. Hopefully we will be able to
+deliver on that!</p>
+
+<h2>Some Additional Notes</h2>
+
+<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
+feel that these ideas are strong enough to commit to a wiki yet, but I do want
+them to be publicly available.</p>
+
+<p>Once concern that our colleagues at NVAccess have identified is that the
+current COM interfaces are too chatty; this is a major reason why screen
+readers frequently inject libraries into the Firefox address space. If we serve
+our content a11y objects as remote COM objects, there is concern that performance
+would suffer. This concern is not due to latency, but rather due to frequency
+of calls; one function call does not provide sufficient information to the a11y
+client. As a result, multiple round trips are required to fetch all of the
+information that is required for a particular DOM node.</p>
+
+<p>My gut feeling about this is that this is probably a legitimate concern, however
+we cannot make good decisions without quantifying the performance. My plan going
+forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
+followed by work on reducing round trips as necessary.</p>
+
+<h2>Smart Proxies</h2>
+
+<p>One idea that was discussed is the idea of the content process speculatively
+sending information to the chrome process that might be needed in the future.
+For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
+will be queried off that interface. A smart proxy could ship that data across
+the RPC channel during marshaling so that querying that additional information
+does not require additional round trips.</p>
+
+<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
+information about how to do this and am posting it here for posterity:</p>
+
+<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
+Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
@@ -116,7 +327,7 @@ loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Micr
 symbol engine as necessary.</p>
 
 <p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadeicmal representation of
+names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.</p>
 ]]></content>
   </entry>
@@ -211,9 +422,7 @@ as a hexadecimal value.</li>
 
 <h3>Downloading windbgext</h3>
 
-<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>)
-(which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
-but the code should be source compatible.</p>
+<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>) available for download.</p>
 
 <p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
 and do not work correctly yet. Please stick to the documented commands at this
@@ -224,513 +433,6 @@ time.</p>
 <p><sup><a href="#r1" id="fn1">*</a></sup> When I write &ldquo;WinDbg&rdquo;, I am really
 referring to any debugger in the <em>Debugging Tools for Windows</em> package,
 including <code>cdb</code>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Bugs from Hell: Injected Third-party Code + Detours = A Bad Time]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/"/>
-    <updated>2016-01-11T13:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time</id>
-    <content type="html"><![CDATA[<p>Happy New Year!</p>
-
-<p>I&rsquo;m finally getting &lsquo;round to writing about a nasty bug that I had to spend a
-bunch of time with in Q4 2015. It&rsquo;s one of the more challenging problems that
-I&rsquo;ve had to break and I&rsquo;ve been asked a lot of questions about it. I&rsquo;m talking
-about <a title="Crash spike in CreateWindowEx with Firefox 42.0b9 on Optimus" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473">bug 1218473</a>.</p>
-
-<h2>How This All Began</h2>
-
-<p>In <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a> I had landed a patch to intercept calls to <code>CreateWindowEx</code>.
-This was necessary because it was apparent in that bug that window subclassing
-was occurring while a window was neutered (&ldquo;neutering&rdquo; is terminology that is
-specific to Mozilla&rsquo;s Win32 IPC code).</p>
-
-<p>While I&rsquo;ll save a discussion on the specifics of window neutering for another
-day, for our purposes it is sufficient for me to point out that subclassing a
-neutered window is bad because it creates an infinite recursion scenario with
-window procedures that will eventually overflow the stack.</p>
-
-<p>Neutering is triggered during certain types of IPC calls as soon as a message is
-sent to an unneutered window on the thread making the IPC call. Unfortunately in
-the case of <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, the message triggering the neutering was
-<code>WM_CREATE</code>. Shortly after creating that window, the code responsible would
-subclass said window. Since <code>WM_CREATE</code> had already triggered neutering, this
-would result in the pathological case that triggers the stack overflow.</p>
-
-<p>For a fix, what I wanted to do is to prevent messages that were sent immediately
-during the execution of <code>CreateWindow</code> (such as <code>WM_CREATE</code>) from triggering
-neutering prematurely. By intercepting calls to <code>CreateWindowEx</code>, I could wrap
-those calls with a RAII object that temporarily suppresses the neutering. Since
-the subclassing occurs immediately after window creation, this meant that
-this subclassing operation was now safe.</p>
-
-<p>Unfortunately, shortly after landing <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, <a title="Crash spike in CreateWindowEx with Firefox 42.0b9 on Optimus" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473">bug 1218473</a> was filed.</p>
-
-<h2>Where to Start</h2>
-
-<p>It wasn&rsquo;t obvious where to start debugging this. While a crash spike was clearly
-correlated with the landing of <a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, the crashes were occurring in
-code that had nothing to do with IPC or Win32. For example, the first stack that
-I looked at was <code>js::CreateRegExpMatchResult</code>!</p>
-
-<p>When it is just not clear where to begin, I like to start by looking at our
-correlation data in Socorro &ndash; you&rsquo;d be surprised how often they can bring
-problems into sharp relief!</p>
-
-<p>In this case, the correlation data didn&rsquo;t disappoint: there
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473#c10">was</a> 100% correlation
-with a module called <code>_etoured.dll</code>. There was also correlation with the
-presence of both NVIDIA video drivers <em>and</em> Intel video drivers. Clearly this
-was a concern only when NVIDIA Optimus technology was enabled.</p>
-
-<p>I also had a pretty strong hypothesis about what <code>_etoured.dll</code> was: For many
-years, Microsoft Research has shipped a package called
-<a href="http://research.microsoft.com/en-us/projects/detours/">Detours</a>. Detours is a
-library that is used for intercepting Win32 API calls. While the changelog for
-Detours 3.0 points out that it has &ldquo;Removed [the] requirement for including
-<code>detoured.dll</code> in processes,&rdquo; in previous versions of the package, this library
-was required to be injected into the target process.</p>
-
-<p>I concluded that <code>_etoured.dll</code> was most likely a renamed version of
-<code>detoured.dll</code> from Detours 2.x.</p>
-
-<h2>Following The Trail</h2>
-
-<p>Now that I knew the likely culprit, I needed to know how it was getting there.
-During a November trip to the Mozilla Toronto office, I spent some time
-debugging a test laptop that was configured with Optimus.</p>
-
-<p>Knowing that the presence of Detours was somehow interfering with our own API
-interception, I decided to find out whether it was also trying to intercept
-<code>CreateWindowExW</code>. I launched <code>windbg</code>, started Firefox with it, and then told
-it to break as soon as <code>user32.dll</code> was loaded:</p>
-
-<pre><samp>
-sxe ld:user32.dll
-</samp></pre>
-
-
-<p>Then I pressed <code>F5</code> to resume execution. When the debugger broke again, this
-time <code>user32</code> was now in memory. I wanted the debugger to break as soon as
-<code>CreateWindowExW</code> was touched:</p>
-
-<pre><samp>
-ba w 4 user32!CreateWindowExW
-</samp></pre>
-
-
-<p>Once again I resumed execution. Then the debugger broke on the memory access and
-gave me this call stack:</p>
-
-<pre><samp>
-nvd3d9wrap!setDeviceHandle+0x1c91
-nvd3d9wrap!initialise+0x373
-nvd3d9wrap!setDeviceHandle+0x467b
-nvd3d9wrap!setDeviceHandle+0x4602
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-KERNELBASE!LoadLibraryExA+0x26
-kernel32!LoadLibraryA+0xba
-nvinit+0x11cb
-nvinit+0x5477
-nvinit!nvCoprocThunk+0x6e94
-nvinit!nvCoprocThunk+0x6e1a
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-kernel32!BasepLoadAppInitDlls+0x167
-kernel32!LoadAppInitDlls+0x82
-USER32!ClientThreadSetup+0x1f9
-USER32!__ClientThreadSetup+0x5
-ntdll!KiUserCallbackDispatcher+0x2e
-GDI32!GdiDllInitialize+0x1c
-USER32!_UserClientDllInitialize+0x32f
-ntdll!LdrpCallInitRoutine+0x14
-ntdll!LdrpRunInitializeRoutines+0x26f
-ntdll!LdrpLoadDll+0x453
-ntdll!LdrLoadDll+0xaa
-mozglue!`anonymous namespace'::patched_LdrLoadDll+0x1b0
-KERNELBASE!LoadLibraryExW+0x1f7
-firefox!XPCOMGlueLoad+0x23c
-firefox!XPCOMGlueStartup+0x1d
-firefox!InitXPCOMGlue+0xba
-firefox!NS_internal_main+0x5c
-firefox!wmain+0xbe
-firefox!__tmainCRTStartup+0xfe
-kernel32!BaseThreadInitThunk+0xe
-ntdll!__RtlUserThreadStart+0x70
-ntdll!_RtlUserThreadStart+0x1b
-</samp></pre>
-
-
-<p>This stack is a gold mine of information. In particular, it tells us the
-following:</p>
-
-<ol>
-<li><p>The offending DLLs are being injected by <code>AppInit_DLLs</code> (and in fact, Raymond
-Chen <a href="https://blogs.msdn.microsoft.com/oldnewthing/20140422-00/?p=1173">has blogged about</a>
-this exact case in the past).</p></li>
-<li><p><code>nvinit.dll</code> is the name of the DLL that is injected by step 1.</p></li>
-<li><p><code>nvinit.dll</code> loads <code>nvd3d9wrap.dll</code> which then uses Detours to patch
-our copy of <code>CreateWindowExW</code>.</p></li>
-</ol>
-
-
-<p>I then became curious as to which other functions they were patching.</p>
-
-<p>Since Detours is patching executable code, we know that at some point it is
-going to need to call <code>VirtualProtect</code> to make the target code writable. In the
-worst case, <code>VirtualProtect</code>&rsquo;s caller is going to pass the address of the page
-where the target code resides. In the best case, the caller will pass in the
-address of the target function itself!</p>
-
-<p>I restarted <code>windbg</code>, but this time I set a breakpoint on <code>VirtualProtect</code>:</p>
-
-<pre><samp>
-bp kernel32!VirtualProtect
-</samp></pre>
-
-
-<p>I then resumed the debugger and examined the call stack every time it broke.
-While not every single <code>VirtualProtect</code> call would correspond to a detour, it
-would be obvious when it was, as the NVIDIA DLLs would be on the call stack.</p>
-
-<p>The first time I caught a detour, I examined the address being passed to
-<code>VirtualProtect</code>: I ended up with the best possible case: the address was
-pointing to the actual target function! From there I was able to distill a
-<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1218473#c39">list</a> of other
-functions being hooked by the injected NVIDIA DLLs.</p>
-
-<h2>Putting it all Together</h2>
-
-<p>By this point I knew who was hooking our code and knew how it was getting there.
-I also noticed that <code>CreateWindowEx</code> is the only function that the NVIDIA DLLs
-and our own code were both trying to intercept. Clearly there was some kind of
-bad interaction occurring between the two interception mechanisms, but what was
-it?</p>
-
-<p>I decided to go back and examine a
-<a href="https://crash-stats.mozilla.com/report/index/e884dc17-957f-4270-86ab-f59742151113">specific</a>
-crash dump. In particular, I wanted to examine three different memory locations:</p>
-
-<ol>
-<li>The first few instructions of <code>user32!CreateWindowExW</code>;</li>
-<li>The first few instructions of <code>xul!CreateWindowExWHook</code>; and</li>
-<li>The site of the call to <code>user32!CreateWindowExW</code> that triggered the crash.</li>
-</ol>
-
-
-<p>Of those three locations, the only one that looked off was location 2:</p>
-
-<pre><samp>
-6b1f6611 56              push    esi
-6b1f6612 ff15f033e975    call    dword ptr [combase!CClassCache::CLSvrClassEntry::GetDDEInfo+0x41 (75e933f0)]
-6b1f6618 c3              ret
-6b1f6619 7106            jno     xul!`anonymous namespace'::CreateWindowExWHook+0x6 (6b1f6621)
-xul!`anonymous namespace'::CreateWindowExWHook:
-6b1f661b cc              int     3
-6b1f661c cc              int     3
-6b1f661d cc              int     3
-6b1f661e cc              int     3
-6b1f661f cc              int     3
-6b1f6620 cc              int     3
-6b1f6621 ff              ???
-</samp></pre>
-
-
-<p><em>Why the hell were the first six bytes filled with breakpoint instructions?</em></p>
-
-<p>I decided at this point to look at some source code. Fortunately Microsoft
-publishes the 32-bit source code for Detours, licensed for non-profit use,
-under the name &ldquo;Detours Express.&rdquo;</p>
-
-<p>I found a copy of Detours Express 2.1 and checked out the code. First I wanted
-to know where all of these <code>0xcc</code> bytes were coming from. A quick <code>grep</code> turned
-up what I was looking for:</p>
-
-<pre><code class="c++ detours.cpp start:93">inline PBYTE detour_gen_brk(PBYTE pbCode, PBYTE pbLimit)
-{
-    while (pbCode &lt; pbLimit) {
-        *pbCode++ = 0xcc;   // brk;
-    }
-    return pbCode;
-}
-</code></pre>
-
-<p>Now that I knew which function was generating the <code>int 3</code> instructions, I then
-wanted to find its callers. Soon I found:</p>
-
-<pre><code class="c++ detours.cpp start:1247">#ifdef DETOURS_X86
-    pbSrc = detour_gen_jmp_immediate(pTrampoline-&gt;rbCode + cbTarget, pTrampoline-&gt;pbRemain);
-    pbSrc = detour_gen_brk(pbSrc,
-                           pTrampoline-&gt;rbCode + sizeof(pTrampoline-&gt;rbCode));
-#endif // DETOURS_X86
-</code></pre>
-
-<p>Okay, so Detours writes the breakpoints out immediately after it has written a
-<code>jmp</code> pointing to its trampoline.</p>
-
-<p><em>Why is our hook function being trampolined?</em></p>
-
-<p>The reason must be because our hook was installed first! Detours has
-detected that and has decided that the best place to trampoline to the NVIDIA
-hook is at the beginning of our hook function.</p>
-
-<p><em>But Detours is using the wrong address!</em></p>
-
-<p>We can see that because the <code>int 3</code> instructions are written out at the
-<em>beginning</em> of <code>CreateWindowExWHook</code>, even though there should be a <code>jmp</code>
-instruction first.</p>
-
-<p><strong>Detours is calculating the wrong address to write its <code>jmp</code>!</strong></p>
-
-<h2>Finding a Workaround</h2>
-
-<p>Once I knew <em>what</em> the problem was, I needed to know more about the <em>why</em> &ndash;
-only then would I be able to come up with a way to work around this problem.</p>
-
-<p>I decided to reconstruct the scenario where both our code and Detours are trying
-to hook the same function, but our hook was installed first. I would then
-follow along through the Detours code to determine how it calculated the wrong
-address to install its <code>jmp</code>.</p>
-
-<p>The first thing to keep in mind is that Mozilla&rsquo;s function interception code
-takes advantage of <a href="https://blogs.msdn.microsoft.com/oldnewthing/20110921-00/?p=9583">hot-patch points</a>
-in Windows. If the target function begins with a <code>mov edi, edi</code> prolog, we
-use a hot-patch style hook instead of a trampoline hook. I am not going to go
-into detail about hot-patch hooks here &ndash; the above Raymond Chen link contains
-enough details to answer your questions. For the purposes of this blog post, the
-important point is that Mozilla&rsquo;s code patches the <code>mov edi, edi</code>, so NVIDIA&rsquo;s
-Detours library would need to recognize and follow the <code>jmp</code>s that our code
-patched in, in order to write its own <code>jmp</code> at <code>CreateWindowExWHook</code>.</p>
-
-<p>Tracing through the Detours code, I found the place where it checks for a
-hot-patch hook and follows the <code>jmp</code> if necessary. While examining a function
-called <code>detour_skip_jmp</code>, I found the bug:</p>
-
-<pre><code class="c++ detours.cpp start:124">            pbNew = pbCode + *(INT32 *)&amp;pbCode[1];
-</code></pre>
-
-<p>This code is supposed to be telling Detours where the target address of a <code>jmp</code>
-is, so that Detours can follow it. <code>pbNew</code> is supposed to be the target address
-of the <code>jmp</code>. <code>pbCode</code> is referencing the address <em>of the beginning of the <code>jmp</code>
-instruction itself</em>. Unfortunately, with this type of <code>jmp</code> instruction, target
-addresses are always relative to the address of the <em>next</em> instruction, not
-the <em>current</em> instruction! Since the current <code>jmp</code> instruction is five bytes
-long, Detours ends up writing its <code>jmp</code> <em>five bytes prior</em> to the intended
-target address!</p>
-
-<p>I went and checked the source code for Detours Express 3.0 to see if this had
-been fixed, and indeed it had:</p>
-
-<pre><code class="c++ detours.cpp start:163">            PBYTE pbNew = pbCode + 5 + *(INT32 *)&amp;pbCode[1];
-</code></pre>
-
-<p>That doesn&rsquo;t do much for me right now, however, since the NVIDIA stuff is still
-using Detours 2.x.</p>
-
-<p>In the case of Mozilla&rsquo;s code, there is legitimate executable code at that
-incorrect address that Detours writes to. It is corrupting the last few
-instructions of that function, thus explaining those mysterious crashes that
-were seemingly unrelated code.</p>
-
-<p>I confirmed this by downloading the binaries from the build that was associated
-with the crash dump that I was analyzing. [As an aside, I should point out that
-you need to grab the <em>identical</em> binaries for this exercise; you cannot build
-from the same source revision and expect this to work due to variability that
-is introduced into builds by things like PGO.]</p>
-
-<p>The five bytes preceeding <code>CreateWindowExHookW</code> in the crash dump diverged from
-those same bytes in the original binaries. I could also make out that the
-overwritten bytes consisted of a <code>jmp</code> instruction.</p>
-
-<h3>In Summary</h3>
-
-<p>Let us now review what we know at this point:</p>
-
-<ul>
-<li>Detours 2.x doesn&rsquo;t correctly follow <code>jmp</code>s from hot-patch hooks;</li>
-<li>If Detours tries to hook something that has already been hot-patched
-(including legitimate hot patches from Microsoft), it will write bytes at
-incorrect addresses;</li>
-<li>NVIDIA Optimus injects this buggy code into everybody&rsquo;s address spaces via an
-<code>AppInit_DLLs</code> entry for <code>nvinit.dll</code>.</li>
-</ul>
-
-
-<p>How can we best distill this into a suitable workaround?</p>
-
-<p>One option could be to block the NVIDIA DLLs outright. In most cases this would
-probably be the simplest option, but I was hesitant to do so this time. I was
-concerned about the unintended consequences of blocking what, for better or
-worse, is a user-mode component of NVIDIA video drivers.</p>
-
-<p>Instead I decided to take advantage of the fact that we now know how this bug is
-triggered. I have modified our API interception code such that if it detects
-the presence of NVIDIA Optimus, it disables hot-patch style hooks.</p>
-
-<p>Not only will this take care of the crash spike that started when I landed
-<a title="crash in mozilla::widget::TSFStaticSink::EnsureInitActiveTIPKeyboard()" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1213567">bug 1213567</a>, I also expect it to take care of other crash signatures
-whose relationship to this bug was not obvious.</p>
-
-<p>That concludes this episode of <em>Bugs from Hell</em>. Until next time&hellip;</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Interesting Win32 APIs]]></title>
-    <link href="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
-    <updated>2015-07-28T11:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
-    <content type="html"><![CDATA[<p>Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
-changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
-many changes, but the ones that were there are quite exciting IMHO. While
-researching these new APIs, I also stumbled across some others that were
-added during the Windows 8 timeframe that we should be considering as well.</p>
-
-<h2>Volatile Ranges</h2>
-
-<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
-claim that these APIs are actually new for the Windows 8.1 Update. Using the
-<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
-and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
-functions, we can now specify ranges of virtual memory that are safe to
-discarded under memory pressure. Later on, should we request that access be
-restored to that memory, the kernel will either return that virtual memory to us
-unmodified, or advise us that the associated pages have been discarded.</p>
-
-<p>A couple of years ago we had an intern on the Perf Team who was working on
-bringing this capability to Linux. I am pleasantly surprised that this is now
-offered on Windows.</p>
-
-<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
-
-<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
-API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
-files when we want the kernel to read ahead. On Win32, we were opening the
-backing file and then doing a series of sequential reads through the file to
-force the kernel to cache the file data. As of Windows 8, we can now call
-<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
-for a similar effect.</p>
-
-<h2>Operation Recorder: An API for SuperFetch</h2>
-
-<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
-and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
-APIs are intended to record access patterns during a file I/O operation.
-SuperFetch will then create prefetch files for the operation, enabling prefetch
-capabilities above and beyond the use case of initial process startup.</p>
-
-<h2>Memory Pressure Notifications</h2>
-
-<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
-Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
-allocates a kernel handle that becomes signalled when physical memory is running
-low. Gecko already has facilities for handling memory pressure events on other
-platforms, so we should probably add this to the Win32 port.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
-    <link href="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/"/>
-    <updated>2015-03-12T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful</id>
-    <content type="html"><![CDATA[<p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
-
-<p>Today I want to talk about some code that we imported from Chromium some time
-ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
-
-<p><figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
-<span class='line-number'>262</span>
-<span class='line-number'>263</span>
-<span class='line-number'>264</span>
-<span class='line-number'>265</span>
-<span class='line-number'>266</span>
-<span class='line-number'>267</span>
-<span class='line-number'>268</span>
-<span class='line-number'>269</span>
-<span class='line-number'>270</span>
-<span class='line-number'>271</span>
-<span class='line-number'>272</span>
-<span class='line-number'>273</span>
-<span class='line-number'>274</span>
-<span class='line-number'>275</span>
-<span class='line-number'>276</span>
-<span class='line-number'>277</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
-</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
-</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
-</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
-</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
-</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
-</span><span class='line'>    <span class="c1">// capture).</span>
-</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
-</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
-</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
-</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
-</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure></p>
-
-<p>This code is wrong. <strong>Very</strong> wrong.</p>
-
-<p>Let us start with the calls to <code>GetQueueStatus</code> and <code>PeekMessage</code>. Those APIs
-mark any messages already in the thread&rsquo;s message queue as having been seen,
-such that they are no longer considered &ldquo;new.&rdquo; Even though those function calls
-do not remove messages from the queue, any messages that were in the queue at
-this point are considered to be &ldquo;old.&rdquo;</p>
-
-<p>The logic in this code snippet is essentially saying, &ldquo;if the queue contains
-mouse messages that do not belong to this thread, then they must belong to an
-attached thread.&rdquo; The code then calls <code>WaitMessage</code> in an effort to give the
-other thread(s) a chance to process their mouse messages. This is where the code
-goes off the rails.</p>
-
-<p>The <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms644956%28v=vs.85%29.aspx">documentation</a>
-for <code>WaitMessage</code> states the following:</p>
-
-<blockquote><p>Note that <code>WaitMessage</code> does not return if there is unread input in the message
-queue after the thread has called a function to check the queue. This is
-because functions such as <code>PeekMessage</code>, <code>GetMessage</code>, <code>GetQueueStatus</code>,
-<code>WaitMessage</code>, <code>MsgWaitForMultipleObjects</code>, and <code>MsgWaitForMultipleObjectsEx</code>
-check the queue and then change the state information for the queue so that
-the input is no longer considered new. A subsequent call to <code>WaitMessage</code> will
-not return until new input of the specified type arrives. The existing unread
-input (received prior to the last time the thread checked the queue) is ignored.</p></blockquote>
-
-<p><code>WaitMessage</code> will only return if there is <em>a new</em> (as opposed to <em>any</em>) message
-in the queue for the calling thread. Any messages for the calling thread that
-were already in there at the time of the <code>GetQueueStatus</code> and <code>PeekMessage</code> calls
-are no longer new, so they are ignored.</p>
-
-<p>There might very well be a message at the head of that queue that should be
-processed by the current thread. Instead it is ignored while we wait for other
-threads. Here is the crux of the problem: we&rsquo;re waiting on other threads whose
-input queues are attached to our own! That other thread can&rsquo;t process its
-messages because our thread has messages in front of its messages; on the other
-hand, our thread has blocked itself!</p>
-
-<p>The only way to break this deadlock is for new messages to be added to the queue.
-That is a big reason why we&rsquo;re seeing things like <a title="Page doesn't load/render if the mouse is not moving" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1105386">bug 1105386</a>: Moving the
-mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</p>
-
-<p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
-going to be getting rid of this code in third-party binaries that attach their
-own windows to Firefox&rsquo;s windows.</p>
 ]]></content>
   </entry>
   

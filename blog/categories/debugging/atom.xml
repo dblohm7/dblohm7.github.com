@@ -4,7 +4,7 @@
   <title><![CDATA[Category: debugging | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/debugging/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2016-02-11T20:14:24-07:00</updated>
+  <updated>2017-07-17T12:03:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -116,7 +116,7 @@ loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Micr
 symbol engine as necessary.</p>
 
 <p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadeicmal representation of
+names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.</p>
 ]]></content>
   </entry>
@@ -211,9 +211,7 @@ as a hexadecimal value.</li>
 
 <h3>Downloading windbgext</h3>
 
-<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>)
-(which obviously requires 32-bit WinDbg). I have not built a 64-bit binary yet,
-but the code should be source compatible.</p>
+<p>I have pre-built binaries (<a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/32/mozdbgext.dll?raw=true">32-bit</a>, <a href="https://github.com/dblohm7/mozdbgext/blob/master/bin/64/mozdbgext.dll?raw=true">64-bit</a>) available for download.</p>
 
 <p>Note that there are several other commands that are &ldquo;roughed-in&rdquo; at this point
 and do not work correctly yet. Please stick to the documented commands at this
