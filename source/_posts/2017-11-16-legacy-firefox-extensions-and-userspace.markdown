@@ -81,7 +81,7 @@ In Conclusion
 Declaring that legacy extensions are userspace does not make them so. The way that 
 the technology actually worked defies the abstract model that the analogy 
 attempts to impose upon it. On the other hand, we can use the failure of that 
-analogy to explain why WebExtensions are important and allows us to construct an 
-extension ecosystem that *does* fit with that analogy.
+analogy to explain why WebExtensions are important and construct an extension 
+ecosystem that *does* fit with that analogy.
 
 
