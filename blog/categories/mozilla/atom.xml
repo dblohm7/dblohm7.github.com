@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-11-16T13:45:39-07:00</updated>
+  <updated>2017-11-16T15:54:45-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -83,7 +83,7 @@ gives us a better kernel analogy:</p>
 
 <ul>
 <li>Gecko is the kernel;</li>
-<li>WebExtensions are privileged applications;</li>
+<li>WebExtensions are privileged user applications;</li>
 <li>Web content runs as unprivileged user applications.</li>
 </ul>
 
