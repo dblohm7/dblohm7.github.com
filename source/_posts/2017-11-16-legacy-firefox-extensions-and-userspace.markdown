@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Legacy Firefox Exensions and \"Userspace\""
+title: "Legacy Firefox Extensions and \"Userspace\""
 date: 2017-11-16 13:30:00 -0700
 comments: true
 categories: [Mozilla, Extensions, Philosophizing]
