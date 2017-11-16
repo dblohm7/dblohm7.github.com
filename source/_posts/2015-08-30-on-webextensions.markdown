@@ -3,7 +3,7 @@ layout: post
 title: "On WebExtensions"
 date: 2015-08-30 02:00:00 -0600
 comments: true
-categories: [Mozilla, Philosophizing]
+categories: [Mozilla, Extensions, Philosophizing]
 ---
 There has been enough that has been said over the past week about [WebExtensions](https://blog.mozilla.org/addons/2015/08/21/the-future-of-developing-firefox-add-ons/) 
 that I wasn't sure if I wanted to write this post. As usual, I can't seem to 
