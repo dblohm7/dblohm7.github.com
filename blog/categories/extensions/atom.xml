@@ -4,7 +4,7 @@
   <title><![CDATA[Category: extensions | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/extensions/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-11-16T16:52:33-07:00</updated>
+  <updated>2017-11-16T16:55:22-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -93,8 +93,8 @@ gives us a better kernel analogy:</p>
 <p>Declaring that legacy extensions are userspace does not make them so. The way that
 the technology actually worked defies the abstract model that the analogy
 attempts to impose upon it. On the other hand, we can use the failure of that
-analogy to explain why WebExtensions are important and allows us to construct an
-extension ecosystem that <em>does</em> fit with that analogy.</p>
+analogy to explain why WebExtensions are important and construct an extension
+ecosystem that <em>does</em> fit with that analogy.</p>
 ]]></content>
   </entry>
   
