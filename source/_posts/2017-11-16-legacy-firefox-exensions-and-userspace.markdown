@@ -72,7 +72,7 @@ API as normal applications. I would suggest that the presence of WebExtensions
 gives us a better kernel analogy:
 
 * Gecko is the kernel;
-* WebExtensions are privileged applications;
+* WebExtensions are privileged user applications;
 * Web content runs as unprivileged user applications.
 
 In Conclusion
