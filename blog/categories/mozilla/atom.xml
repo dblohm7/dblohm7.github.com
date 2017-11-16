@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-07-17T12:03:49-06:00</updated>
+  <updated>2017-11-16T13:45:39-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,91 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Legacy Firefox Exensions and "Userspace"]]></title>
+    <link href="http://dblohm7.ca/blog/2017/11/16/legacy-firefox-exensions-and-userspace/"/>
+    <updated>2017-11-16T13:30:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-exensions-and-userspace</id>
+    <content type="html"><![CDATA[<p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
+positive and negative. That is not surprising to anybody &ndash; any software that
+has a large number of users is going to be a topic for discussion, especially
+when the release in question is undoubtedly a watershed.</p>
+
+<p>While I have <a href="http://dblohm7.ca/blog/2015/08/30/on-webextensions/">previously</a>
+blogged about the transition to WebExtensions, now that we have actually passed
+through the cutoff for legacy extensions, I have decided to add some new
+commentary on the subject.</p>
+
+<p>One analogy that has been used in the discussion of the extension ecosystem is
+that of kernelspace and userspace. The crux of the analogy is that Gecko is
+equivalent to an operating system kernel, and thus extensions are the user-mode
+programs that run atop that kernel. The argument then follows that Mozilla&rsquo;s
+deprecation and removal of legacy extension capabilities is akin to &ldquo;breaking&rdquo;
+userspace. [<em>Some people who say this are using the same tone as Linus does
+whenever he eviscerates Linux developers who break userspace, which is neither
+productive nor welcomed by anyone, but I digress.</em>] Unfortunately, that analogy
+simply does not map to the legacy extension model.</p>
+
+<h2>Legacy Extensions as Kernel Modules</h2>
+
+<p>The most significant problem with the userspace analogy is that legacy extensions
+effectively meld with Gecko and become part of Gecko itself. If we accept the
+premise that Gecko is like a monolithic OS kernel, then we must also accept that
+the analogical equivalent of loading arbitrary code into that kernel, is the
+kernel module. Such components are loaded into the kernel and effectively become
+part of it. Their code runs with full privileges. They break whenever
+significant changes are made to the kernel itself.</p>
+
+<p>Sound familiar?</p>
+
+<p>Legacy extensions were akin to kernel modules. When there is no abstraction,
+there can be no such thing as userspace. This is precisely the problem that
+WebExtensions solves!</p>
+
+<h2>Building Out a Legacy API</h2>
+
+<p>Maybe somebody out there is thinking, &ldquo;well what if you took all the APIs that
+extensions used, turned that into a &lsquo;userspace,&rsquo; and then just left that part
+alone?&rdquo;</p>
+
+<p>Which APIs? Where do we draw the line? Do we check the code coverage for every
+legacy addon in AMO and use that to determine what to include?</p>
+
+<p>Remember, there was no abstraction; installed legacy addons are fused to Gecko.
+If we pledge not to touch anything that legacy addons might touch, then we
+cannot touch anything at all.</p>
+
+<p>Where do we go from here? Freeze an old version of Gecko and host an entire copy
+of it inside web content? Compile it to WebAssembly? [<em>Oh God, what have I done?</em>]</p>
+
+<p>If <em>that&rsquo;s</em> not a maintenance burden, I don&rsquo;t know what is!</p>
+
+<h2>A Kernel Analogy for WebExtensions</h2>
+
+<p>Another problem with the legacy-extensions-as-userspace analogy is that it leaves
+awkward room for web content, whose API is abstract and well-defined. I do not
+think that it is appropriate to consider web content to be equivalent to a
+sandboxed application, as sandboxed applications use the same (albeit restricted)
+API as normal applications. I would suggest that the presence of WebExtensions
+gives us a better kernel analogy:</p>
+
+<ul>
+<li>Gecko is the kernel;</li>
+<li>WebExtensions are privileged applications;</li>
+<li>Web content runs as unprivileged user applications.</li>
+</ul>
+
+
+<h2>In Conclusion</h2>
+
+<p>Declaring that legacy extensions are userspace does not make them so. The way that
+the technology actually worked defies the abstract model that the analogy
+attempts to impose upon it. On the other hand, we can use the failure of that
+analogy to explain why WebExtensions is important and allows us to construct an
+extension ecosystem that <em>does</em> fit with that analogy.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Win32 Gotchas]]></title>
@@ -320,114 +405,6 @@ information about how to do this and am posting it here for posterity:</p>
 <p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
 <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
 Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
-    <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
-    <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
-
-<p>The syntax is pretty simple:</p>
-
-<p><code>!iat &lt;hexadecimal address&gt;</code></p>
-
-<p>This address shouldn&rsquo;t be just any pointer; it should be the address of an
-entry in the current module&rsquo;s import address table (IAT). These addresses
-are typically very identifiable by the <code>_imp_</code> prefix in their symbol names.</p>
-
-<p>The purpose of this extension is to look up the name of the DLL from whom the
-function is being imported. Furthermore, the extension checks the expected
-target address of the import with the actual target address of the import. This
-allows us to detect API hooking via IAT patching.</p>
-
-<h3>An Example Session</h3>
-
-<p>I fired up a local copy of Nightly, attached a debugger to it, and dumped the
-call stack of its main thread:</p>
-
-<pre><samp>
- # ChildEBP RetAddr
-00 0018ecd0 765aa32a ntdll!NtWaitForMultipleObjects+0xc
-01 0018ee64 761ec47b KERNELBASE!WaitForMultipleObjectsEx+0x10a
-02 0018eecc 1406905a USER32!MsgWaitForMultipleObjectsEx+0x17b
-03 0018ef18 1408e2c8 xul!mozilla::widget::WinUtils::WaitForMessage+0x5a
-04 0018ef84 13fdae56 xul!nsAppShell::ProcessNextNativeEvent+0x188
-05 0018ef9c 13fe3778 xul!nsBaseAppShell::DoProcessNextNativeEvent+0x36
-06 0018efbc 10329001 xul!nsBaseAppShell::OnProcessNextEvent+0x158
-07 0018f0e0 1038e612 xul!nsThread::ProcessNextEvent+0x401
-08 0018f0fc 1095de03 xul!NS_ProcessNextEvent+0x62
-09 0018f130 108e493d xul!mozilla::ipc::MessagePump::Run+0x273
-0a 0018f154 108e48b2 xul!MessageLoop::RunInternal+0x4d
-0b 0018f18c 108e448d xul!MessageLoop::RunHandler+0x82
-0c 0018f1ac 13fe78f0 xul!MessageLoop::Run+0x1d
-0d 0018f1b8 14090f07 xul!nsBaseAppShell::Run+0x50
-0e 0018f1c8 1509823f xul!nsAppShell::Run+0x17
-0f 0018f1e4 1514975a xul!nsAppStartup::Run+0x6f
-10 0018f5e8 15146527 xul!XREMain::XRE_mainRun+0x146a
-11 0018f650 1514c04a xul!XREMain::XRE_main+0x327
-12 0018f768 00215c1e xul!XRE_main+0x3a
-13 0018f940 00214dbd firefox!do_main+0x5ae
-14 0018f9e4 0021662e firefox!NS_internal_main+0x18d
-15 0018fa18 0021a269 firefox!wmain+0x12e
-16 0018fa60 76e338f4 firefox!__tmainCRTStartup+0xfe
-17 0018fa74 77d656c3 KERNEL32!BaseThreadInitThunk+0x24
-18 0018fabc 77d6568e ntdll!__RtlUserThreadStart+0x2f
-19 0018facc 00000000 ntdll!_RtlUserThreadStart+0x1b
-</samp></pre>
-
-
-<p>Let us examine the code at frame 3:</p>
-
-<pre><samp>
-14069042 6a04            push    4
-14069044 68ff1d0000      push    1DFFh
-14069049 8b5508          mov     edx,dword ptr [ebp+8]
-1406904c 2b55f8          sub     edx,dword ptr [ebp-8]
-1406904f 52              push    edx
-14069050 6a00            push    0
-14069052 6a00            push    0
-14069054 ff159cc57d19    call    dword ptr [xul!_imp__MsgWaitForMultipleObjectsEx (197dc59c)]
-1406905a 8945f4          mov     dword ptr [ebp-0Ch],eax
-</samp></pre>
-
-
-<p>Notice the function call to <code>MsgWaitForMultipleObjectsEx</code> occurs indirectly;
-the call instruction is referencing a pointer within the <code>xul.dll</code> binary
-itself. This is the IAT entry that corresponds to that function.</p>
-
-<p>Now, if I load <code>mozdbgext</code>, I can take the address of that IAT entry and execute
-the following command:</p>
-
-<pre><samp>
-0:000> !iat 0x197dc59c
-Expected target: USER32.dll!MsgWaitForMultipleObjectsEx
-Actual target: USER32!MsgWaitForMultipleObjectsEx+0x0
-</samp></pre>
-
-
-<p><code>!iat</code> has done two things for us:</p>
-
-<ol>
-<li>It did a reverse lookup to determine the module and function name for the
-import that corresponds to that particular IAT entry; and</li>
-<li>It followed the IAT pointer and determined the symbol at the target address.</li>
-</ol>
-
-
-<p>Normally we want both the expected and actual targets to match. If they don&rsquo;t,
-we should investigate further, as this mismatch may indicate that the IAT has
-been patched by a third party.</p>
-
-<p>Note that <code>!iat</code> command is breakpad aware (provided that you&rsquo;ve already
-loaded the symbols using <code>!bploadsyms</code>) but can fall back to the Microsoft
-symbol engine as necessary.</p>
-
-<p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
-names for the IAT entries, you need to enter the hexadecimal representation of
-the pointer.</p>
 ]]></content>
   </entry>
   

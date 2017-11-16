@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-exensions-and-userspace/</loc>
+<lastmod>2017-11-16T13:30:00-07:00</lastmod>
+</url>
+<url>
 <loc>http://dblohm7.ca/blog/2017/07/17/win32-gotchas/</loc>
 <lastmod>2017-07-17T12:00:00-06:00</lastmod>
 </url>
@@ -107,6 +111,9 @@
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/categories/chromium/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/extensions/</loc>
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/categories/philosophizing/</loc>

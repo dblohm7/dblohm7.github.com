@@ -9,8 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="For the second time since I have been at Mozilla I have encountered a situation
-where hooks are called for notifications of a newly created window, &hellip;">
+  <meta name="description" content="This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
+positive and negative. That is not surprising to anybody &ndash &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -52,7 +52,7 @@ where hooks are called for notifications of a newly created window, &hellip;">
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
   
-    <h2>My adventures as a member of Mozilla&#8217;s Platform Integration Team</h2>
+    <h2>My adventures as a member of Mozilla&#8217;s Content Isolation Team</h2>
   
 </hgroup>
 
@@ -79,6 +79,120 @@ where hooks are called for notifications of a newly created window, &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2017/11/16/legacy-firefox-exensions-and-userspace/">Legacy Firefox Exensions and &#8220;Userspace&#8221;</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2017-11-16T00:00:00-07:00" pubdate data-updated="true">Nov 16th, 2017</time>
+        
+           | <a href="/blog/2017/11/16/legacy-firefox-exensions-and-userspace/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2017/11/16/legacy-firefox-exensions-and-userspace/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
+positive and negative. That is not surprising to anybody &ndash; any software that
+has a large number of users is going to be a topic for discussion, especially
+when the release in question is undoubtedly a watershed.</p>
+
+<p>While I have <a href="http://dblohm7.ca/blog/2015/08/30/on-webextensions/">previously</a>
+blogged about the transition to WebExtensions, now that we have actually passed
+through the cutoff for legacy extensions, I have decided to add some new
+commentary on the subject.</p>
+
+<p>One analogy that has been used in the discussion of the extension ecosystem is
+that of kernelspace and userspace. The crux of the analogy is that Gecko is
+equivalent to an operating system kernel, and thus extensions are the user-mode
+programs that run atop that kernel. The argument then follows that Mozilla&rsquo;s
+deprecation and removal of legacy extension capabilities is akin to &ldquo;breaking&rdquo;
+userspace. [<em>Some people who say this are using the same tone as Linus does
+whenever he eviscerates Linux developers who break userspace, which is neither
+productive nor welcomed by anyone, but I digress.</em>] Unfortunately, that analogy
+simply does not map to the legacy extension model.</p>
+
+<h2>Legacy Extensions as Kernel Modules</h2>
+
+<p>The most significant problem with the userspace analogy is that legacy extensions
+effectively meld with Gecko and become part of Gecko itself. If we accept the
+premise that Gecko is like a monolithic OS kernel, then we must also accept that
+the analogical equivalent of loading arbitrary code into that kernel, is the
+kernel module. Such components are loaded into the kernel and effectively become
+part of it. Their code runs with full privileges. They break whenever
+significant changes are made to the kernel itself.</p>
+
+<p>Sound familiar?</p>
+
+<p>Legacy extensions were akin to kernel modules. When there is no abstraction,
+there can be no such thing as userspace. This is precisely the problem that
+WebExtensions solves!</p>
+
+<h2>Building Out a Legacy API</h2>
+
+<p>Maybe somebody out there is thinking, &ldquo;well what if you took all the APIs that
+extensions used, turned that into a &lsquo;userspace,&rsquo; and then just left that part
+alone?&rdquo;</p>
+
+<p>Which APIs? Where do we draw the line? Do we check the code coverage for every
+legacy addon in AMO and use that to determine what to include?</p>
+
+<p>Remember, there was no abstraction; installed legacy addons are fused to Gecko.
+If we pledge not to touch anything that legacy addons might touch, then we
+cannot touch anything at all.</p>
+
+<p>Where do we go from here? Freeze an old version of Gecko and host an entire copy
+of it inside web content? Compile it to WebAssembly? [<em>Oh God, what have I done?</em>]</p>
+
+<p>If <em>that&rsquo;s</em> not a maintenance burden, I don&rsquo;t know what is!</p>
+
+<h2>A Kernel Analogy for WebExtensions</h2>
+
+<p>Another problem with the legacy-extensions-as-userspace analogy is that it leaves
+awkward room for web content, whose API is abstract and well-defined. I do not
+think that it is appropriate to consider web content to be equivalent to a
+sandboxed application, as sandboxed applications use the same (albeit restricted)
+API as normal applications. I would suggest that the presence of WebExtensions
+gives us a better kernel analogy:</p>
+
+<ul>
+<li>Gecko is the kernel;</li>
+<li>WebExtensions are privileged applications;</li>
+<li>Web content runs as unprivileged user applications.</li>
+</ul>
+
+
+<h2>In Conclusion</h2>
+
+<p>Declaring that legacy extensions are userspace does not make them so. The way that
+the technology actually worked defies the abstract model that the analogy
+attempts to impose upon it. On the other hand, we can use the failure of that
+analogy to explain why WebExtensions is important and allows us to construct an
+extension ecosystem that <em>does</em> fit with that analogy.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1386,131 +1500,6 @@ platforms, so we should probably add this to the Win32 port.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/03/12/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2015-03-12T00:00:00-06:00" pubdate data-updated="true">Mar 12th, 2015</time>
-        
-           | <a href="/blog/2015/03/12/waitmessage-considered-harmful/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
-
-<p>Today I want to talk about some code that we imported from Chromium some time
-ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
-
-<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
-<span class='line-number'>262</span>
-<span class='line-number'>263</span>
-<span class='line-number'>264</span>
-<span class='line-number'>265</span>
-<span class='line-number'>266</span>
-<span class='line-number'>267</span>
-<span class='line-number'>268</span>
-<span class='line-number'>269</span>
-<span class='line-number'>270</span>
-<span class='line-number'>271</span>
-<span class='line-number'>272</span>
-<span class='line-number'>273</span>
-<span class='line-number'>274</span>
-<span class='line-number'>275</span>
-<span class='line-number'>276</span>
-<span class='line-number'>277</span>
-</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
-</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
-</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
-</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
-</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
-</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
-</span><span class='line'>    <span class="c1">// capture).</span>
-</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
-</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
-</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
-</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
-</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
-</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
-</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
-</span><span class='line'>    <span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This code is wrong. <strong>Very</strong> wrong.</p>
-
-<p>Let us start with the calls to <code>GetQueueStatus</code> and <code>PeekMessage</code>. Those APIs
-mark any messages already in the thread&rsquo;s message queue as having been seen,
-such that they are no longer considered &ldquo;new.&rdquo; Even though those function calls
-do not remove messages from the queue, any messages that were in the queue at
-this point are considered to be &ldquo;old.&rdquo;</p>
-
-<p>The logic in this code snippet is essentially saying, &ldquo;if the queue contains
-mouse messages that do not belong to this thread, then they must belong to an
-attached thread.&rdquo; The code then calls <code>WaitMessage</code> in an effort to give the
-other thread(s) a chance to process their mouse messages. This is where the code
-goes off the rails.</p>
-
-<p>The <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms644956%28v=vs.85%29.aspx">documentation</a>
-for <code>WaitMessage</code> states the following:</p>
-
-<blockquote><p>Note that <code>WaitMessage</code> does not return if there is unread input in the message
-queue after the thread has called a function to check the queue. This is
-because functions such as <code>PeekMessage</code>, <code>GetMessage</code>, <code>GetQueueStatus</code>,
-<code>WaitMessage</code>, <code>MsgWaitForMultipleObjects</code>, and <code>MsgWaitForMultipleObjectsEx</code>
-check the queue and then change the state information for the queue so that
-the input is no longer considered new. A subsequent call to <code>WaitMessage</code> will
-not return until new input of the specified type arrives. The existing unread
-input (received prior to the last time the thread checked the queue) is ignored.</p></blockquote>
-
-<p><code>WaitMessage</code> will only return if there is <em>a new</em> (as opposed to <em>any</em>) message
-in the queue for the calling thread. Any messages for the calling thread that
-were already in there at the time of the <code>GetQueueStatus</code> and <code>PeekMessage</code> calls
-are no longer new, so they are ignored.</p>
-
-<p>There might very well be a message at the head of that queue that should be
-processed by the current thread. Instead it is ignored while we wait for other
-threads. Here is the crux of the problem: we&rsquo;re waiting on other threads whose
-input queues are attached to our own! That other thread can&rsquo;t process its
-messages because our thread has messages in front of its messages; on the other
-hand, our thread has blocked itself!</p>
-
-<p>The only way to break this deadlock is for new messages to be added to the queue.
-That is a big reason why we&rsquo;re seeing things like <a title="Page doesn't load/render if the mouse is not moving" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1105386">bug 1105386</a>: Moving the
-mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</p>
-
-<p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
-going to be getting rid of this code in third-party binaries that attach their
-own windows to Firefox&rsquo;s windows.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="2">&larr; Older</a>
@@ -1526,6 +1515,10 @@ own windows to Firefox&rsquo;s windows.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2017/11/16/legacy-firefox-exensions-and-userspace/">Legacy Firefox Exensions and &#8220;Userspace&#8221;</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2017/07/17/win32-gotchas/">Win32 Gotchas</a>
       </li>
     
@@ -1539,10 +1532,6 @@ own windows to Firefox&rsquo;s windows.</p>
     
       <li class="post">
         <a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a>
       </li>
     
   </ul>
