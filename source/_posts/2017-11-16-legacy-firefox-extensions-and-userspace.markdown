@@ -46,8 +46,8 @@ Building Out a Legacy API
 -------------------------
 
 Maybe somebody out there is thinking, "well what if you took all the APIs that 
-extensions used, turned that into a 'userspace,' and then just left that part 
-alone?"
+legacy extensions used, turned that into a 'userspace,' and then just left that 
+part alone?"
 
 Which APIs? Where do we draw the line? Do we check the code coverage for every 
 legacy addon in AMO and use that to determine what to include?
