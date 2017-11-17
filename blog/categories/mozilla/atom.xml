@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2017-11-16T16:55:22-07:00</updated>
+  <updated>2017-11-17T11:47:18-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -57,8 +57,8 @@ WebExtensions solves!</p>
 <h2>Building Out a Legacy API</h2>
 
 <p>Maybe somebody out there is thinking, &ldquo;well what if you took all the APIs that
-extensions used, turned that into a &lsquo;userspace,&rsquo; and then just left that part
-alone?&rdquo;</p>
+legacy extensions used, turned that into a &lsquo;userspace,&rsquo; and then just left that
+part alone?&rdquo;</p>
 
 <p>Which APIs? Where do we draw the line? Do we check the code coverage for every
 legacy addon in AMO and use that to determine what to include?</p>
