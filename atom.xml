@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-18T17:37:18-07:00</updated>
+  <updated>2019-01-18T17:46:45-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -29,7 +29,7 @@ series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
 <p>The general theme of my work in 2018 was dealing with the DLL injection problem: On Windows,
 third parties love to forcibly load their DLLs into other processes &ndash; web browsers in particular,
-thus making Firefox is a primary target.</p>
+thus making Firefox a primary target.</p>
 
 <p>Many of these libraries tend to alter Firefox processes in ways that hurt the stability and/or performance
 of our code; many chemspill releases have gone out over the years to deal with these problems. While I
