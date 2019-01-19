@@ -1,0 +1,103 @@
+---
+layout: post
+title: "2018 Roundup: Q1"
+date: 2019-01-18 17:30:00 -0700
+comments: true
+categories: [Mozilla, roundups, DLL Injection]
+---
+I had a very busy 2018. So busy, in fact, that I have not been able to devote any time to actually 
+discussing what I worked on! I had intended to write these posts during the end of December, but a 
+hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a 
+series of retrospectives on last year's work, broken up by quarter.
+
+(Links to future posts will go here)
+
+Overview
+--------
+
+The general theme of my work in 2018 was dealing with the DLL injection problem: On Windows, 
+third-parties love to forcibly load their DLLs into other processes. Third parties love targeting 
+web browsers in particular, therefore Firefox is a primary target.
+
+Many of these libraries like to alter Firefox processes in ways that hurt the stability and/or performance 
+of our code; many chemspill releases have gone out over the years to deal with these problems. While I 
+could rant for hours over this, the fact is that DLL injection is rampant in the ecosystem of Windows 
+desktop applications and is not going to disappear any time soon. In the meantime, we need to be able 
+to deal with it.
+
+Some astute readers might be ready to send me an email or post a comment about how ignorant I am about 
+the new(-ish) process mitigation policies that are available in newer versions of Windows. While those 
+features are definitely useful, they are not panaceas:
+
+* We cannot turn on the "Extension Point Disable" policy for users of assistive technologies; screen 
+  readers rely heavily on DLL injection using `SetWindowsHookEx` and `SetWinEventHook`, both of which 
+  are covered by this mitigation;
+* We could enable the "Microsoft Binary Signature" policy, however that requires us to load our own 
+  DLLs first before enabling; once that happens, it is often already too late: other DLLs have already 
+  injected themselves by the time we are able to activate this policy. (Note that this could easily be 
+  solved if this policy were augmented to also permit loading of any DLL signed by the same organization 
+  as that of the process's executable binary, but Microsoft seems to be unwilling to do this.)
+* The above mitigations are not universally available. They do not help us on Windows 7.
+
+For me, Q1 2018 was all about gathering better data about injected DLLs.
+
+Learning More About DLLs Injected into Firefox
+----------------------------------------------
+
+One of our major pain points over the years of dealing with injected DLLs has been that the vendor of 
+the DLL is not always apparent to us. In general, our crash reports and telemetry pings only include 
+the leaf name of the various DLLs on a user's system. This is intentional on our part: we want to 
+preserve user privacy. On the other hand, this severely limits our ability to determine which party 
+is responsible for a particular DLL.
+
+One avenue for obtaining this information is to look at any digital signature that is embedded in the 
+DLL. By examining the certificate that was used to sign the binary, we can extract the organization 
+of the cert's owner and include that with our crash reports and telemetry.
+
+In {%bug 1430857%} I wrote a bunch of code that enables us to extract that information from signed 
+binaries using the Windows Authenticode APIs. Originally, in that bug, all of that signature extraction 
+work happened from within the browser itself, while it was running: It would gather the cert information 
+on a background thread while the browser was running, and include those annotations in a subsequent 
+crash dump, should such a thing occur.
+
+After some reflection, I realized that I was not gathering annotations in the right place. As an example, 
+what if an injected DLL were to trigger a crash before the background thread had a chance to grab 
+that DLL's cert information?
+
+I realized that the best place to gather this information was in a post-processing step after the 
+crash dump had been generated, and in fact we already had the right mechanism for doing so: the 
+`minidump-analyzer` program was already doing post-processing on Firefox crash dumps before sending 
+them back to Mozilla. I moved the signature extraction and crash annotation code out of Gecko and 
+into the analyzer in {%bug 1436845%}.
+
+(As an aside, while working on the `minidump-analyzer`, I found some problems with how it handled 
+command line arguments: it was assuming that `main` passes its `argv` as UTF-8, which is not true on 
+Windows. I fixed those issues in {%bug 1437156%}.)
+
+In {%bug 1434489%} I also ended up adding this information to the "modules ping" that we have in 
+telemetry; IIRC this ping is only sent weekly. When the modules ping is requested, we gather the 
+module cert info asynchronously on a background thread.
+
+Finally, I had to modify Socorro (the back-end for [crash-stats](https://crash-stats.mozilla.com)) to 
+be able to understand the signature annotations and be able to display them via {%bug 1434495%}. This 
+required two commits: one to modify the Socorro stackwalker to merge the module signature information 
+into the full crash report, and another to add a "Signed By" column to every report's "Modules" tab to 
+display the signature information (Note that this column is only present when at least one module in 
+a particular crash report contains signature information).
+
+The end result was very satisfying: Most of the injected DLLs in our Windows crash reports are signed, 
+so it is now much easier to identify their vendors!
+
+This project was very satisifying for me in many ways: First of all, surfacing this information was an 
+itch that I had been wanting to scratch for quite some time. Secondly, this really was a "full stack" 
+project, touching everything from extracting signature info from binaries using C++, all the way up to 
+writing some back-end code in Python and a little touch of front-end stuff to surface the data in the 
+web app.
+
+Note that, while this project focused on Windows because of the severity of the library injection 
+problem on that platform, it would be easy enough to reuse most of this code for macOS builds as well; 
+the only major work for the latter case would be for extracting signature information from a dylib. 
+This is not currently a priority for us, though.
+
+Thanks for reading! Coming up in Q2: Refactoring the Windows DLL Interceptor!
+

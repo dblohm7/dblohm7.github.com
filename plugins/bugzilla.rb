@@ -7,7 +7,7 @@ require 'rest_client'
 require 'json'
  
 module Bugzilla
-  SERVER = "https://api-dev.bugzilla.mozilla.org/1.2/"
+  SERVER = "https://bugzilla.mozilla.org/rest/"
   @network_is_busted = false
    
   def Bugzilla.bug (bug_no)
@@ -30,7 +30,9 @@ module Bugzilla
       response = '{"summary":""}' if @network_is_busted
       ::File.open(file, 'w') {|f| f.write(response.to_str) }
     end
-    return JSON.parse(response)
+    parsed = JSON.parse(response)
+    bugs = parsed["bugs"]
+    return bugs[0]
   end
 end
  

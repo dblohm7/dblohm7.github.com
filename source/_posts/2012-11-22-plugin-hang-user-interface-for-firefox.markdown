@@ -3,7 +3,7 @@ layout: post
 title: "Plugin Hang User Interface for Firefox"
 date: 2012-11-22 10:22
 comments: true
-categories: [Win32, Plugins, New Features]
+categories: [Mozilla, Win32, Plugins, New Features]
 ---
 My first significant project at Mozilla has been 
 [bug 805591](https://bugzilla.mozilla.org/show_bug.cgi?id=805591), 
