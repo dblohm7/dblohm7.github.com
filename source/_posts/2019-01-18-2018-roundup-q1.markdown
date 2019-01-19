@@ -16,10 +16,10 @@ Overview
 --------
 
 The general theme of my work in 2018 was dealing with the DLL injection problem: On Windows, 
-third-parties love to forcibly load their DLLs into other processes. Third parties love targeting 
-web browsers in particular, therefore Firefox is a primary target.
+third parties love to forcibly load their DLLs into other processes -- web browsers in particular, 
+thus making Firefox is a primary target.
 
-Many of these libraries like to alter Firefox processes in ways that hurt the stability and/or performance 
+Many of these libraries tend to alter Firefox processes in ways that hurt the stability and/or performance 
 of our code; many chemspill releases have gone out over the years to deal with these problems. While I 
 could rant for hours over this, the fact is that DLL injection is rampant in the ecosystem of Windows 
 desktop applications and is not going to disappear any time soon. In the meantime, we need to be able 
@@ -31,7 +31,7 @@ features are definitely useful, they are not panaceas:
 
 * We cannot turn on the "Extension Point Disable" policy for users of assistive technologies; screen 
   readers rely heavily on DLL injection using `SetWindowsHookEx` and `SetWinEventHook`, both of which 
-  are covered by this mitigation;
+  are covered by this policy;
 * We could enable the "Microsoft Binary Signature" policy, however that requires us to load our own 
   DLLs first before enabling; once that happens, it is often already too late: other DLLs have already 
   injected themselves by the time we are able to activate this policy. (Note that this could easily be 
