@@ -4,7 +4,7 @@
   <title><![CDATA[Category: roundups | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/roundups/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-18T17:34:19-07:00</updated>
+  <updated>2019-01-18T17:37:18-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -28,10 +28,10 @@ series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 <h2>Overview</h2>
 
 <p>The general theme of my work in 2018 was dealing with the DLL injection problem: On Windows,
-third-parties love to forcibly load their DLLs into other processes. Third parties love targeting
-web browsers in particular, therefore Firefox is a primary target.</p>
+third parties love to forcibly load their DLLs into other processes &ndash; web browsers in particular,
+thus making Firefox is a primary target.</p>
 
-<p>Many of these libraries like to alter Firefox processes in ways that hurt the stability and/or performance
+<p>Many of these libraries tend to alter Firefox processes in ways that hurt the stability and/or performance
 of our code; many chemspill releases have gone out over the years to deal with these problems. While I
 could rant for hours over this, the fact is that DLL injection is rampant in the ecosystem of Windows
 desktop applications and is not going to disappear any time soon. In the meantime, we need to be able
@@ -44,7 +44,7 @@ features are definitely useful, they are not panaceas:</p>
 <ul>
 <li>We cannot turn on the &ldquo;Extension Point Disable&rdquo; policy for users of assistive technologies; screen
 readers rely heavily on DLL injection using <code>SetWindowsHookEx</code> and <code>SetWinEventHook</code>, both of which
-are covered by this mitigation;</li>
+are covered by this policy;</li>
 <li>We could enable the &ldquo;Microsoft Binary Signature&rdquo; policy, however that requires us to load our own
 DLLs first before enabling; once that happens, it is often already too late: other DLLs have already
 injected themselves by the time we are able to activate this policy. (Note that this could easily be
