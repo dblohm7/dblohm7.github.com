@@ -225,12 +225,12 @@ following operations:</p>
 
 
 <p><code>VMSharingPolicyShared</code> is actually implemented by delegating to a <code>static</code> instance of
-<code>VMSharingPolicyUnique</code></p>
+<code>VMSharingPolicyUnique</code>.</p>
 
 <h3>Implications of Refactoring</h3>
 
 <p>To determine the performance implications, I added timings to our DLL Interceptor unit test. I was
-very happy to see that, despite the additional layers of abstraction, the C++ compiler&rsquo;s optimizer is
+very happy to see that, despite the additional layers of abstraction, the C++ compiler&rsquo;s optimizer was
 doing its job: There was no performance impact whatsoever!</p>
 
 <p><a name="vmsharing"></a>Once the refactoring was complete, I switched the default VM Sharing Policy for <code>WindowsDllInterceptor</code>
@@ -262,7 +262,8 @@ set hooks; since landing this bug, it is no longer possible for clients of the D
 set a hook that had previously failed to be set.</p>
 
 <p>Quantifying the memory costs of this bug is&hellip; non-trivial, but it suffices to say that fixing
-this bug probably resulted in the savings of at least a few hundred KiB in committed VM.</p>
+this bug probably resulted in the savings of at least a few hundred KiB in committed VM on
+affected machines.</p>
 
 <p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process</p>
 </div>
