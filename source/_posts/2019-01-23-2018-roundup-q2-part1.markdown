@@ -66,7 +66,7 @@ but each instance also typically only sets one or two hooks. This means that mos
 was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boundary, this wasted a 
 lot of precious virtual address space in our 32-bit builds.
 
-By refactoring and parameterizing these opeations, we ended up with the following combinations:
+By refactoring and parameterizing these operations, we ended up with the following combinations:
 
 * In-process memory access, each `WindowsDllInterceptor` instance receives its own trampoline space;
 * In-process memory access, all `WindowsDllInterceptor` instances within a module *share* trampoline space;
