@@ -9,8 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="I had a very busy 2018. So busy, in fact, that I have not been able to devote any time to actually
-discussing what I worked on! I had intended to &hellip;">
+  <meta name="description" content="This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for Q1. Refactoring the DLL &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -85,6 +85,197 @@ discussing what I worked on! I had intended to &hellip;">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2019-01-23T00:00:00-07:00" pubdate data-updated="true">Jan 23rd, 2019</time>
+        
+           | <a href="/blog/2019/01/23/2018-roundup-q2-part1/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<h2>Refactoring the DLL Interceptor</h2>
+
+<p>As I have alluded to <a href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">previously</a>,
+Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to
+as the &ldquo;DLL Interceptor.&rdquo; We use the DLL interceptor to instrument various functions within our own
+processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of
+Q2 refactoring this code. While I was in there, I took the opportunity to improve the interceptor&rsquo;s
+memory efficiency, thus benefitting the Fission MemShrink project. [<em>When these changes landed, we were
+not yet tracking the memory savings, but I will include a rough estimate <a href="#vmsharing">later</a> in this post.</em>]</p>
+
+<h3>A Brief Overview of Detours-style API Hooking</h3>
+
+<p>While many distinct function hooking techniques are used in the Windows ecosystem, the Detours-style
+hook is one of the most effective and most popular. While I am not going to go into too many specifics
+here, I&rsquo;d like to offer a quick overview. In this description, &ldquo;target&rdquo; is the function being hooked.</p>
+
+<p>Here is what happens when a function is detoured:</p>
+
+<ol>
+<li><p>Allocate a chunk of memory to serve as a &ldquo;trampoline.&rdquo; We must be able to adjust the protection
+attributes on that memory.</p></li>
+<li><p>Disassemble enough of the target to make room for a <code>jmp</code> instruction. On 32-bit x86 processors,
+this requires 5 bytes. x86-64 is more complicated, but generally, to <code>jmp</code> to an absolute address, we
+try to make room for 13 bytes.</p></li>
+<li><p>Copy the instructions from step 2 over to the trampoline.</p></li>
+<li><p>At the beginning of the target function, write a <code>jmp</code> to the hook function.</p></li>
+<li><p>Append additional instructions to the trampoline that, when executed, will cause the processor to
+jump back to the first valid instruction after the <code>jmp</code> written in step 4.</p></li>
+<li><p>If the hook function wants to pass control on to the original target function, it calls the
+trampoline.</p></li>
+</ol>
+
+
+<p>Note that these steps don&rsquo;t occur <em>exactly</em> in the order specified above; I selected the above ordering
+in an effort to simplify my description.</p>
+
+<p>Here is an attempt at visualizing the control flow of a detoured function on x86-64:</p>
+
+<p><img src="http://dblohm7.ca/images/detours_hook.svg"></p>
+
+<h3>Refactoring</h3>
+
+<p>Previously, the DLL interceptor relied on directly manipulating pointers in order to read and write the
+various instructions involved in the hook. In <a title="Parameterize memory operations in WindowsDllInterceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432653">bug 1432653</a> I changed things so that the memory
+operations are parameterized based on two orthogonal concepts:</p>
+
+<ul>
+<li>In-process vs out-of-process memory access: I wanted to be able to abstract reads and writes such
+that we could optionally set a hook in another process from our own.</li>
+<li>Virtual memory allocation scheme: I wanted to be able to change how trampoline memory was allocated.
+Previously, each instance of <code>WindowsDllInterceptor</code> allocated its own page of memory for trampolines,
+but each instance also typically only sets one or two hooks. This means that most of the 4KiB page
+was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boundary, this wasted a
+lot of precious virtual address space in our 32-bit builds.</li>
+</ul>
+
+
+<p>By refactoring and parameterizing these opeations, we ended up with the following combinations:
+* In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
+* In-process memory access, all <code>WindowsDllInterceptor</code> instances within a module <em>share</em> trampoline space;
+* Out-of-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
+* Out-of-process memory access, all <code>WindowsDllInterceptor</code> instances within a module share trampoline space (currently
+not implemented as this option is not particularly useful at the moment).</p>
+
+<p>Instead of directly manipulating pointers, we now use instances of <code>ReadOnlyTargetFunction</code>,
+<code>WritableTargetFunction</code>, and <code>Trampoline</code> to manipulate our code/data. Those classes in turn use the
+memory management and virtual memory allocation policies to perform the actual reading and writing.</p>
+
+<h3>Memory Management Policies</h3>
+
+<p>The interceptor now supports two policies, <code>MMPolicyInProcess</code> and <code>MMPolicyOutOfProcess</code>. Each policy
+must implement the following memory operations:</p>
+
+<ul>
+<li>Read</li>
+<li>Write</li>
+<li>Change protection attributes</li>
+<li>Reserve trampoline space</li>
+<li>Commit trampoline space</li>
+</ul>
+
+
+<p><code>MMPolicyInProcess</code> is implemented using <code>memcpy</code> for read and write, <code>VirtualProtect</code>
+for protection attribute changes, and <code>VirtualAlloc</code> for reserving and committing trampoline space.</p>
+
+<p><code>MMPolicyOutOfProcess</code> uses <code>ReadProcessMemory</code> and <code>WriteProcessMemory</code> for read and write. As a perf
+optimization, we try to batch reads and writes together to reduce the system call traffic. We obviously
+use <code>VirtualProtectEx</code> to adjust protection attributes in the other process.</p>
+
+<p>Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a
+separate call-out. We allocate trampoline space using shared memory. It is mapped into the local
+process with read+write permissions using <code>MapViewOfFile</code>. The memory is mapped into the remote process
+using some code that I wrote in <a title="Add out-of-process memory access policies to DLL interceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451511">bug 1451511</a> that either uses <code>NtMapViewOfSection</code> or
+<code>MapViewOfFile2</code>, depending on availability. Individual pages from those chunks are then committed via
+<code>VirtualAlloc</code> in the local process and <code>VirtualAllocEx</code> in the remote process. This scheme enables
+us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!</p>
+
+<h3>VM Sharing Policies</h3>
+
+<p>The code for these policies is a lot simpler than the code for the memory management policies. We now
+have <code>VMSharingPolicyUnique</code> and <code>VMSharingPolicyShared</code>. Each of these policies must implement the
+following operations:</p>
+
+<ul>
+<li>Reserve space for up to <em>N</em> trampolines of size <em>K</em>;</li>
+<li>Obtain a <code>Trampoline</code> object for the next available <em>K</em>-byte trampoline slot;</li>
+<li>Return an iterable collection of all extant trampolines.</li>
+</ul>
+
+
+<p><code>VMSharingPolicyShared</code> is actually implemented by delegating to a <code>static</code> instance of
+<code>VMSharingPolicyUnique</code></p>
+
+<h3>Implications of Refactoring</h3>
+
+<p>To determine the performance implications, I added timings to our DLL Interceptor unit test. I was
+very happy to see that, despite the additional layers of abstraction, the C++ compiler&rsquo;s optimizer is
+doing its job: There was no performance impact whatsoever!</p>
+
+<p><a name="vmsharing"></a>Once the refactoring was complete, I switched the default VM Sharing Policy for <code>WindowsDllInterceptor</code>
+over to <code>VMSharingPolicyShared</code> in <a title="DLL interceptors should share trampoline VM" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451524">bug 1451524</a>.</p>
+
+<p>Browsing today&rsquo;s <code>mozilla-central</code> tip, I count 14 locations where we instantiate interceptors inside
+<code>xul.dll</code>. Given that not all interceptors are necessarily instantiated at once, I am now offering a
+worst-case back-of-the-napkin estimate of the memory savings:</p>
+
+<ul>
+<li><p>Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to
+Windows&#8217; 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB
+of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated,
+they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.</p></li>
+<li><p>By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of
+address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.</p></li>
+</ul>
+
+
+<h3>Oh, and One More Thing</h3>
+
+<p>Another problem that I discovered during this refactoring was <a title="Repeated failed function hook attempts cause exhaustion of interceptor trampoline space" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459335">bug 1459335</a>. It turns out that the
+interceptor&rsquo;s callers were not distinguishing between &ldquo;I have not set this hook yet&rdquo; and &ldquo;I attempted
+to set this hook but it failed.&rdquo; Across several call sites, I discovered that our code would repeatedly
+retry to set hooks even when they had previously failed, causing leakage of trampoline space!</p>
+
+<p>To fix this, I modified the interceptor&rsquo;s interface so that we use one-time initialization APIs to
+set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to
+set a hook that had previously failed to be set.</p>
+
+<p>Quantifying the memory costs of this bug is&hellip; non-trivial, but it suffices to say that fixing
+this bug probably resulted in the savings of at least a few hundred KiB in committed VM.</p>
+
+<p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a></h1>
     
     
@@ -115,7 +306,8 @@ discussing what I worked on! I had intended to write these posts during the end 
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
 series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
-<p>(Links to future posts will go here)</p>
+<p>Here is an index of the remaining entries in this series:
+<a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></p>
 
 <h2>Overview</h2>
 
@@ -205,7 +397,8 @@ problem on that platform, it would be easy enough to reuse most of this code for
 the only major work for the latter case would be for extracting signature information from a dylib.
 This is not currently a priority for us, though.</p>
 
-<p>Thanks for reading! Coming up in Q2: Refactoring the Windows DLL Interceptor!</p>
+<p>Thanks for reading! Coming up in <a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Q2</a>:
+Refactoring the DLL Interceptor!</p>
 </div>
   
   
@@ -1455,101 +1648,6 @@ whose relationship to this bug was not obvious.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/08/30/on-webextensions/">On WebExtensions</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2015-08-30T00:00:00-06:00" pubdate data-updated="true">Aug 30th, 2015</time>
-        
-           | <a href="/blog/2015/08/30/on-webextensions/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2015/08/30/on-webextensions/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>There has been enough that has been said over the past week about <a href="https://blog.mozilla.org/addons/2015/08/21/the-future-of-developing-firefox-add-ons/">WebExtensions</a>
-that I wasn&rsquo;t sure if I wanted to write this post. As usual, I can&rsquo;t seem to
-help myself. Note the usual disclaimer that this is my personal opinion. Further
-note that I have no involvement with WebExtensions at this time, so I write this
-from the point of view of an observer.</p>
-
-<h2>API? What API?</h2>
-
-<p>I shall begin with the proposition that the legacy, non-jetpack
-environment for addons is not an API. As ridiculous as some readers might
-consider this to be, please humour me for a moment.</p>
-
-<p>Let us go back to the acronym, &ldquo;API.&rdquo; <strong>A</strong>pplication <strong>P</strong>rogramming <strong>I</strong>nterface.
-While the usage of the term &ldquo;API&rdquo; seems to have expanded over the years to encompass
-just about any type of interface whatsoever, I&rsquo;d like to explore the first letter of that
-acronym: <em>Application</em>.</p>
-
-<p>An <em>Application</em> Programming Interface is a specific type of interface that is
-exposed for the purposes of building applications. It typically provides a
-formal abstraction layer that isolates applications from the implementation
-details behind the lower tier(s) in the software stack. In the case of web
-browsers, I suggest that there are two distinct types of applications:
-web content, and extensions.</p>
-
-<p>There is obviously a very well defined API for web content. On the other hand,
-I would argue that Gecko&rsquo;s legacy addon environment is not an API at all! From
-the point of view of an extension, there is no abstraction, limited formality,
-and not necessarily an intention to be used by applications.</p>
-
-<p>An extension is imported into Firefox with full privileges and can access whatever
-it wants. Does it have access to interfaces? Yes, but are those interfaces intended
-for <em>applications</em>? Some are, but many are not. The environment that Gecko
-currently provides for legacy addons is analagous to an operating system running
-every single application in kernel mode. Is that powerful? Absolutely! Is that
-the best thing to do for maintainability and robustness? Absolutely not!</p>
-
-<p>Somewhere a line needs to be drawn to demarcate this abstraction layer and
-improve Gecko developers&#8217; ability to make improvements under the hood. Last
-week&rsquo;s announcement was an invitation to addon developers to help shape that
-future. Please participate and please do so constructively!</p>
-
-<h2>WebExtensions are not Chrome Extensions</h2>
-
-<p>When I first heard rumors about WebExtensions in Whistler, my source made it
-very clear to me that the WebExtensions initiative is not about making Chrome
-extensions run in Firefox. In fact, I am quite disappointed with some of the
-press coverage that seems to completely miss this point.</p>
-
-<p>Yes, WebExtensions will be implementing some APIs to be <em>source compatible</em>
-with Chrome. That makes it easier to port a Chrome extension, but porting will
-still be necessary. I like the Venn Diagram concept that the <a href="https://wiki.mozilla.org/WebExtensions/FAQ">WebExtensions FAQ</a>
-uses: Some Chrome APIs will not be available in WebExtensions. On the other hand,
-WebExtensions will be providing APIs above and beyond the Chrome API set that
-will maintain Firefox&rsquo;s legacy of extensibility.</p>
-
-<p>Please try not to think of this project as Mozilla taking functionality away.
-In general I think it is safe to think of this as an opportunity to move that
-same functionality to a mechanism that is more formal and abstract.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="2">&larr; Older</a>
@@ -1565,6 +1663,10 @@ same functionality to a mechanism that is more formal and abstract.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a>
       </li>
     
@@ -1578,10 +1680,6 @@ same functionality to a mechanism that is more formal and abstract.</p>
     
       <li class="post">
         <a href="/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/">Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2017/04/07/asynchronous-plugin-initialization-requiem/">Asynchronous Plugin Initialization: Requiem</a>
       </li>
     
   </ul>
@@ -1654,19 +1752,6 @@ same functionality to a mechanism that is more formal and abstract.</p>
       (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
     }());
 </script>
-
-
-
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) {return;}
-  js = d.createElement(s); js.id = id; js.async = true;
-  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-
-
 
 
 

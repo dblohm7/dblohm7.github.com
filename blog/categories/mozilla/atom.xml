@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-18T17:46:45-07:00</updated>
+  <updated>2019-01-23T18:36:28-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,168 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[2018 Roundup: Q2, Part 1]]></title>
+    <link href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/"/>
+    <updated>2019-01-23T18:30:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
+    <content type="html"><![CDATA[<p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<h2>Refactoring the DLL Interceptor</h2>
+
+<p>As I have alluded to <a href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">previously</a>,
+Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to
+as the &ldquo;DLL Interceptor.&rdquo; We use the DLL interceptor to instrument various functions within our own
+processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of
+Q2 refactoring this code. While I was in there, I took the opportunity to improve the interceptor&rsquo;s
+memory efficiency, thus benefitting the Fission MemShrink project. [<em>When these changes landed, we were
+not yet tracking the memory savings, but I will include a rough estimate <a href="#vmsharing">later</a> in this post.</em>]</p>
+
+<h3>A Brief Overview of Detours-style API Hooking</h3>
+
+<p>While many distinct function hooking techniques are used in the Windows ecosystem, the Detours-style
+hook is one of the most effective and most popular. While I am not going to go into too many specifics
+here, I&rsquo;d like to offer a quick overview. In this description, &ldquo;target&rdquo; is the function being hooked.</p>
+
+<p>Here is what happens when a function is detoured:</p>
+
+<ol>
+<li><p>Allocate a chunk of memory to serve as a &ldquo;trampoline.&rdquo; We must be able to adjust the protection
+attributes on that memory.</p></li>
+<li><p>Disassemble enough of the target to make room for a <code>jmp</code> instruction. On 32-bit x86 processors,
+this requires 5 bytes. x86-64 is more complicated, but generally, to <code>jmp</code> to an absolute address, we
+try to make room for 13 bytes.</p></li>
+<li><p>Copy the instructions from step 2 over to the trampoline.</p></li>
+<li><p>At the beginning of the target function, write a <code>jmp</code> to the hook function.</p></li>
+<li><p>Append additional instructions to the trampoline that, when executed, will cause the processor to
+jump back to the first valid instruction after the <code>jmp</code> written in step 4.</p></li>
+<li><p>If the hook function wants to pass control on to the original target function, it calls the
+trampoline.</p></li>
+</ol>
+
+
+<p>Note that these steps don&rsquo;t occur <em>exactly</em> in the order specified above; I selected the above ordering
+in an effort to simplify my description.</p>
+
+<p>Here is an attempt at visualizing the control flow of a detoured function on x86-64:</p>
+
+<p><img class="<a" src="href="http://dblohm7.ca/images/detours_hook.svg">http://dblohm7.ca/images/detours_hook.svg</a>&#8221;></p>
+
+<h3>Refactoring</h3>
+
+<p>Previously, the DLL interceptor relied on directly manipulating pointers in order to read and write the
+various instructions involved in the hook. In <a title="Parameterize memory operations in WindowsDllInterceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432653">bug 1432653</a> I changed things so that the memory
+operations are parameterized based on two orthogonal concepts:</p>
+
+<ul>
+<li>In-process vs out-of-process memory access: I wanted to be able to abstract reads and writes such
+that we could optionally set a hook in another process from our own.</li>
+<li>Virtual memory allocation scheme: I wanted to be able to change how trampoline memory was allocated.
+Previously, each instance of <code>WindowsDllInterceptor</code> allocated its own page of memory for trampolines,
+but each instance also typically only sets one or two hooks. This means that most of the 4KiB page
+was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boundary, this wasted a
+lot of precious virtual address space in our 32-bit builds.</li>
+</ul>
+
+
+<p>By refactoring and parameterizing these opeations, we ended up with the following combinations:
+* In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
+* In-process memory access, all <code>WindowsDllInterceptor</code> instances within a module <em>share</em> trampoline space;
+* Out-of-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
+* Out-of-process memory access, all <code>WindowsDllInterceptor</code> instances within a module share trampoline space (currently
+not implemented as this option is not particularly useful at the moment).</p>
+
+<p>Instead of directly manipulating pointers, we now use instances of <code>ReadOnlyTargetFunction</code>,
+<code>WritableTargetFunction</code>, and <code>Trampoline</code> to manipulate our code/data. Those classes in turn use the
+memory management and virtual memory allocation policies to perform the actual reading and writing.</p>
+
+<h3>Memory Management Policies</h3>
+
+<p>The interceptor now supports two policies, <code>MMPolicyInProcess</code> and <code>MMPolicyOutOfProcess</code>. Each policy
+must implement the following memory operations:</p>
+
+<ul>
+<li>Read</li>
+<li>Write</li>
+<li>Change protection attributes</li>
+<li>Reserve trampoline space</li>
+<li>Commit trampoline space</li>
+</ul>
+
+
+<p><code>MMPolicyInProcess</code> is implemented using <code>memcpy</code> for read and write, <code>VirtualProtect</code>
+for protection attribute changes, and <code>VirtualAlloc</code> for reserving and committing trampoline space.</p>
+
+<p><code>MMPolicyOutOfProcess</code> uses <code>ReadProcessMemory</code> and <code>WriteProcessMemory</code> for read and write. As a perf
+optimization, we try to batch reads and writes together to reduce the system call traffic. We obviously
+use <code>VirtualProtectEx</code> to adjust protection attributes in the other process.</p>
+
+<p>Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a
+separate call-out. We allocate trampoline space using shared memory. It is mapped into the local
+process with read+write permissions using <code>MapViewOfFile</code>. The memory is mapped into the remote process
+using some code that I wrote in <a title="Add out-of-process memory access policies to DLL interceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451511">bug 1451511</a> that either uses <code>NtMapViewOfSection</code> or
+<code>MapViewOfFile2</code>, depending on availability. Individual pages from those chunks are then committed via
+<code>VirtualAlloc</code> in the local process and <code>VirtualAllocEx</code> in the remote process. This scheme enables
+us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!</p>
+
+<h3>VM Sharing Policies</h3>
+
+<p>The code for these policies is a lot simpler than the code for the memory management policies. We now
+have <code>VMSharingPolicyUnique</code> and <code>VMSharingPolicyShared</code>. Each of these policies must implement the
+following operations:</p>
+
+<ul>
+<li>Reserve space for up to <em>N</em> trampolines of size <em>K</em>;</li>
+<li>Obtain a <code>Trampoline</code> object for the next available <em>K</em>-byte trampoline slot;</li>
+<li>Return an iterable collection of all extant trampolines.</li>
+</ul>
+
+
+<p><code>VMSharingPolicyShared</code> is actually implemented by delegating to a <code>static</code> instance of
+<code>VMSharingPolicyUnique</code></p>
+
+<h3>Implications of Refactoring</h3>
+
+<p>To determine the performance implications, I added timings to our DLL Interceptor unit test. I was
+very happy to see that, despite the additional layers of abstraction, the C++ compiler&rsquo;s optimizer is
+doing its job: There was no performance impact whatsoever!</p>
+
+<p><a name="vmsharing"></a>Once the refactoring was complete, I switched the default VM Sharing Policy for <code>WindowsDllInterceptor</code>
+over to <code>VMSharingPolicyShared</code> in <a title="DLL interceptors should share trampoline VM" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451524">bug 1451524</a>.</p>
+
+<p>Browsing today&rsquo;s <code>mozilla-central</code> tip, I count 14 locations where we instantiate interceptors inside
+<code>xul.dll</code>. Given that not all interceptors are necessarily instantiated at once, I am now offering a
+worst-case back-of-the-napkin estimate of the memory savings:</p>
+
+<ul>
+<li><p>Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to
+Windows&#8217; 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB
+of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated,
+they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.</p></li>
+<li><p>By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of
+address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.</p></li>
+</ul>
+
+
+<h3>Oh, and One More Thing</h3>
+
+<p>Another problem that I discovered during this refactoring was <a title="Repeated failed function hook attempts cause exhaustion of interceptor trampoline space" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459335">bug 1459335</a>. It turns out that the
+interceptor&rsquo;s callers were not distinguishing between &ldquo;I have not set this hook yet&rdquo; and &ldquo;I attempted
+to set this hook but it failed.&rdquo; Across several call sites, I discovered that our code would repeatedly
+retry to set hooks even when they had previously failed, causing leakage of trampoline space!</p>
+
+<p>To fix this, I modified the interceptor&rsquo;s interface so that we use one-time initialization APIs to
+set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to
+set a hook that had previously failed to be set.</p>
+
+<p>Quantifying the memory costs of this bug is&hellip; non-trivial, but it suffices to say that fixing
+this bug probably resulted in the savings of at least a few hundred KiB in committed VM.</p>
+
+<p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q1]]></title>
@@ -23,7 +185,8 @@ discussing what I worked on! I had intended to write these posts during the end 
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
 series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
-<p>(Links to future posts will go here)</p>
+<p>Here is an index of the remaining entries in this series:
+<a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></p>
 
 <h2>Overview</h2>
 
@@ -113,7 +276,8 @@ problem on that platform, it would be easy enough to reuse most of this code for
 the only major work for the latter case would be for extracting signature information from a dylib.
 This is not currently a priority for us, though.</p>
 
-<p>Thanks for reading! Coming up in Q2: Refactoring the Windows DLL Interceptor!</p>
+<p>Thanks for reading! Coming up in <a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Q2</a>:
+Refactoring the DLL Interceptor!</p>
 ]]></content>
   </entry>
   
@@ -346,105 +510,6 @@ info is one of those things that you do not miss until you do not have it.</p>
 <p>For further reading about critical section debug info, check out
 <a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
 archived article from MSDN Magazine.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
-    <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
-    <updated>2017-04-07T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
-    <content type="html"><![CDATA[<p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
-initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
-to remain enabled on release, so we cut our losses and cancelled the project
-early in 2016. Now that code is just a bunch of dead weight. With the
-deprecation of non-Flash NPAPI plugins in Firefox 52, our developers are now
-working on simplifying the remaining NPAPI code as much as possible.</p>
-
-<p>Obviously the removal of that code does not prevent me from discussing some of
-the more interesting facets of that work.</p>
-
-<p>Today I am going to talk about how async plugin init worked when web content
-attempted to access a property on a plugin&rsquo;s scriptable object, when that
-plugin had not yet completed its asynchronous initialization.</p>
-
-<p>As <a href="https://developer.mozilla.org/en-US/docs/Plugins/Guide/Scripting_plugins">described on MDN</a>,
-the DOM queries a plugin for scriptability by calling <code>NPP_GetValue</code> with the
-<code>NPPVpluginScriptableNPObject</code> constant. With async plugin init, we did not
-return the true NPAPI scriptable object back to the DOM. Instead we returned
-a surrogate object. This meant that we did not need to synchronously wait for
-the plugin to initialize before returning a result back to the DOM.</p>
-
-<p>If the DOM subsequently called into that surrogate object, the surrogate would
-be forced to synchronize with the plugin. There was a limit on how much fakery
-the async surrogate could do once the DOM needed a definitive answer &ndash; after
-all, the NPAPI itself is entirely synchronous. While you may question whether
-the asynchronous surrogate actually bought us any responsiveness, performance
-profiles and measurements that I took at the time did indeed demonstrate that
-the asynchronous surrogate did buy us enough additional concurrency to make it
-worthwhile. A good number of plugin instantiations were able to complete in
-time before the DOM had made a single invocation on the surrogate.</p>
-
-<p>Once the surrogate object had synchronized with the plugin, it would then mostly
-act as a pass-through to the plugin&rsquo;s real NPAPI scriptable object, with one
-notable exception: property accesses.</p>
-
-<p>The reason for this is not necessarily obvious, so allow me to elaborate:</p>
-
-<p>The DOM usually sets up a scriptable object as follows:</p>
-
-<pre><samp>
-this.__proto__.__proto__.__proto__
-</samp></pre>
-
-
-<ul>
-<li>Where <code>this</code> is the WebIDL object (ie, content&rsquo;s <code>&lt;embed&gt;</code> element);</li>
-<li>Whose prototype is the NPAPI scriptable object;</li>
-<li>Whose prototype is the shared WebIDL prototype;</li>
-<li>Whose prototype is <code>Object.prototype</code>.</li>
-</ul>
-
-
-<p>NPAPI is reentrant (some might say <em>insanely</em> reentrant). It is possible (and
-indeed common) for a plugin to set properties on the WebIDL object from within
-the plugin&rsquo;s <code>NPP_New</code>.</p>
-
-<p>Suppose that the DOM tries to access a property on the plugin&rsquo;s WebIDL object
-that is normally set by the plugin&rsquo;s <code>NPP_New</code>. In the asynchronous case, the
-plugin&rsquo;s initialization might still be in progress, so that property might not
-yet exist.</p>
-
-<p>In the case where the property does not yet exist on the WebIDL object, JavaScript
-fails to retrieve an &ldquo;own&rdquo; property. It then moves on to the first prototype
-and attempts to resolve the property on that. As outlined above, this prototype
-would actually be the async surrogate. The async surrogate would then be in a
-situation where it must absolutely produce a definitive result, so this would
-trigger synchronization with the plugin. At this point the plugin would be
-guaranteed to have finished initializing.</p>
-
-<p>Now we have a problem: JS was already examining the NPAPI scriptable object when
-it blocked to synchronize with the plugin. Meanwhile, the plugin went ahead and
-set properties (including the one that we&rsquo;re interested in) on the WebIDL object.
-By the time that JS execution resumes, it would already be looking too far up the
-prototype chain to see those new properties!</p>
-
-<p>The surrogate needed to be aware of this when it synchronized with the plugin
-during a property access. If the plugin had already completed its initialization
-(thus rendering synchronization unnecessary), the surrogate would simply pass the
-property access on to the real NPAPI scriptable object. On the other hand, if a
-synchronization was performed, the surrogate would first retry the WebIDL object
-by querying for the WebIDL object&rsquo;s &ldquo;own&rdquo; properties, and return the own property
-if it now existed. If no own property existed on the WebIDL object, then the
-surrogate would revert to its &ldquo;pass through all the things&rdquo; behaviour.</p>
-
-<p>If I hadn&rsquo;t made the asynchronous surrogate scriptable object do that, we would
-have ended up with a strange situation where the DOM&rsquo;s initial property access
-on an embed could fail non-deterministically during page load.</p>
-
-<p>That&rsquo;s enough chatter for today. I enjoy blogging about my crazy hacks that make
-the impossible, umm&hellip; possible, so maybe I&rsquo;ll write some more of these in the
-future.</p>
 ]]></content>
   </entry>
   

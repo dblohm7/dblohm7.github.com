@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/</loc>
+<lastmod>2019-01-23T18:30:00-07:00</lastmod>
+</url>
+<url>
 <loc>http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/</loc>
 <lastmod>2019-01-18T17:30:00-07:00</lastmod>
 </url>
@@ -139,6 +143,12 @@
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/categories/roundups/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/posts/2/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/posts/3/</loc>
 </url>
 <url>
 <loc>http://dblohm7.ca/pmo/windbgcheatsheet.html</loc>
