@@ -1,0 +1,155 @@
+---
+layout: post
+title: "2018 Roundup: Q2, Part 1"
+date: 2019-01-23 18:30:00 -0700
+comments: true
+categories: [Mozilla, roundups, DLL Injection]
+---
+*This is the second post in my "2018 Roundup" series. For an index of all entries, please see my 
+blog entry for [Q1](http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
+
+Refactoring the DLL Interceptor
+-------------------------------
+
+As I have alluded to [previously](http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/), 
+Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to 
+as the "DLL Interceptor." We use the DLL interceptor to instrument various functions within our own 
+processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of 
+Q2 refactoring this code. While I was in there, I took the opportunity to improve the interceptor's 
+memory efficiency, thus benefitting the Fission MemShrink project. [*When these changes landed, we were 
+not yet tracking the memory savings, but I will include a rough estimate [later](#vmsharing) in this post.*]
+
+
+### A Brief Overview of Detours-style API Hooking
+
+While many distinct function hooking techniques are used in the Windows ecosystem, the Detours-style 
+hook is one of the most effective and most popular. While I am not going to go into too many specifics 
+here, I'd like to offer a quick overview. In this description, "target" is the function being hooked.
+
+Here is what happens when a function is detoured:
+
+1. Allocate a chunk of memory to serve as a "trampoline." We must be able to adjust the protection 
+attributes on that memory.
+
+2. Disassemble enough of the target to make room for a `jmp` instruction. On 32-bit x86 processors, 
+this requires 5 bytes. x86-64 is more complicated, but generally, to `jmp` to an absolute address, we 
+try to make room for 13 bytes.
+
+3. Copy the instructions from step 2 over to the trampoline.
+
+4. At the beginning of the target function, write a `jmp` to the hook function.
+
+5. Append additional instructions to the trampoline that, when executed, will cause the processor to 
+jump back to the first valid instruction after the `jmp` written in step 4.
+
+6. If the hook function wants to pass control on to the original target function, it calls the 
+trampoline.
+
+Note that these steps don't occur *exactly* in the order specified above; I selected the above ordering 
+in an effort to simplify my description.
+
+Here is an attempt at visualizing the control flow of a detoured function on x86-64:
+
+{% img http://dblohm7.ca/images/detours_hook.svg %}
+
+### Refactoring
+
+Previously, the DLL interceptor relied on directly manipulating pointers in order to read and write the 
+various instructions involved in the hook. In {% bug 1432653 %} I changed things so that the memory 
+operations are parameterized based on two orthogonal concepts:
+
+* In-process vs out-of-process memory access: I wanted to be able to abstract reads and writes such 
+that we could optionally set a hook in another process from our own.
+* Virtual memory allocation scheme: I wanted to be able to change how trampoline memory was allocated. 
+Previously, each instance of `WindowsDllInterceptor` allocated its own page of memory for trampolines, 
+but each instance also typically only sets one or two hooks. This means that most of the 4KiB page 
+was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boundary, this wasted a 
+lot of precious virtual address space in our 32-bit builds.
+
+By refactoring and parameterizing these opeations, we ended up with the following combinations:
+* In-process memory access, each `WindowsDllInterceptor` instance receives its own trampoline space;
+* In-process memory access, all `WindowsDllInterceptor` instances within a module *share* trampoline space;
+* Out-of-process memory access, each `WindowsDllInterceptor` instance receives its own trampoline space;
+* Out-of-process memory access, all `WindowsDllInterceptor` instances within a module share trampoline space (currently 
+not implemented as this option is not particularly useful at the moment).
+
+Instead of directly manipulating pointers, we now use instances of `ReadOnlyTargetFunction`, 
+`WritableTargetFunction`, and `Trampoline` to manipulate our code/data. Those classes in turn use the 
+memory management and virtual memory allocation policies to perform the actual reading and writing.
+
+### Memory Management Policies
+
+The interceptor now supports two policies, `MMPolicyInProcess` and `MMPolicyOutOfProcess`. Each policy 
+must implement the following memory operations:
+
+* Read
+* Write
+* Change protection attributes
+* Reserve trampoline space
+* Commit trampoline space
+
+`MMPolicyInProcess` is implemented using `memcpy` for read and write, `VirtualProtect` 
+for protection attribute changes, and `VirtualAlloc` for reserving and committing trampoline space.
+
+`MMPolicyOutOfProcess` uses `ReadProcessMemory` and `WriteProcessMemory` for read and write. As a perf 
+optimization, we try to batch reads and writes together to reduce the system call traffic. We obviously 
+use `VirtualProtectEx` to adjust protection attributes in the other process.
+
+Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a 
+separate call-out. We allocate trampoline space using shared memory. It is mapped into the local 
+process with read+write permissions using `MapViewOfFile`. The memory is mapped into the remote process 
+using some code that I wrote in {% bug 1451511 %} that either uses `NtMapViewOfSection` or 
+`MapViewOfFile2`, depending on availability. Individual pages from those chunks are then committed via 
+`VirtualAlloc` in the local process and `VirtualAllocEx` in the remote process. This scheme enables 
+us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!
+
+### VM Sharing Policies
+
+The code for these policies is a lot simpler than the code for the memory management policies. We now 
+have `VMSharingPolicyUnique` and `VMSharingPolicyShared`. Each of these policies must implement the 
+following operations:
+
+* Reserve space for up to *N* trampolines of size *K*;
+* Obtain a `Trampoline` object for the next available *K*-byte trampoline slot;
+* Return an iterable collection of all extant trampolines.
+
+`VMSharingPolicyShared` is actually implemented by delegating to a `static` instance of 
+`VMSharingPolicyUnique`
+
+### Implications of Refactoring
+
+To determine the performance implications, I added timings to our DLL Interceptor unit test. I was 
+very happy to see that, despite the additional layers of abstraction, the C++ compiler's optimizer is 
+doing its job: There was no performance impact whatsoever!
+
+<a name="vmsharing"></a>Once the refactoring was complete, I switched the default VM Sharing Policy for `WindowsDllInterceptor` 
+over to `VMSharingPolicyShared` in {% bug 1451524 %}.
+
+Browsing today's `mozilla-central` tip, I count 14 locations where we instantiate interceptors inside
+`xul.dll`. Given that not all interceptors are necessarily instantiated at once, I am now offering a
+worst-case back-of-the-napkin estimate of the memory savings:
+
+* Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to 
+Windows' 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB 
+of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated, 
+they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.
+
+* By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of 
+address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.
+
+### Oh, and One More Thing
+
+Another problem that I discovered during this refactoring was {% bug 1459335 %}. It turns out that the 
+interceptor's callers were not distinguishing between "I have not set this hook yet" and "I attempted 
+to set this hook but it failed." Across several call sites, I discovered that our code would repeatedly 
+retry to set hooks even when they had previously failed, causing leakage of trampoline space!
+
+To fix this, I modified the interceptor's interface so that we use one-time initialization APIs to 
+set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to 
+set a hook that had previously failed to be set.
+
+Quantifying the memory costs of this bug is... non-trivial, but it suffices to say that fixing 
+this bug probably resulted in the savings of at least a few hundred KiB in committed VM.
+
+That's it for today's post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process
+
