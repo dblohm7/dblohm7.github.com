@@ -48,7 +48,7 @@ trampoline.
 Note that these steps don't occur *exactly* in the order specified above; I selected the above ordering 
 in an effort to simplify my description.
 
-Here is an attempt at visualizing the control flow of a detoured function on x86-64:
+Here is my attempt at visualizing the control flow of a detoured function on x86-64:
 
 {% img http://dblohm7.ca/images/detours_hook.svg %}
 
