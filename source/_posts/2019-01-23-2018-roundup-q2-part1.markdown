@@ -67,6 +67,7 @@ was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boun
 lot of precious virtual address space in our 32-bit builds.
 
 By refactoring and parameterizing these opeations, we ended up with the following combinations:
+
 * In-process memory access, each `WindowsDllInterceptor` instance receives its own trampoline space;
 * In-process memory access, all `WindowsDllInterceptor` instances within a module *share* trampoline space;
 * Out-of-process memory access, each `WindowsDllInterceptor` instance receives its own trampoline space;
