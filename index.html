@@ -209,7 +209,7 @@ use <code>VirtualProtectEx</code> to adjust protection attributes in the other p
 <p>Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a
 separate call-out. We allocate trampoline space using shared memory. It is mapped into the local
 process with read+write permissions using <code>MapViewOfFile</code>. The memory is mapped into the remote process
-using some code that I wrote in <a title="Add out-of-process memory access policies to DLL interceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451511">bug 1451511</a> that either uses <code>NtMapViewOfSection</code> or
+as read+execute using some code that I wrote in <a title="Add out-of-process memory access policies to DLL interceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451511">bug 1451511</a> that either uses <code>NtMapViewOfSection</code> or
 <code>MapViewOfFile2</code>, depending on availability. Individual pages from those chunks are then committed via
 <code>VirtualAlloc</code> in the local process and <code>VirtualAllocEx</code> in the remote process. This scheme enables
 us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!</p>
