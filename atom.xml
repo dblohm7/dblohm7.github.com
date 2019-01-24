@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-23T18:52:22-07:00</updated>
+  <updated>2019-01-23T18:57:42-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -78,7 +78,7 @@ lot of precious virtual address space in our 32-bit builds.</li>
 </ul>
 
 
-<p>By refactoring and parameterizing these opeations, we ended up with the following combinations:</p>
+<p>By refactoring and parameterizing these operations, we ended up with the following combinations:</p>
 
 <ul>
 <li>In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;</li>
