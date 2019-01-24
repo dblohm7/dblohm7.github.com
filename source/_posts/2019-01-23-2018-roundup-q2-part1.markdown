@@ -99,7 +99,7 @@ use `VirtualProtectEx` to adjust protection attributes in the other process.
 Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a 
 separate call-out. We allocate trampoline space using shared memory. It is mapped into the local 
 process with read+write permissions using `MapViewOfFile`. The memory is mapped into the remote process 
-using some code that I wrote in {% bug 1451511 %} that either uses `NtMapViewOfSection` or 
+as read+execute using some code that I wrote in {% bug 1451511 %} that either uses `NtMapViewOfSection` or 
 `MapViewOfFile2`, depending on availability. Individual pages from those chunks are then committed via 
 `VirtualAlloc` in the local process and `VirtualAllocEx` in the remote process. This scheme enables 
 us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!
