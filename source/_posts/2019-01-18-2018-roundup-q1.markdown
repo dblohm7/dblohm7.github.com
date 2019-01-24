@@ -11,7 +11,8 @@ hardware failure delayed that until the new year. Alas, here we are in 2019, and
 series of retrospectives on last year's work, broken up by quarter.
 
 Here is an index of the remaining entries in this series:
-[2018 Roundup: Q2, Part 1](http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/)
+
+* [2018 Roundup: Q2, Part 1](http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/)
 
 Overview
 --------
