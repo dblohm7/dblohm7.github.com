@@ -167,12 +167,16 @@ lot of precious virtual address space in our 32-bit builds.</li>
 </ul>
 
 
-<p>By refactoring and parameterizing these opeations, we ended up with the following combinations:
-* In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
-* In-process memory access, all <code>WindowsDllInterceptor</code> instances within a module <em>share</em> trampoline space;
-* Out-of-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;
-* Out-of-process memory access, all <code>WindowsDllInterceptor</code> instances within a module share trampoline space (currently
-not implemented as this option is not particularly useful at the moment).</p>
+<p>By refactoring and parameterizing these opeations, we ended up with the following combinations:</p>
+
+<ul>
+<li>In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;</li>
+<li>In-process memory access, all <code>WindowsDllInterceptor</code> instances within a module <em>share</em> trampoline space;</li>
+<li>Out-of-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;</li>
+<li>Out-of-process memory access, all <code>WindowsDllInterceptor</code> instances within a module share trampoline space (currently
+not implemented as this option is not particularly useful at the moment).</li>
+</ul>
+
 
 <p>Instead of directly manipulating pointers, we now use instances of <code>ReadOnlyTargetFunction</code>,
 <code>WritableTargetFunction</code>, and <code>Trampoline</code> to manipulate our code/data. Those classes in turn use the
