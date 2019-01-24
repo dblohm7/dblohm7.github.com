@@ -4,7 +4,7 @@
   <title><![CDATA[Category: dll injection | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/dll-injection/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-23T18:40:58-07:00</updated>
+  <updated>2019-01-23T18:42:06-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -152,12 +152,12 @@ over to <code>VMSharingPolicyShared</code> in <a title="DLL interceptors should 
 worst-case back-of-the-napkin estimate of the memory savings:</p>
 
 <ul>
-<li><p>Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to
+<li>Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to
 Windows&#8217; 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB
 of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated,
-they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.</p></li>
-<li><p>By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of
-address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.</p></li>
+they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.</li>
+<li>By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of
+address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.</li>
 </ul>
 
 
