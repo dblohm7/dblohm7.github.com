@@ -134,7 +134,6 @@ worst-case back-of-the-napkin estimate of the memory savings:
 Windows' 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB 
 of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated, 
 they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.
-
 * By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of 
 address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.
 
