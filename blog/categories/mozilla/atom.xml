@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-23T18:50:59-07:00</updated>
+  <updated>2019-01-23T18:52:22-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -57,7 +57,7 @@ trampoline.</p></li>
 <p>Note that these steps don&rsquo;t occur <em>exactly</em> in the order specified above; I selected the above ordering
 in an effort to simplify my description.</p>
 
-<p>Here is an attempt at visualizing the control flow of a detoured function on x86-64:</p>
+<p>Here is my attempt at visualizing the control flow of a detoured function on x86-64:</p>
 
 <p><img class="<a" src="href="http://dblohm7.ca/images/detours_hook.svg">http://dblohm7.ca/images/detours_hook.svg</a>&#8221;></p>
 
