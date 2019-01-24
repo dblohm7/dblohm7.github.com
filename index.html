@@ -255,10 +255,11 @@ address space, thus yielding savings of 52KiB in committed memory and 780KiB in 
 
 <h3>Oh, and One More Thing</h3>
 
-<p>Another problem that I discovered during this refactoring was <a title="Repeated failed function hook attempts cause exhaustion of interceptor trampoline space" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459335">bug 1459335</a>. It turns out that the
-interceptor&rsquo;s callers were not distinguishing between &ldquo;I have not set this hook yet&rdquo; and &ldquo;I attempted
-to set this hook but it failed.&rdquo; Across several call sites, I discovered that our code would repeatedly
-retry to set hooks even when they had previously failed, causing leakage of trampoline space!</p>
+<p>Another problem that I discovered during this refactoring was <a title="Repeated failed function hook attempts cause exhaustion of interceptor trampoline space" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459335">bug 1459335</a>. It turns out that some
+of the interceptor&rsquo;s callers were not distinguishing between &ldquo;I have not set this hook yet&rdquo; and &ldquo;I
+attempted to set this hook but it failed&rdquo; scenarios. Across several call sites, I discovered that
+our code would repeatedly retry to set hooks even when they had previously failed, causing leakage
+of trampoline space!</p>
 
 <p>To fix this, I modified the interceptor&rsquo;s interface so that we use one-time initialization APIs to
 set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to
