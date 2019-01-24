@@ -4,7 +4,7 @@
   <title><![CDATA[Category: dll injection | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/dll-injection/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-23T18:42:06-07:00</updated>
+  <updated>2019-01-23T18:45:28-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -189,8 +189,12 @@ discussing what I worked on! I had intended to write these posts during the end 
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
 series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
-<p>Here is an index of the remaining entries in this series:
-<a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></p>
+<p>Here is an index of the remaining entries in this series:</p>
+
+<ul>
+<li><a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></li>
+</ul>
+
 
 <h2>Overview</h2>
 
