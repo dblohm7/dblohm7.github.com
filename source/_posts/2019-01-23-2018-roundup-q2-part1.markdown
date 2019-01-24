@@ -139,10 +139,11 @@ address space, thus yielding savings of 52KiB in committed memory and 780KiB in 
 
 ### Oh, and One More Thing
 
-Another problem that I discovered during this refactoring was {% bug 1459335 %}. It turns out that the 
-interceptor's callers were not distinguishing between "I have not set this hook yet" and "I attempted 
-to set this hook but it failed." Across several call sites, I discovered that our code would repeatedly 
-retry to set hooks even when they had previously failed, causing leakage of trampoline space!
+Another problem that I discovered during this refactoring was {% bug 1459335 %}. It turns out that some 
+of the interceptor's callers were not distinguishing between "I have not set this hook yet" and "I 
+attempted to set this hook but it failed" scenarios. Across several call sites, I discovered that 
+our code would repeatedly retry to set hooks even when they had previously failed, causing leakage 
+of trampoline space!
 
 To fix this, I modified the interceptor's interface so that we use one-time initialization APIs to 
 set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to 
