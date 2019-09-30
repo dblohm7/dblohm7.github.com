@@ -1,0 +1,69 @@
+---
+layout: post
+title: "Coming Around Full Circle"
+date: 2019-09-30 10:30:00 -0600
+comments: true
+categories: [Mozilla, announcements]
+---
+One thing about me that most Mozillians don't know is that, when I first applied to work at MoCo, 
+I had applied to work on the mobile platform. When all was said and done, it was decided at the time 
+that I would be a better fit for an opening on Taras Glek's platform performance team.
+
+My first day at Mozilla was October 15, 2012 -- I will be celebrating my seventh anniversary at MoCo in 
+just a couple short weeks! Some people with similar tenures have suggested to me that we are now 
+"old guard," but I'm not sure that I feel that way! Anyway, I digress.
+
+The platform performance team eventually evolved into a desktop-focused performance team by late 2013.
+By the end of 2015 I had decided that it was time for a change, and by March 2016 I had moved over to 
+work for Jim Mathies, focusing on Gecko integration with Windows. I ended up spending the next twenty 
+or so months helping the accessibility team port their Windows implementation over to multiprocess.
+
+Once Firefox Quantum 57 hit the streets, I scoped out and provided technical leadership for the 
+InjectEject project, whose objective was to tackle some of the root problems with DLL injection that 
+were causing us grief in Windows-land.
+
+I am proud to say that, over the past three years on Jim's team, I have done the best work of my career.
+I'd like to thank Brad Lassey (now at Google) for his willingness to bring me over to his group, as well as 
+Jim and David Bolter (a11y manager at the time) for their confidence in me. As somebody who had spent most 
+of his adult life having no confidence in his work whatsoever, their willingness to entrust me with 
+taking on those risks and responsibilities made an enormous difference in my self esteem and my 
+professional life.
+
+Over the course of H1 2019, I began to feel restless again. I knew it was time for another change. What 
+I did not expect was that the agent of that change would be James Willcox, aka Snorp. In Whistler, Snorp 
+planted the seed in my head that I might want to come over to work with him on GeckoView, within the 
+mobile group which David was now managing.
+
+The timing seemed perfect, so I made the decision to move to GeckoView. I had to finish tying up some 
+loose ends with InjectEject, so all the various stakeholders agreed that I'd move over at the end of Q3 2019.
+
+Which brings me to this week, when I officially join the GeckoView team. I find it somewhat amusing 
+that I am now joining the team that evolved from the team that I had originally applied for back in 
+2012. I have truly come full circle in my career at Mozilla!
+
+So, what's next?
+
+* I have a couple of InjectEject bugs that are pretty much finished, but just need some polish and 
+code reviews before landing.
+
+* For the next month or two at least, I am going to continue to meet weekly with Jim to assist with 
+the transition as he ramps up new staff on the project.
+
+* I still plan to be the module owner for the Firefox Launcher Process and the MSCOM library, however most 
+day-to-day work will be done by others going forward;
+
+* I will continue to serve as the mozglue peer in charge of the DLL blocklist and DLL interceptor, with 
+the same caveat.
+
+Switching over to Android from Windows does not mean that I am leaving my Windows experience at the door; I 
+would like to continue to be a resource on that front, so I would encourage people to continue to ask me 
+for advice.
+
+On the other hand, I am very much looking forward to stepping back into the mobile space. My first crack at 
+mobile was as an intern back in 2003, when I was working with some code that had to run on PalmOS 3.0! I have not
+touched Android since I shipped a couple of utility apps back in 2011, so I am looking forward to learning 
+more about what has changed. I am also looking forward to learning more about native development on Android, 
+which is something that I never really had a chance to try.
+
+As they used to say on Monty Python's Flying Circus, "And now for something completely different!"
+
