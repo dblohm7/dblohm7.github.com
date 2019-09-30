@@ -37,9 +37,9 @@ mobile group which David was now managing.
 The timing seemed perfect, so I made the decision to move to GeckoView. I had to finish tying up some 
 loose ends with InjectEject, so all the various stakeholders agreed that I'd move over at the end of Q3 2019.
 
-Which brings me to this week, when I officially join the GeckoView team. I find it somewhat amusing 
-that I am now joining the team that evolved from the team that I had originally applied for back in 
-2012. I have truly come full circle in my career at Mozilla!
+Which brings me to this week, when I officially join the GeckoView team, working for Emily Toop. I find 
+it somewhat amusing that I am now joining the team that evolved from the team that I had originally applied 
+for back in 2012. I have truly come full circle in my career at Mozilla!
 
 So, what's next?
 
