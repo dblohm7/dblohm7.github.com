@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-01-23T22:43:12-07:00</updated>
+  <updated>2019-09-30T10:30:49-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,75 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Coming Around Full Circle]]></title>
+    <link href="http://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/"/>
+    <updated>2019-09-30T10:30:00-06:00</updated>
+    <id>http://dblohm7.ca/blog/2019/09/30/coming-around-full-circle</id>
+    <content type="html"><![CDATA[<p>One thing about me that most Mozillians don&rsquo;t know is that, when I first applied to work at MoCo,
+I had applied to work on the mobile platform. When all was said and done, it was decided at the time
+that I would be a better fit for an opening on Taras Glek&rsquo;s platform performance team.</p>
+
+<p>My first day at Mozilla was October 15, 2012 &ndash; I will be celebrating my seventh anniversary at MoCo in
+just a couple short weeks! Some people with similar tenures have suggested to me that we are now
+&ldquo;old guard,&rdquo; but I&rsquo;m not sure that I feel that way! Anyway, I digress.</p>
+
+<p>The platform performance team eventually evolved into a desktop-focused performance team by late 2013.
+By the end of 2015 I had decided that it was time for a change, and by March 2016 I had moved over to
+work for Jim Mathies, focusing on Gecko integration with Windows. I ended up spending the next twenty
+or so months helping the accessibility team port their Windows implementation over to multiprocess.</p>
+
+<p>Once Firefox Quantum 57 hit the streets, I scoped out and provided technical leadership for the
+InjectEject project, whose objective was to tackle some of the root problems with DLL injection that
+were causing us grief in Windows-land.</p>
+
+<p>I am proud to say that, over the past three years on Jim&rsquo;s team, I have done the best work of my career.
+I&rsquo;d like to thank Brad Lassey (now at Google) for his willingness to bring me over to his group, as well as
+Jim and David Bolter (a11y manager at the time) for their confidence in me. As somebody who had spent most
+of his adult life having no confidence in his work whatsoever, their willingness to entrust me with
+taking on those risks and responsibilities made an enormous difference in my self esteem and my
+professional life.</p>
+
+<p>Over the course of H1 2019, I began to feel restless again. I knew it was time for another change. What
+I did not expect was that the agent of that change would be James Willcox, aka Snorp. In Whistler, Snorp
+planted the seed in my head that I might want to come over to work with him on GeckoView, within the
+mobile group which David was now managing.</p>
+
+<p>The timing seemed perfect, so I made the decision to move to GeckoView. I had to finish tying up some
+loose ends with InjectEject, so all the various stakeholders agreed that I&rsquo;d move over at the end of Q3 2019.</p>
+
+<p>Which brings me to this week, when I officially join the GeckoView team. I find it somewhat amusing
+that I am now joining the team that evolved from the team that I had originally applied for back in
+2012. I have truly come full circle in my career at Mozilla!</p>
+
+<p>So, what&rsquo;s next?</p>
+
+<ul>
+<li><p>I have a couple of InjectEject bugs that are pretty much finished, but just need some polish and
+code reviews before landing.</p></li>
+<li><p>For the next month or two at least, I am going to continue to meet weekly with Jim to assist with
+the transition as he ramps up new staff on the project.</p></li>
+<li><p>I still plan to be the module owner for the Firefox Launcher Process and the MSCOM library, however most
+day-to-day work will be done by others going forward;</p></li>
+<li><p>I will continue to serve as the mozglue peer in charge of the DLL blocklist and DLL interceptor, with
+the same caveat.</p></li>
+</ul>
+
+
+<p>Switching over to Android from Windows does not mean that I am leaving my Windows experience at the door; I
+would like to continue to be a resource on that front, so I would encourage people to continue to ask me
+for advice.</p>
+
+<p>On the other hand, I am very much looking forward to stepping back into the mobile space. My first crack at
+mobile was as an intern back in 2003, when I was working with some code that had to run on PalmOS 3.0! I have not
+touched Android since I shipped a couple of utility apps back in 2011, so I am looking forward to learning
+more about what has changed. I am also looking forward to learning more about native development on Android,
+which is something that I never really had a chance to try.</p>
+
+<p>As they used to say on Monty Python&rsquo;s Flying Circus, &ldquo;And now for something completely different!&rdquo;</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 1]]></title>
@@ -469,57 +538,6 @@ the callable:</p>
 <p><strong>TL;DR:</strong> If you see a pattern where further initialization work is being done
 on an <code>HWND</code> after a <code>CreateWindowEx</code> call, move that initialization code to your
 window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds]]></title>
-    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
-    <updated>2017-06-12T15:50:43-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
-    <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
-use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
-<code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
-
-<h2>They enable more utility in WinDbg extensions</h2>
-
-<p>Every time you initialize a <code>CRITICAL_SECTION</code>, Windows inserts the CS&rsquo;s
-debug info into a process-wide linked list. This enables their discovery by
-the Windows debugging engine, and makes the <code>!cs</code>, <code>!critsec</code>, and <code>!locks</code>
-commands more useful.</p>
-
-<h2>They enable profiling of their initialization and acquisition</h2>
-
-<p>When the &ldquo;Create user mode stack trace database&rdquo; gflag is enabled, Windows
-records the call stack of the thread that called <code>InitializeCriticalSection</code>
-on that CS. Windows also records the call stack of the owning thread once
-it has acquired the CS. This can be very useful for debugging deadlocks.</p>
-
-<h2>They track their contention counts</h2>
-
-<p>Since every CS has been placed in a process-wide linked list, we may now ask
-the debugger to dump statistics about every live CS in the process. In
-particular, we can ask the debugger to output the contention counts for each
-CS in the process. After running a workload against Nightly, we may then take
-the contention output, sort it descendingly, and be able to determine which
-<code>CRITICAL_SECTION</code>s are the most contended in the process.</p>
-
-<p>We may then want to more closely inspect the hottest CSes to determine whether
-there is anything that we can do to reduce contention and all of the extra
-context switching that entails.</p>
-
-<h2>In Summary</h2>
-
-<p>When we use <code>SRWLOCK</code>s or initialize our <code>CRITICAL_SECTION</code>s with the
-<code>CRITICAL_SECTION_NO_DEBUG_INFO</code> flag, we are denying ourselves access to this
-information. That&rsquo;s fine on release builds, but on Nightly I think it is worth
-having around. While I realize that most Mozilla developers have not used this
-until now (otherwise I would not be writing this blog post), this rich debugger
-info is one of those things that you do not miss until you do not have it.</p>
-
-<p>For further reading about critical section debug info, check out
-<a href="https://web.archive.org/web/20150419055323/https://msdn.microsoft.com/en-us/magazine/cc164040.aspx">this</a>
-archived article from MSDN Magazine.</p>
 ]]></content>
   </entry>
   
