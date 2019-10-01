@@ -10,7 +10,7 @@ positive and negative. That is not surprising to anybody -- any software that
 has a large number of users is going to be a topic for discussion, especially 
 when the release in question is undoubtedly a watershed.
 
-While I have [previously](http://dblohm7.ca/blog/2015/08/30/on-webextensions/) 
+While I have [previously](https://dblohm7.ca/blog/2015/08/30/on-webextensions/) 
 blogged about the transition to WebExtensions, now that we have actually passed 
 through the cutoff for legacy extensions, I have decided to add some new 
 commentary on the subject.

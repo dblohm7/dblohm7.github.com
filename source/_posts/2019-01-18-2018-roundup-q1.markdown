@@ -12,7 +12,7 @@ series of retrospectives on last year's work, broken up by quarter.
 
 Here is an index of the remaining entries in this series:
 
-* [2018 Roundup: Q2, Part 1](http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/)
+* [2018 Roundup: Q2, Part 1](https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/)
 
 Overview
 --------
@@ -101,6 +101,6 @@ problem on that platform, it would be easy enough to reuse most of this code for
 the only major work for the latter case would be for extracting signature information from a dylib. 
 This is not currently a priority for us, though.
 
-Thanks for reading! Coming up in [Q2](http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/): 
+Thanks for reading! Coming up in [Q2](https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/): 
 Refactoring the DLL Interceptor!
 

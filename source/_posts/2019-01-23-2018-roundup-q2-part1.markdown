@@ -6,12 +6,12 @@ comments: true
 categories: [Mozilla, roundups, DLL Injection]
 ---
 *This is the second post in my "2018 Roundup" series. For an index of all entries, please see my 
-blog entry for [Q1](http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
+blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
 
 Refactoring the DLL Interceptor
 -------------------------------
 
-As I have alluded to [previously](http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/), 
+As I have alluded to [previously](https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/), 
 Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to 
 as the "DLL Interceptor." We use the DLL interceptor to instrument various functions within our own 
 processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of 
@@ -50,7 +50,7 @@ in an effort to simplify my description.
 
 Here is my attempt at visualizing the control flow of a detoured function on x86-64:
 
-{% img http://dblohm7.ca/images/detours_hook.svg %}
+{% img https://dblohm7.ca/images/detours_hook.svg %}
 
 ### Refactoring
 

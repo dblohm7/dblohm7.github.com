@@ -23,7 +23,7 @@ When the Hang UI is invoked, you'll notice that Firefox has created
 a new child process, plugin-hang-ui.exe. This child process will 
 display the Plugin Hang UI dialog box.
 
-{% img http://dblohm7.ca/images/hangui.png %}
+{% img https://dblohm7.ca/images/hangui.png %}
 
 My patch is currently under review, but the Plugin Hang UI is fully functional 
 in a [try build](http://ftp.mozilla.org/pub/mozilla.org/firefox/try-builds/aklotz@mozilla.com-f5d8fdf4f29a/try-win32/firefox-19.0a1.en-US.win32.installer.exe), 

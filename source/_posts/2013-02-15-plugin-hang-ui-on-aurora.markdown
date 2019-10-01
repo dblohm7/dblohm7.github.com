@@ -8,7 +8,7 @@ categories: [Mozilla, Plugins]
 The UI Has Landed
 -----------------
 
-The [Plugin Hang UI](http://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/) 
+The [Plugin Hang UI](https://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/) 
 landed in mozilla-central in time for January's merge. This means that it is 
 now available on both Nightly and Aurora.
 
