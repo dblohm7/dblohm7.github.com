@@ -4,7 +4,7 @@
   <title><![CDATA[Category: main thread i/o | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/main-thread-i-slash-o/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-10-01T11:19:37-06:00</updated>
+  <updated>2019-10-01T11:25:40-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -44,7 +44,7 @@ module that interposes calls to <code>read</code>, <code>write</code>, and <code
 timeline whenever main thread I/O is reported. Here is a sample screenshot of the
 markers in action (the pink stuff for readers who are unfamiliar with SPS markers):</p>
 
-<p><a href="href="http://dblohm7.ca/images/iomarkers.png">http://dblohm7.ca/images/iomarkers.png</a>&#8221;><img class="<a" src="href="http://dblohm7.ca/images/iomarkers.png">http://dblohm7.ca/images/iomarkers.png</a>&#8221;></a></p>
+<p><a href="href="https://dblohm7.ca/images/iomarkers.png">https://dblohm7.ca/images/iomarkers.png</a>&#8221;><img class="<a" src="href="https://dblohm7.ca/images/iomarkers.png">https://dblohm7.ca/images/iomarkers.png</a>&#8221;></a></p>
 
 <p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867757">bug 867757</a> (under review)
 this will become more sophisticated, as SPS will immediately sample the callstack of
@@ -56,7 +56,7 @@ but with both existing patches applied the data is already useful. By firing up
 Cleopatra and filtering on either <code>NSPRInterposer</code> or <code>SQLiteInterposer</code>, you can
 isolate and view the main thread I/O stacks:</p>
 
-<p><a href="href="http://dblohm7.ca/images/iofilteredstacks.png">http://dblohm7.ca/images/iofilteredstacks.png</a>&#8221;><img class="<a" src="href="http://dblohm7.ca/images/iofilteredstacks.png">http://dblohm7.ca/images/iofilteredstacks.png</a>&#8221;></a></p>
+<p><a href="href="https://dblohm7.ca/images/iofilteredstacks.png">https://dblohm7.ca/images/iofilteredstacks.png</a>&#8221;><img class="<a" src="href="https://dblohm7.ca/images/iofilteredstacks.png">https://dblohm7.ca/images/iofilteredstacks.png</a>&#8221;></a></p>
 
 <p>Hopefully these patches will prove to be beneficial to our efforts to eliminate
 main thread I/O.</p>

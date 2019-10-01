@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-10-01T11:19:37-06:00</updated>
+  <updated>2019-10-01T11:25:40-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -88,11 +88,11 @@ which is something that I never really had a chance to try.</p>
     <updated>2019-01-23T18:30:00-07:00</updated>
     <id>http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
     <content type="html"><![CDATA[<p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
-blog entry for <a href="http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
 <h2>Refactoring the DLL Interceptor</h2>
 
-<p>As I have alluded to <a href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">previously</a>,
+<p>As I have alluded to <a href="https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">previously</a>,
 Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to
 as the &ldquo;DLL Interceptor.&rdquo; We use the DLL interceptor to instrument various functions within our own
 processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of
@@ -128,7 +128,7 @@ in an effort to simplify my description.</p>
 
 <p>Here is my attempt at visualizing the control flow of a detoured function on x86-64:</p>
 
-<p><img class="<a" src="href="http://dblohm7.ca/images/detours_hook.svg">http://dblohm7.ca/images/detours_hook.svg</a>&#8221;></p>
+<p><img class="<a" src="href="https://dblohm7.ca/images/detours_hook.svg">https://dblohm7.ca/images/detours_hook.svg</a>&#8221;></p>
 
 <h3>Refactoring</h3>
 
@@ -263,7 +263,7 @@ series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 <p>Here is an index of the remaining entries in this series:</p>
 
 <ul>
-<li><a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></li>
+<li><a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></li>
 </ul>
 
 
@@ -355,7 +355,7 @@ problem on that platform, it would be easy enough to reuse most of this code for
 the only major work for the latter case would be for extracting signature information from a dylib.
 This is not currently a priority for us, though.</p>
 
-<p>Thanks for reading! Coming up in <a href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Q2</a>:
+<p>Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Q2</a>:
 Refactoring the DLL Interceptor!</p>
 ]]></content>
   </entry>
@@ -370,7 +370,7 @@ positive and negative. That is not surprising to anybody &ndash; any software th
 has a large number of users is going to be a topic for discussion, especially
 when the release in question is undoubtedly a watershed.</p>
 
-<p>While I have <a href="http://dblohm7.ca/blog/2015/08/30/on-webextensions/">previously</a>
+<p>While I have <a href="https://dblohm7.ca/blog/2015/08/30/on-webextensions/">previously</a>
 blogged about the transition to WebExtensions, now that we have actually passed
 through the cutoff for legacy extensions, I have decided to add some new
 commentary on the subject.</p>
