@@ -153,5 +153,5 @@ Quantifying the memory costs of this bug is... non-trivial, but it suffices to s
 this bug probably resulted in the savings of at least a few hundred KiB in committed VM on 
 affected machines.
 
-That's it for today's post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process
+That's it for today's post, folks! Thanks for reading! Coming up in [Q2, Part 2](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/): Implementing a Skeletal Launcher Process
 
