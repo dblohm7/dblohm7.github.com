@@ -4,7 +4,7 @@
   <title><![CDATA[Category: dll injection | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/dll-injection/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2019-10-01T11:53:07-06:00</updated>
+  <updated>2021-01-04T15:46:33-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,93 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[2018 Roundup: Q2, Part 2]]></title>
+    <link href="http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/"/>
+    <updated>2021-01-04T15:45:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2</id>
+    <content type="html"><![CDATA[<p><em>This is the third post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
+I am trying to get caught up on documenting my past work!</p>
+
+<h2>Implementing a Skeletal Launcher Process</h2>
+
+<p>One of the things I added to Firefox for Windows was a new process called the &ldquo;launcher process.&rdquo;
+&ldquo;Bootstrap process&rdquo; would be a better name, but we already used the term &ldquo;bootstrap&rdquo;
+for our XPCOM initialization code. Instead of overloading that term and adding potential confusion,
+I opted for using &ldquo;launcher process&rdquo; instead.</p>
+
+<p>The launcher process is intended to be the first process that runs when the user starts
+Firefox. Its sole purpose is to create the &ldquo;real&rdquo; browser process in a suspended state, set various
+attributes on the browser process, resume the browser process, and then self-terminate.</p>
+
+<p>In <a title="Skeletal bootstrap process" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1454745">bug 1454745</a> I implemented an initial skeletal (and opt-in) implementation of the
+launcher process for starting.</p>
+
+<p>This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a <code>CreateProcess</code>
+sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons,
+which I will outline in the following sections.</p>
+
+<h3>Built into <code>firefox.exe</code></h3>
+
+<p>I wanted the launcher process to exist as a special &ldquo;mode&rdquo; of <code>firefox.exe</code>, as opposed to a distinct
+executable.</p>
+
+<h3>Performance</h3>
+
+<p>By definition, the launcher process lies on the critical path to browser startup. I needed to be very
+conscious of how we affect overall browser startup time.</p>
+
+<p>Since the launcher process is built into <code>firefox.exe</code>, I needed to examine that executable&rsquo;s existing
+dependencies to ensure that it is not loading any dependent libraries that are not actually needed
+by the launcher process. Other than the essential Win32 DLLs <code>kernel32.dll</code>, <code>advapi32.dll</code>, and their
+dependencies, I did not want anything else to load. In particular, I wanted to avoid loading <code>user32.dll</code>
+and/or <code>gdi32.dll</code>, as this would trigger the initialization of Windows&#8217; GUI facilities, which would be a
+huge performance killer. For that reason, most browser-mode library dependencies of <code>firefox.exe</code>
+are either delay-loaded or are explicitly loaded via <code>LoadLibrary</code>.</p>
+
+<h3>Safe Mode</h3>
+
+<p>We want the launcher process to both respect Firefox&rsquo;s safe mode, as well as alter its behaviour
+as necessary when safe mode is requested.</p>
+
+<p>There are multiple mechanisms used by Firefox to detect safe mode. The launcher process detects
+all of them except for one: Testing whether the user is holding the shift key. Retrieving keyboard
+state would trigger loading of <code>user32.dll</code>, which would harm performance as I described above.</p>
+
+<p>This is not too severe an issue in practice: The browser process itself would still detect the
+shift key. Furthermore, while the launcher process may in theory alter its behaviour depending on
+whether or not safe mode is requested, none of its behaviour changes are significant enough to
+materially affect the browser&rsquo;s ability to start in safe mode.</p>
+
+<p>Also note that, for serious cases where the browser is repeatedly unable to start,
+the browser triggers a restart in safe mode via environment variable, which <em>is</em> a mechanism that
+the launcher process honours.</p>
+
+<h3>Testing and Automation</h3>
+
+<p>We want the launcher process to behave well with respect to automated testing.</p>
+
+<p>The skeletal launcher process that I landed in Q2 included code to pass its console handles
+on to the browser process, but there was more work necessary to completely handle this case.
+These capabilities were not yet an issue because the launcher process was opt-in at the time.</p>
+
+<h3>Error Recovery</h3>
+
+<p>We want the launcher process to gracefully handle failures even though, also by definition, it does not
+have access to facilities that internal Gecko code has, such as telemetry and the crash reporter.</p>
+
+<p>The skeletal launcher process that I landed in Q2 did not yet utilize any special error handling
+code, but this was also not yet an issue because the launcher process was opt-in at this point.</p>
+
+<h3>Next Time</h3>
+
+<p>Thanks for reading! Coming up in Q2, Part 3: Fleshing Out the Launcher Process</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 1]]></title>
@@ -177,7 +264,7 @@ set a hook that had previously failed to be set.</p>
 this bug probably resulted in the savings of at least a few hundred KiB in committed VM on
 affected machines.</p>
 
-<p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in Q2, Part 2: Implementing a Skeletal Launcher Process</p>
+<p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">Q2, Part 2</a>: Implementing a Skeletal Launcher Process</p>
 ]]></content>
   </entry>
   
@@ -195,6 +282,7 @@ series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
 <ul>
 <li><a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></li>
+<li><a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a></li>
 </ul>
 
 
