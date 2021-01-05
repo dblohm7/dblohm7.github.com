@@ -40,3 +40,18 @@ mark {
   color: black;
   background: yellow;
 }
+a > code {
+  color:#1863a1
+}
+a:visited > code {
+  color:#751590
+}
+a:focus > code {
+  color:#0181eb
+}
+a:hover > code {
+  color:#0181eb
+}
+a:active > code {
+  color:#01579f
+}
