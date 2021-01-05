@@ -1,0 +1,83 @@
+---
+layout: post
+title: "2018 Roundup: Q2, Part 3"
+date: 2021-01-05 09:45:00 -0700
+comments: true
+categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
+---
+*This is the fourth post in my "2018 Roundup" series. For an index of all entries, please see my 
+blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
+
+Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series. 
+I am trying to get caught up on documenting my past work!
+
+Fleshing Out the Launcher Process
+---------------------------------
+
+Once I had landed the [skeletal implementation](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/) 
+of the launcher process, it was time to start making it do useful things.
+
+### Ensuring Medium Integrity
+[*For an overview of Windows integrity levels, check out [this MSDN page](https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control) -- Aaron*]
+
+Since Windows Vista, standard Windows users possess a security token that specifies a medium integrity level.
+When UAC is enabled, members of the `Administrators` group also run as a standard user with a medium IL, with 
+the additional ability of being able to "elevate" themselves to a high IL. An administrator who disables UAC 
+has a token that is always high integrity.
+
+Running a process at a high IL is something that is not to be taken lightly: at that level, the process may 
+alter system settings and access files that would otherwise be restricted.
+
+While our sandboxed content processes always run at a low IL, I believe that defense-in-depth calls for ensuring 
+that the browser process is not running at a high IL. In particular, I was concerned about cases where, for 
+example, a system administrator accidentally starts Firefox from an elevated command prompt instead of a normal 
+command prompt.
+
+This was a perfect use case for the launcher process: it detects whether it is running at high IL, and if so, 
+it launches the browser with medium integrity.
+
+Unfortunately some users prefer to configure their accounts to run at all times as `Administrator` with high integrity! 
+This is *terrible* idea from a security perspective, but it is what it is; in my experience, most users who 
+run with this configuration do so deliberately, and they have no interest in being lectured about it.
+
+Unfortunately, users running under this account configuration will experience side-effects of the Firefox browser 
+process running at medium IL. Specifically, a medium IL process is unable to initiate IPC connections with a process 
+running at a higher IL. This will break features such as drag-and-drop, since even the user's shell processes are running 
+at a higher IL than Firefox.
+
+Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option 
+that prevents the launcher process from de-elevating when running with a high IL. I hate that I needed to do this, 
+but moral suasion was not going to be effective technique for solving this problem.
+
+### Process Mitigation Policies
+
+Another tool that the launcher process enables us to utilize is process mitigation options. Introduced in Windows 8, 
+the kernel provides several opt-in flags that allows us to add prophylactic policies to our processes in an effort to 
+harden them against attacks.
+
+Additional flags have been added over time, so we must be careful to only set flags that are supported by the version 
+of Windows on which we're running.
+
+We were already utilizing some of these mitigation policies via the 
+[`SetProcessMitigationPolicy`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy) API. 
+Unfortunately this API is designed for a process to use on itself once it is already running. This implies that there 
+is a window of time between process creation and the time that the mitigation is enabled where an attack could occur.
+
+Fortunately, Windows provides a second avenue for setting process mitigation flags: These flags may be set as part of 
+an attribute list in the [`STARTUPINFOEX`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw) 
+structure that we pass into `CreateProcess`.
+
+Perhaps you can now see where I am going with this: The launcher process enables us to specify process mitigation flags 
+for the browser process *at the time of browser process creation*, thus preventing the aforementioned window of opportunity 
+for attacks to occur!
+
+While there are other flags that we could support in the future, the initial mitigation policy that I added was the 
+[`PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute) 
+flag. This forces the Windows loader to always use the Windows `system32` directory as the first directory in its search path, 
+thus preventing library preload attacks. Use of this mitigation also gave us an unexpected performance gain on devices with 
+mechanical hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in `system32`. With 
+`system32` at the front of the loader's search path, the resulting reduction in hard disk seek times produced a slight but 
+meaningful decrease in browser startup time! How I made these measurements is addressed in a future post.
+
+### Next Time
+This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing for Launcher Process by Default.

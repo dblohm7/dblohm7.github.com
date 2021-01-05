@@ -3,7 +3,7 @@ layout: post
 title: "2018 Roundup: Q2, Part 2"
 date: 2021-01-04 15:45:00 -0700
 comments: true
-categories: [Mozilla, roundups, DLL Injection]
+categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
 ---
 *This is the third post in my "2018 Roundup" series. For an index of all entries, please see my 
 blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
@@ -24,7 +24,7 @@ Firefox. Its sole purpose is to create the "real" browser process in a suspended
 attributes on the browser process, resume the browser process, and then self-terminate.
 
 In {% bug 1454745 %} I implemented an initial skeletal (and opt-in) implementation of the
-launcher process for starting.
+launcher process.
 
 This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a `CreateProcess` 
 sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons, 
@@ -40,14 +40,14 @@ conscious of how we affect overall browser startup time.
 
 Since the launcher process is built into `firefox.exe`, I needed to examine that executable's existing 
 dependencies to ensure that it is not loading any dependent libraries that are not actually needed 
-by the launcher process. Other than the essential Win32 DLLs `kernel32.dll`, `advapi32.dll`, and their 
-dependencies, I did not want anything else to load. In particular, I wanted to avoid loading `user32.dll` 
+by the launcher process. Other than the essential Win32 DLLs `kernel32.dll`, `advapi32.dll` (and their 
+dependencies), I did not want anything else to load. In particular, I wanted to avoid loading `user32.dll` 
 and/or `gdi32.dll`, as this would trigger the initialization of Windows' GUI facilities, which would be a 
 huge performance killer. For that reason, most browser-mode library dependencies of `firefox.exe` 
 are either delay-loaded or are explicitly loaded via `LoadLibrary`.
 
 ### Safe Mode
-We want the launcher process to both respect Firefox's safe mode, as well as alter its behaviour 
+We wanted the launcher process to both respect Firefox's safe mode, as well as alter its behaviour 
 as necessary when safe mode is requested.
 
 There are multiple mechanisms used by Firefox to detect safe mode. The launcher process detects 
@@ -64,18 +64,18 @@ the browser triggers a restart in safe mode via environment variable, which *is*
 the launcher process honours.
 
 ### Testing and Automation
-We want the launcher process to behave well with respect to automated testing.
+We wanted the launcher process to behave well with respect to automated testing.
 
 The skeletal launcher process that I landed in Q2 included code to pass its console handles 
 on to the browser process, but there was more work necessary to completely handle this case.
 These capabilities were not yet an issue because the launcher process was opt-in at the time.
 
 ### Error Recovery
-We want the launcher process to gracefully handle failures even though, also by definition, it does not
+We wanted the launcher process to gracefully handle failures even though, also by definition, it does not
 have access to facilities that internal Gecko code has, such as telemetry and the crash reporter.
 
 The skeletal launcher process that I landed in Q2 did not yet utilize any special error handling
 code, but this was also not yet an issue because the launcher process was opt-in at this point.
 
 ### Next Time
-Thanks for reading! Coming up in Q2, Part 3: Fleshing Out the Launcher Process
+Thanks for reading! Coming up in [Q2, Part 3](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/): Fleshing Out the Launcher Process
