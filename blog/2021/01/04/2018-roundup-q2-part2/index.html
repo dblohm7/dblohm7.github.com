@@ -123,7 +123,7 @@ Firefox. Its sole purpose is to create the &ldquo;real&rdquo; browser process in
 attributes on the browser process, resume the browser process, and then self-terminate.</p>
 
 <p>In <a title="Skeletal bootstrap process" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1454745">bug 1454745</a> I implemented an initial skeletal (and opt-in) implementation of the
-launcher process for starting.</p>
+launcher process.</p>
 
 <p>This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a <code>CreateProcess</code>
 sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons,
@@ -141,15 +141,15 @@ conscious of how we affect overall browser startup time.</p>
 
 <p>Since the launcher process is built into <code>firefox.exe</code>, I needed to examine that executable&rsquo;s existing
 dependencies to ensure that it is not loading any dependent libraries that are not actually needed
-by the launcher process. Other than the essential Win32 DLLs <code>kernel32.dll</code>, <code>advapi32.dll</code>, and their
-dependencies, I did not want anything else to load. In particular, I wanted to avoid loading <code>user32.dll</code>
+by the launcher process. Other than the essential Win32 DLLs <code>kernel32.dll</code>, <code>advapi32.dll</code> (and their
+dependencies), I did not want anything else to load. In particular, I wanted to avoid loading <code>user32.dll</code>
 and/or <code>gdi32.dll</code>, as this would trigger the initialization of Windows&#8217; GUI facilities, which would be a
 huge performance killer. For that reason, most browser-mode library dependencies of <code>firefox.exe</code>
 are either delay-loaded or are explicitly loaded via <code>LoadLibrary</code>.</p>
 
 <h3>Safe Mode</h3>
 
-<p>We want the launcher process to both respect Firefox&rsquo;s safe mode, as well as alter its behaviour
+<p>We wanted the launcher process to both respect Firefox&rsquo;s safe mode, as well as alter its behaviour
 as necessary when safe mode is requested.</p>
 
 <p>There are multiple mechanisms used by Firefox to detect safe mode. The launcher process detects
@@ -167,7 +167,7 @@ the launcher process honours.</p>
 
 <h3>Testing and Automation</h3>
 
-<p>We want the launcher process to behave well with respect to automated testing.</p>
+<p>We wanted the launcher process to behave well with respect to automated testing.</p>
 
 <p>The skeletal launcher process that I landed in Q2 included code to pass its console handles
 on to the browser process, but there was more work necessary to completely handle this case.
@@ -175,7 +175,7 @@ These capabilities were not yet an issue because the launcher process was opt-in
 
 <h3>Error Recovery</h3>
 
-<p>We want the launcher process to gracefully handle failures even though, also by definition, it does not
+<p>We wanted the launcher process to gracefully handle failures even though, also by definition, it does not
 have access to facilities that internal Gecko code has, such as telemetry and the crash reporter.</p>
 
 <p>The skeletal launcher process that I landed in Q2 did not yet utilize any special error handling
@@ -183,7 +183,7 @@ code, but this was also not yet an issue because the launcher process was opt-in
 
 <h3>Next Time</h3>
 
-<p>Thanks for reading! Coming up in Q2, Part 3: Fleshing Out the Launcher Process</p>
+<p>Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/">Q2, Part 3</a>: Fleshing Out the Launcher Process</p>
 </div>
 
 
@@ -210,7 +210,7 @@ code, but this was also not yet an issue because the launcher process was opt-in
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/dll-injection/'>dll injection</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/roundups/'>roundups</a>
+    <a class='category' href='/blog/categories/2018-roundup/'>2018 roundup</a>, <a class='category' href='/blog/categories/dll-injection/'>dll injection</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/roundups/'>roundups</a>
   
 </span>
 
@@ -228,6 +228,8 @@ code, but this was also not yet an issue because the launcher process was opt-in
       
         <a class="basic-alignment left" href="/blog/2019/09/30/coming-around-full-circle/" title="Previous Post: Coming Around Full Circle">&laquo; Coming Around Full Circle</a>
       
+      
+        <a class="basic-alignment right" href="/blog/2021/01/05/2018-roundup-q2-part3/" title="Next Post: 2018 Roundup: Q2, Part 3">2018 Roundup: Q2, Part 3 &raquo;</a>
       
     </p>
   </footer>
@@ -248,6 +250,10 @@ code, but this was also not yet an issue because the launcher process was opt-in
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a>
       </li>
     
@@ -261,10 +267,6 @@ code, but this was also not yet an issue because the launcher process was opt-in
     
       <li class="post">
         <a href="/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2017/11/16/legacy-firefox-extensions-and-userspace/">Legacy Firefox Extensions and &#8220;Userspace&#8221;</a>
       </li>
     
   </ul>

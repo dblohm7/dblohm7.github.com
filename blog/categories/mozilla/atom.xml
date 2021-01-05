@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-01-04T15:46:33-07:00</updated>
+  <updated>2021-01-05T09:45:24-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,91 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[2018 Roundup: Q2, Part 3]]></title>
+    <link href="http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/"/>
+    <updated>2021-01-05T09:45:00-07:00</updated>
+    <id>http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3</id>
+    <content type="html"><![CDATA[<p><em>This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
+I am trying to get caught up on documenting my past work!</p>
+
+<h2>Fleshing Out the Launcher Process</h2>
+
+<p>Once I had landed the <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">skeletal implementation</a>
+of the launcher process, it was time to start making it do useful things.</p>
+
+<h3>Ensuring Medium Integrity</h3>
+
+<p>[<em>For an overview of Windows integrity levels, check out <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control">this MSDN page</a> &ndash; Aaron</em>]</p>
+
+<p>Since Windows Vista, standard Windows users possess a security token that specifies a medium integrity level.
+When UAC is enabled, members of the <code>Administrators</code> group also run as a standard user with a medium IL, with
+the additional ability of being able to &ldquo;elevate&rdquo; themselves to a high IL. An administrator who disables UAC
+has a token that is always high integrity.</p>
+
+<p>Running a process at a high IL is something that is not to be taken lightly: at that level, the process may
+alter system settings and access files that would otherwise be restricted.</p>
+
+<p>While our sandboxed content processes always run at a low IL, I believe that defense-in-depth calls for ensuring
+that the browser process is not running at a high IL. In particular, I was concerned about cases where, for
+example, a system administrator accidentally starts Firefox from an elevated command prompt instead of a normal
+command prompt.</p>
+
+<p>This was a perfect use case for the launcher process: it detects whether it is running at high IL, and if so,
+it launches the browser with medium integrity.</p>
+
+<p>Unfortunately some users prefer to configure their accounts to run at all times as <code>Administrator</code> with high integrity!
+This is <em>terrible</em> idea from a security perspective, but it is what it is; in my experience, most users who
+run with this configuration do so deliberately, and they have no interest in being lectured about it.</p>
+
+<p>Unfortunately, users running under this account configuration will experience side-effects of the Firefox browser
+process running at medium IL. Specifically, a medium IL process is unable to initiate IPC connections with a process
+running at a higher IL. This will break features such as drag-and-drop, since even the user&rsquo;s shell processes are running
+at a higher IL than Firefox.</p>
+
+<p>Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option
+that prevents the launcher process from de-elevating when running with a high IL. I hate that I needed to do this,
+but moral suasion was not going to be effective technique for solving this problem.</p>
+
+<h3>Process Mitigation Policies</h3>
+
+<p>Another tool that the launcher process enables us to utilize is process mitigation options. Introduced in Windows 8,
+the kernel provides several opt-in flags that allows us to add prophylactic policies to our processes in an effort to
+harden them against attacks.</p>
+
+<p>Additional flags have been added over time, so we must be careful to only set flags that are supported by the version
+of Windows on which we&rsquo;re running.</p>
+
+<p>We were already utilizing some of these mitigation policies via the
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy"><code>SetProcessMitigationPolicy</code></a> API.
+Unfortunately this API is designed for a process to use on itself once it is already running. This implies that there
+is a window of time between process creation and the time that the mitigation is enabled where an attack could occur.</p>
+
+<p>Fortunately, Windows provides a second avenue for setting process mitigation flags: These flags may be set as part of
+an attribute list in the <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw"><code>STARTUPINFOEX</code></a>
+structure that we pass into <code>CreateProcess</code>.</p>
+
+<p>Perhaps you can now see where I am going with this: The launcher process enables us to specify process mitigation flags
+for the browser process <em>at the time of browser process creation</em>, thus preventing the aforementioned window of opportunity
+for attacks to occur!</p>
+
+<p>While there are other flags that we could support in the future, the initial mitigation policy that I added was the
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute"><code>PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON</code></a>
+flag. This forces the Windows loader to always use the Windows <code>system32</code> directory as the first directory in its search path,
+thus preventing library preload attacks. Use of this mitigation also gave us an unexpected performance gain on devices with
+mechanical hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in <code>system32</code>. With
+<code>system32</code> at the front of the loader&rsquo;s search path, the resulting reduction in hard disk seek times produced a slight but
+meaningful decrease in browser startup time! How I made these measurements is addressed in a future post.</p>
+
+<h3>Next Time</h3>
+
+<p>This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing for Launcher Process by Default.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 2]]></title>
@@ -36,7 +121,7 @@ Firefox. Its sole purpose is to create the &ldquo;real&rdquo; browser process in
 attributes on the browser process, resume the browser process, and then self-terminate.</p>
 
 <p>In <a title="Skeletal bootstrap process" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1454745">bug 1454745</a> I implemented an initial skeletal (and opt-in) implementation of the
-launcher process for starting.</p>
+launcher process.</p>
 
 <p>This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a <code>CreateProcess</code>
 sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons,
@@ -54,15 +139,15 @@ conscious of how we affect overall browser startup time.</p>
 
 <p>Since the launcher process is built into <code>firefox.exe</code>, I needed to examine that executable&rsquo;s existing
 dependencies to ensure that it is not loading any dependent libraries that are not actually needed
-by the launcher process. Other than the essential Win32 DLLs <code>kernel32.dll</code>, <code>advapi32.dll</code>, and their
-dependencies, I did not want anything else to load. In particular, I wanted to avoid loading <code>user32.dll</code>
+by the launcher process. Other than the essential Win32 DLLs <code>kernel32.dll</code>, <code>advapi32.dll</code> (and their
+dependencies), I did not want anything else to load. In particular, I wanted to avoid loading <code>user32.dll</code>
 and/or <code>gdi32.dll</code>, as this would trigger the initialization of Windows&#8217; GUI facilities, which would be a
 huge performance killer. For that reason, most browser-mode library dependencies of <code>firefox.exe</code>
 are either delay-loaded or are explicitly loaded via <code>LoadLibrary</code>.</p>
 
 <h3>Safe Mode</h3>
 
-<p>We want the launcher process to both respect Firefox&rsquo;s safe mode, as well as alter its behaviour
+<p>We wanted the launcher process to both respect Firefox&rsquo;s safe mode, as well as alter its behaviour
 as necessary when safe mode is requested.</p>
 
 <p>There are multiple mechanisms used by Firefox to detect safe mode. The launcher process detects
@@ -80,7 +165,7 @@ the launcher process honours.</p>
 
 <h3>Testing and Automation</h3>
 
-<p>We want the launcher process to behave well with respect to automated testing.</p>
+<p>We wanted the launcher process to behave well with respect to automated testing.</p>
 
 <p>The skeletal launcher process that I landed in Q2 included code to pass its console handles
 on to the browser process, but there was more work necessary to completely handle this case.
@@ -88,7 +173,7 @@ These capabilities were not yet an issue because the launcher process was opt-in
 
 <h3>Error Recovery</h3>
 
-<p>We want the launcher process to gracefully handle failures even though, also by definition, it does not
+<p>We wanted the launcher process to gracefully handle failures even though, also by definition, it does not
 have access to facilities that internal Gecko code has, such as telemetry and the crash reporter.</p>
 
 <p>The skeletal launcher process that I landed in Q2 did not yet utilize any special error handling
@@ -96,7 +181,7 @@ code, but this was also not yet an issue because the launcher process was opt-in
 
 <h3>Next Time</h3>
 
-<p>Thanks for reading! Coming up in Q2, Part 3: Fleshing Out the Launcher Process</p>
+<p>Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/">Q2, Part 3</a>: Fleshing Out the Launcher Process</p>
 ]]></content>
   </entry>
   
@@ -347,11 +432,13 @@ discussing what I worked on! I had intended to write these posts during the end 
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
 series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 
-<p>Here is an index of the remaining entries in this series:</p>
+<p>Here is an index of all the entries in this series:</p>
 
 <ul>
+<li><a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a> (this post)</li>
 <li><a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a></li>
 <li><a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a></li>
+<li><a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a></li>
 </ul>
 
 
@@ -445,91 +532,6 @@ This is not currently a priority for us, though.</p>
 
 <p>Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Q2</a>:
 Refactoring the DLL Interceptor!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Legacy Firefox Extensions and "Userspace"]]></title>
-    <link href="http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace/"/>
-    <updated>2017-11-16T13:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace</id>
-    <content type="html"><![CDATA[<p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
-positive and negative. That is not surprising to anybody &ndash; any software that
-has a large number of users is going to be a topic for discussion, especially
-when the release in question is undoubtedly a watershed.</p>
-
-<p>While I have <a href="https://dblohm7.ca/blog/2015/08/30/on-webextensions/">previously</a>
-blogged about the transition to WebExtensions, now that we have actually passed
-through the cutoff for legacy extensions, I have decided to add some new
-commentary on the subject.</p>
-
-<p>One analogy that has been used in the discussion of the extension ecosystem is
-that of kernelspace and userspace. The crux of the analogy is that Gecko is
-equivalent to an operating system kernel, and thus extensions are the user-mode
-programs that run atop that kernel. The argument then follows that Mozilla&rsquo;s
-deprecation and removal of legacy extension capabilities is akin to &ldquo;breaking&rdquo;
-userspace. [<em>Some people who say this are using the same tone as Linus does
-whenever he eviscerates Linux developers who break userspace, which is neither
-productive nor welcomed by anyone, but I digress.</em>] Unfortunately, that analogy
-simply does not map to the legacy extension model.</p>
-
-<h2>Legacy Extensions as Kernel Modules</h2>
-
-<p>The most significant problem with the userspace analogy is that legacy extensions
-effectively meld with Gecko and become part of Gecko itself. If we accept the
-premise that Gecko is like a monolithic OS kernel, then we must also accept that
-the analogical equivalent of loading arbitrary code into that kernel, is the
-kernel module. Such components are loaded into the kernel and effectively become
-part of it. Their code runs with full privileges. They break whenever
-significant changes are made to the kernel itself.</p>
-
-<p>Sound familiar?</p>
-
-<p>Legacy extensions were akin to kernel modules. When there is no abstraction,
-there can be no such thing as userspace. This is precisely the problem that
-WebExtensions solves!</p>
-
-<h2>Building Out a Legacy API</h2>
-
-<p>Maybe somebody out there is thinking, &ldquo;well what if you took all the APIs that
-legacy extensions used, turned that into a &lsquo;userspace,&rsquo; and then just left that
-part alone?&rdquo;</p>
-
-<p>Which APIs? Where do we draw the line? Do we check the code coverage for every
-legacy addon in AMO and use that to determine what to include?</p>
-
-<p>Remember, there was no abstraction; installed legacy addons are fused to Gecko.
-If we pledge not to touch anything that legacy addons might touch, then we
-cannot touch anything at all.</p>
-
-<p>Where do we go from here? Freeze an old version of Gecko and host an entire copy
-of it inside web content? Compile it to WebAssembly? [<em>Oh God, what have I done?</em>]</p>
-
-<p>If <em>that&rsquo;s</em> not a maintenance burden, I don&rsquo;t know what is!</p>
-
-<h2>A Kernel Analogy for WebExtensions</h2>
-
-<p>Another problem with the legacy-extensions-as-userspace analogy is that it leaves
-awkward room for web content, whose API is abstract and well-defined. I do not
-think that it is appropriate to consider web content to be equivalent to a
-sandboxed application, as sandboxed applications use the same (albeit restricted)
-API as normal applications. I would suggest that the presence of WebExtensions
-gives us a better kernel analogy:</p>
-
-<ul>
-<li>Gecko is the kernel;</li>
-<li>WebExtensions are privileged user applications;</li>
-<li>Web content runs as unprivileged user applications.</li>
-</ul>
-
-
-<h2>In Conclusion</h2>
-
-<p>Declaring that legacy extensions are userspace does not make them so. The way that
-the technology actually worked defies the abstract model that the analogy
-attempts to impose upon it. On the other hand, we can use the failure of that
-analogy to explain why WebExtensions are important and construct an extension
-ecosystem that <em>does</em> fit with that analogy.</p>
 ]]></content>
   </entry>
   

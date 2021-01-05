@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/</loc>
+<lastmod>2021-01-05T09:45:00-07:00</lastmod>
+</url>
+<url>
 <loc>http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/</loc>
 <lastmod>2021-01-04T15:45:00-07:00</lastmod>
 </url>
@@ -151,6 +155,9 @@
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/categories/roundups/</loc>
+</url>
+<url>
+<loc>http://dblohm7.ca/blog/categories/2018-roundup/</loc>
 </url>
 <url>
 <loc>http://dblohm7.ca/blog/categories/announcements/</loc>

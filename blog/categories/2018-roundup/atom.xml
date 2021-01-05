@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: roundups | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/roundups/atom.xml" rel="self"/>
+  <title><![CDATA[Category: 2018 roundup | Aaron Klotz at Mozilla]]></title>
+  <link href="http://dblohm7.ca/blog/categories/2018-roundup/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
   <updated>2021-01-05T09:45:24-07:00</updated>
   <id>http://dblohm7.ca/</id>
