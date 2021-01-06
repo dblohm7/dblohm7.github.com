@@ -15,7 +15,7 @@ Here is an index of all the entries in this series:
 * [2018 Roundup: Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/) (this post)
 * [2018 Roundup: Q2, Part 1](https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/)
 * [2018 Roundup: Q2, Part 2](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/)
-* [2018 Roundup: Q2, Part 3](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/)
+* [2018 Roundup: Q2, Part 3](https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/)
 
 Overview
 --------

@@ -27,8 +27,8 @@ In {% bug 1454745 %} I implemented an initial skeletal (and opt-in) implementati
 launcher process.
 
 This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a `CreateProcess` 
-sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons, 
-which I will outline in the following sections.
+sample off of MSDN and call it day. The actual launcher process implmentation is more complicated than 
+that, for reasons that I will outline in the following sections.
 
 ### Built into `firefox.exe`
 I wanted the launcher process to exist as a special "mode" of `firefox.exe`, as opposed to a distinct
@@ -78,4 +78,4 @@ The skeletal launcher process that I landed in Q2 did not yet utilize any specia
 code, but this was also not yet an issue because the launcher process was opt-in at this point.
 
 ### Next Time
-Thanks for reading! Coming up in [Q2, Part 3](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part3/): Fleshing Out the Launcher Process
+Thanks for reading! Coming up in [Q2, Part 3](https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/): Fleshing Out the Launcher Process
