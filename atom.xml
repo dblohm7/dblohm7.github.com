@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-01-06T12:11:27-07:00</updated>
+  <updated>2021-01-06T12:14:33-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -125,8 +125,8 @@ attributes on the browser process, resume the browser process, and then self-ter
 launcher process.</p>
 
 <p>This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a <code>CreateProcess</code>
-sample off of MSDN and call it day. The code is a bit more complicated than that, for various reasons,
-which I will outline in the following sections.</p>
+sample off of MSDN and call it day. The actual launcher process implmentation is more complicated than
+that, for reasons that I will outline in the following sections.</p>
 
 <h3>Built into <code>firefox.exe</code></h3>
 
