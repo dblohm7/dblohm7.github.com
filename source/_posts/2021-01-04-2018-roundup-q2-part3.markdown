@@ -20,18 +20,18 @@ of the launcher process, it was time to start making it do useful things.
 ### Ensuring Medium Integrity
 [*For an overview of Windows integrity levels, check out [this MSDN page](https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control) -- Aaron*]
 
-Since Windows Vista, standard Windows users possess a security token that specifies a medium integrity level.
+Since Windows Vista, security tokens for standard users have declared a medium integrity level by default.
 When UAC is enabled, members of the `Administrators` group also run as a standard user with a medium IL, with 
 the additional ability of being able to "elevate" themselves to a high IL. An administrator who disables UAC 
 has a token that is always high integrity.
 
 Running a process at a high IL is something that is not to be taken lightly: at that level, the process may 
-alter system settings and access files that would otherwise be restricted.
+alter system settings and access files that would otherwise be restricted by the OS.
 
-While our sandboxed content processes always run at a low IL, I believe that defense-in-depth calls for ensuring 
-that the browser process is not running at a high IL. In particular, I was concerned about cases where, for 
-example, a system administrator accidentally starts Firefox from an elevated command prompt instead of a normal 
-command prompt.
+While our sandboxed content processes always run at a low IL, I believed that defense-in-depth called for ensuring 
+that the browser process did not run at a high IL. In particular, I was concerned about cases where elevation
+might be accidental. Consider, for example, a hypothetical scenario where a system administrator is running two
+open command prompts, one elevated and one not, and they accidentally start Firefox from the one that is elevated.
 
 This was a perfect use case for the launcher process: it detects whether it is running at high IL, and if so, 
 it launches the browser with medium integrity.
@@ -58,10 +58,10 @@ harden them against attacks.
 Additional flags have been added over time, so we must be careful to only set flags that are supported by the version 
 of Windows on which we're running.
 
-We were already utilizing some of these mitigation policies via the 
+We could have set some of these policies by calling the 
 [`SetProcessMitigationPolicy`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy) API. 
 Unfortunately this API is designed for a process to use on itself once it is already running. This implies that there 
-is a window of time between process creation and the time that the mitigation is enabled where an attack could occur.
+is a window of time between process creation and the time that the process enables its mitigations where an attack could occur.
 
 Fortunately, Windows provides a second avenue for setting process mitigation flags: These flags may be set as part of 
 an attribute list in the [`STARTUPINFOEX`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw) 
@@ -73,11 +73,12 @@ for attacks to occur!
 
 While there are other flags that we could support in the future, the initial mitigation policy that I added was the 
 [`PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute) 
-flag. This forces the Windows loader to always use the Windows `system32` directory as the first directory in its search path, 
-thus preventing library preload attacks. Use of this mitigation also gave us an unexpected performance gain on devices with 
-mechanical hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in `system32`. With 
+flag. Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations. 
+This flag forces the Windows loader to always use the Windows `system32` directory as the first directory in its search path, 
+which prevents library preload attacks. Using this mitigation also gave us an unexpected performance gain on devices with 
+magnetic hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in `system32`. With 
 `system32` at the front of the loader's search path, the resulting reduction in hard disk seek times produced a slight but 
 meaningful decrease in browser startup time! How I made these measurements is addressed in a future post.
 
 ### Next Time
-This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing for Launcher Process by Default.
+This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing to Enable the Launcher Process by Default.
