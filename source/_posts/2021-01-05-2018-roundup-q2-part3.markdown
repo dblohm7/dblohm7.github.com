@@ -47,7 +47,7 @@ at a higher IL than Firefox.
 
 Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option 
 that prevents the launcher process from de-elevating when running with a high IL. I hate that I needed to do this, 
-but moral suasion was not going to be effective technique for solving this problem.
+but moral suasion was not going to be an effective technique for solving this problem.
 
 ### Process Mitigation Policies
 
@@ -73,7 +73,7 @@ for attacks to occur!
 
 While there are other flags that we could support in the future, the initial mitigation policy that I added was the 
 [`PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON`](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute) 
-flag. Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations. 
+flag. [*Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations. -- Aaron*] 
 This flag forces the Windows loader to always use the Windows `system32` directory as the first directory in its search path, 
 which prevents library preload attacks. Using this mitigation also gave us an unexpected performance gain on devices with 
 magnetic hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in `system32`. With 
@@ -81,4 +81,4 @@ magnetic hard drives: most of our DLL dependencies are either loaded using absol
 meaningful decrease in browser startup time! How I made these measurements is addressed in a future post.
 
 ### Next Time
-This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing to Enable the Launcher Process by Default.
+This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in [H2](https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/): Preparing to Enable the Launcher Process by Default.

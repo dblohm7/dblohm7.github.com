@@ -1,0 +1,193 @@
+---
+layout: post
+title: "2018 Roundup: H2"
+date: 2021-02-24 17:30:00 -0700
+comments: true
+categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
+---
+*This is the fifth post in my "2018 Roundup" series. For an index of all entries, please see my 
+blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
+
+Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series. 
+I am trying to get caught up on documenting my past work!
+
+Preparing to Enable the Launcher Process by Default
+---------------------------------------------------
+
+### CI and Developer Tooling
+
+Given that the launcher process completely changes how our Win32 Firefox builds 
+start, I needed to update both our CI harnesses, as well as the launcher process 
+itself. I didn't do much that was particularly noteworthy from a technical 
+standpoint, but I will mention some important points:
+
+During normal use, the launcher process usually exits immediately after the 
+browser process is confirmed to have started. This was a deliberate design 
+decision that I made. Having the launcher process wait for the browser process 
+to terminate would not do any harm, however I did not want the launcher process 
+hanging around in Task Manager and being misunderstood by users who are checking 
+their browser's resource usage.
+
+On the other hand, such a design completely breaks scripts that expect to start 
+Firefox and be able to synchronously wait for the browser to exit before 
+continuing! Clearly I needed to provide an opt-in for the latter case, so I added 
+the `--wait-for-browser` command-line option. The launcher process also implicitly 
+enables this mode under a few [other scenarios](https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/browser/app/winlauncher/LauncherProcessWin.cpp#92).
+
+Secondly, there is the issue of debugging. Developers were previously used to 
+attaching to the first `firefox.exe` process they see and expecting to be debugging 
+the browser process. With the launcher process enabled by default, this is no 
+longer the case.
+
+There are few options here:
+
+* Visual Studio users may install the [Child Process Debugging Power Tool](https://devblogs.microsoft.com/devops/introducing-the-child-process-debugging-power-tool/), 
+  which enables the VS debugger to attach to child processes;
+* WinDbg users may start their debugger with the `-o` command-line flag, 
+  or use the `Debug child processes also` checkbox in the GUI;
+* I added support for a `MOZ_DEBUG_BROWSER_PAUSE` environment variable, which 
+  allows developers to set a timeout (in seconds) for the browser process to 
+  print its pid to `stdout` and wait for a debugger attachment.
+
+### Performance Testing
+
+As I have alluded to in previous posts, I needed to measure the effect of adding 
+an additional process to the critical path of Firefox startup. Since in-process 
+testing will not work in this case, I needed to use something that could provide 
+a holistic view across both launcher and browser processes. I decided to enhance 
+our existing `xperf` suite in Talos to support my use case.
+
+I already had prior experience with `xperf`; I spent a significant part of 2013 
+working with Joel Maher to put the `xperf` Talos suite into production. I also 
+knew that the existing code was not sufficiently generic to be able to handle my 
+use case.
+
+I threw together a rudimentary [analysis framework](https://github.com/dblohm7/xperf) 
+for working with CSV-exported xperf data. Then, after Joel's review, I vendored 
+it into `mozilla-central` and used it to construct an analysis for startup time. 
+[*While a more thorough discussion of this framework is definitely warranted, I 
+also feel that it is tangential to the discussion at hand; I'll write a dedicated 
+blog entry about this topic in the future. -- Aaron*]
+
+In essence, the analysis considers the following facts when processing an xperf recording:
+
+* The launcher process will be the first `firefox.exe` process that runs;
+* The browser process will be started by the launcher process;
+* The browser process will fire a [session store window restored](https://searchfox.org/mozilla-central/source/toolkit/components/startup/mozprofilerprobe.mof) event.
+
+For our analysis, we needed to do the following:
+
+1. Find the event showing the first `firefox.exe` process being created;
+2. Find the session store window restored event from the second process;
+3. Output the time interval between the two events.
+
+[This block of code](https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/testing/talos/talos/xtalos/parse_xperf.py#36) 
+demonstrates how that analysis is specified using my analyzer framework.
+
+Overall, these test results were quite positive. We saw a very slight but 
+imperceptible increase in startup time on machines with solid-state drives, 
+however the security benefits from the launcher process outweigh this very small 
+regression.
+
+Most interestingly, we saw a signficant *improvement* in startup time on Windows
+10 machines with magnetic hard disks! As I mentioned in Q2 Part 3, I believe 
+this improvement is due to reduced hard disk seeking thanks to the launcher 
+process forcing `\windows\system32` to the front of the dynamic linker's search 
+path.
+
+### Error and Experimentation Readiness
+
+By Q3 I had the launcher process in a state where it was built by default into 
+Firefox, but it was still opt-in. As I have written previously, we needed the 
+launcher process to gracefully fail even without having the benefit of various 
+Gecko services such as telemetry and the crash reporter.
+
+#### Error Propagation
+
+First of call, I created a new class, [`WindowsError`](https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/widget/windows/WinHeaderOnlyUtils.h#73), 
+that encapsulates all types of Windows error codes. As an aside, I would strongly 
+encourage all Gecko developers who are writing new code that invokes Windows APIs 
+to use this class in your error handling.
+
+`WindowsError` is currently able to store Win32 `DWORD` error codes, `NTSTATUS` 
+error codes, and `HRESULT` error codes. Internally the code is stored as an 
+`HRESULT`, since that type has encodings to support the other two. `WindowsError` 
+also provides a method to convert its error code to a localized string for 
+human-readable output.
+
+As for the launcher process itself, nearly every function in the launcher 
+process returns a `mozilla::Result`-based type. In case of error, we return a
+`LauncherResult`, which [*as of 2018; this has changed more recently -- Aaron*] 
+is a structure containing the error's source file, line number, and `WindowsError` 
+describing the failure.
+
+#### Detecting Browser Process Failures
+
+While all `Result`s in the launcher process may be indicating a successful 
+start, we may not yet be out of the woods! Consider the possibility that the 
+various interventions taken by the launcher process might have somehow impaired 
+the browser process's ability to start!
+
+The way we deal with this is to record timestamps for both the launcher process 
+and the browser process. We record these timestamps in a way that distinguishes 
+between multiple distinct Firefox installations.
+
+In the ideal scenario where both processes are functioning correctly, we expect 
+a timestamp for the launcher process to be recorded, followed by a timestamp for 
+the browser process.
+
+If something goes wrong with the browser process, it will not be able to 
+record its timestamp.
+
+The next time the launcher process is started, it checks for timestamps recorded 
+from the previous run. If the browser process's timestamp is either missing or 
+older than the previous launcher timestamp, then we know that something went 
+wrong. In this case, the launcher process disables itself and proceeds to start 
+the browser process without any of its usual interventions.
+
+Once the browser has successfully started, it reflects the launcher process 
+state into telemetry, preferences, and `about:support`.
+
+Future attempts to start Firefox will bypass the launcher process until the 
+next time the installation's binaries are updated, at which point we reset the 
+timestamps and attempt once again to start with the launcher process. We do this 
+in the hope that whatever was failing in version *n* might be fixed in version 
+*n + 1*.
+
+Note that this update behaviour implies that there is no way to forcibly and 
+permanently disable the launcher process. This is by design: the timestamp 
+feature is designed to prevent the browser from becoming unusable, not to provide 
+configurability. The launcher process is a security feature and not something 
+that we should want users adjusting any more than we would want users to be 
+disabling the capability system or some other important security mitigation. In 
+fact, my original roadmap for InjectEject called for eventually removing the 
+timestamp code once the launcher failure rate became small enough.
+
+#### Experimentation and Emergency
+
+The pref reflection built into the timestamp system is bi-directional. This 
+allowed us to ship a release where we ran a study with a fraction of users 
+running with the launcher process enabled by default.
+
+Once we rolled out the launcher process at 100%, this pref also served as a 
+useful "emergency kill switch" that we could have flipped if necessary.
+
+Fortunately our experiments were successful and we rolled the launcher process 
+out to release at 100% without ever needing the kill switch!
+
+At this point, this pref should probably be removed, as we no longer need nor
+want to control launcher process deployment in this way.
+
+#### Error Reporting
+
+When telemetry is enabled, the launcher process is able to convert its 
+`LauncherResult` into a ping which is sent in the background by `ping-sender`. 
+When telemetry is disabled, we perform a last-ditch effort to surface the error 
+by logging details about the `LauncherResult` failure in the Windows Event Log.
+
+### In Conclusion 
+
+Thanks for reading! This concludes my 2018 Roundup series! There is so much more
+work from 2018 that I did for this project that I wish I could discuss, but for 
+security reasons I must refrain. Nonetheless, I hope you enjoyed this series.
+Stay tuned for more roundups in the future!
