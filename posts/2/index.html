@@ -9,7 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="As of today I have added a new command to mozdbgext: !iat. The syntax is pretty simple: !iat &lt;hexadecimal address&gt; This address shouldn&rsquo;t &hellip;">
+  <meta name="description" content="In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -27,6 +28,7 @@
   <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
   
+
 <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
@@ -42,6 +44,7 @@
   </script>
 
 
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
   <link href="https://dblohm7.ca/favicon.gif" rel="icon">
 </head>
 
@@ -76,6 +79,99 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/04/06/new-team-new-project/">New Team, New Project</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2016-04-06T00:00:00-06:00" pubdate data-updated="true">Apr 6th, 2016</time>
+        
+           | <a href="/blog/2016/04/06/new-team-new-project/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
+Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
+in some form or another for several years prior to that, I decided that it was
+time for me to move on to new challenges. Fortunately the Platform org was
+willing to have me set up shop under the (e10s|sandboxing|platform integration)
+umbrella.</p>
+
+<p>I am pretty excited about this new role!</p>
+
+<p>My first project is to sort out the accessibility situation under Windows e10s.
+This started back at Mozlando last December. A number of engineers from across
+the Platform org, plus me, got together to brainstorm. Not too long after we had
+all returned home, I ended up making a suggestion on an email thread that has
+evolved into the core concept that I am currently attempting. As is typical at
+Mozilla, no deed goes unpunished, so I have been asked to flesh out my ideas.
+An overview of this plan is available on the <a href="https://wiki.mozilla.org/Electrolysis/Accessibility/Windows">wiki</a>.</p>
+
+<p>My hope is that I&rsquo;ll be able to deliver a working, &ldquo;version 0.9&rdquo; type of demo
+in time for our London all-hands at the end of Q2. Hopefully we will be able to
+deliver on that!</p>
+
+<h2>Some Additional Notes</h2>
+
+<p>I am using this section of the blog post to make some additional notes. I don&rsquo;t
+feel that these ideas are strong enough to commit to a wiki yet, but I do want
+them to be publicly available.</p>
+
+<p>Once concern that our colleagues at NVAccess have identified is that the
+current COM interfaces are too chatty; this is a major reason why screen
+readers frequently inject libraries into the Firefox address space. If we serve
+our content a11y objects as remote COM objects, there is concern that performance
+would suffer. This concern is not due to latency, but rather due to frequency
+of calls; one function call does not provide sufficient information to the a11y
+client. As a result, multiple round trips are required to fetch all of the
+information that is required for a particular DOM node.</p>
+
+<p>My gut feeling about this is that this is probably a legitimate concern, however
+we cannot make good decisions without quantifying the performance. My plan going
+forward is to proceed with a na&iuml;ve implementation of COM remoting to start,
+followed by work on reducing round trips as necessary.</p>
+
+<h2>Smart Proxies</h2>
+
+<p>One idea that was discussed is the idea of the content process speculatively
+sending information to the chrome process that might be needed in the future.
+For example, if we have an <code>IAccessible</code>, we can expect that multiple properties
+will be queried off that interface. A smart proxy could ship that data across
+the RPC channel during marshaling so that querying that additional information
+does not require additional round trips.</p>
+
+<p>COM makes this possible using &ldquo;handler marshaling.&rdquo; I have dug up some
+information about how to do this and am posting it here for posterity:</p>
+
+<p><a href="https://www.microsoft.com/msj/0599/com/com0599.aspx">House of COM, May 1999 <em>Microsoft Systems Journal</em></a>;<br/>
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms683786.aspx">Implementing and Activating a Handler with Extra Data Supplied by Server</a> on MSDN;<br/>
+Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MSDN Magazine website but I have an archived copy on CD-ROM.<br/></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1290,172 +1386,6 @@ becomes unnecessary.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2014-08-14T00:00:00-06:00" pubdate data-updated="true">Aug 14th, 2014</time>
-        
-           | <a href="/blog/2014/08/14/diffusion-of-responsibility/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Something that I&rsquo;ve been noticing on numerous social media and discussion forum
-sites is that whenever Firefox comes up, inevitably there are comments in those
-threads about Firefox performance. Given my role at Mozilla, these comments are
-of particular interest to me.</p>
-
-<p>The reaction to roc&rsquo;s <a href="http://robert.ocallahan.org/2014/08/choose-firefox-now-or-later-you-wont.html">recent blog post</a>
-has motivated me enough to respond to a specific subset of comments. These
-comments all exhibit a certain pattern: their authors are experiencing problems
-with Firefox, they are very dissatisfied, but they are not discussing them in a
-way that is actionable by Mozilla.</p>
-
-<h2>How Mozilla Finds Problems</h2>
-
-<p>Mozilla encourages our contributors to run prerelease versions of Firefox,
-especially <a href="http://nightly.mozilla.org">Nightly</a> builds. This allows us to do
-some good old-fashioned dogfooding during the development of a Firefox release.</p>
-
-<p>We also have many tools that run as part of our continuous integration
-infrastructure. Valgrind, Address Sanitizer, Leak Sanitizer, reference count
-tracking, deadlock detection, assertions, Talos performance tests, and xperf are
-some of the various tools that we apply to our builds. I do not claim that this
-list is exhaustive! :-)</p>
-
-<p>We use numerous technologies to discover problems that occur while running on
-our users&#8217; computers. We have a crash reporter that (with the user&rsquo;s consent)
-reports <a href="https://crash-stats.mozilla.com/home/products/Firefox">data</a> about the
-crash. We have Firefox Health Report and <a href="http://telemetry.mozilla.org">Telemetry</a>
-that, when consented to, send us useful information for discovering problems.</p>
-
-<p>Our ability to analyze crash report/FHR/telemetry data is limited to those users
-who consent to share it with us. As much as I am proud of the fact that we
-respect the privacy of our users, this means that we only receive data from a
-fraction of them; many users who are experiencing problems are not included in
-this data.</p>
-
-<p>Despite the fact that we have all of these wonderful tools to help us deliver
-quality releases, the fact is that they cannot exhaustively catch every possible
-bug that is encountered out in the wild. There are too many combinations of
-extensions and configurations out there to possibly allow us to catch
-everything before release.</p>
-
-<p>That&rsquo;s where you, our users, come in!</p>
-
-<h2>If You See Something, Say Something!</h2>
-
-<p>Reddit, Hacker News, Slashdot and other similar sites are fantastic for ranting.
-I should know &ndash; I do it with the best of them! Having said that, they are also
-terrible for the purposes of bug reporting!</p>
-
-<p>As users it&rsquo;s easy for us to assume that somebody else will encounter our
-problems and report them. Unfortunately that is not always the case, especially
-with a browser that is as configurable as Firefox.</p>
-
-<h3>Reporting Bugs</h3>
-
-<p>If you are experiencing a bug, the best way to ensure that something can be done
-about your bug is to <a href="https://bugzilla.mozilla.org/enter_bug.cgi?format=guided">report it</a>
-in Bugzilla. This might seem a little bit intimidating for somebody who is new
-to bug reporting, but I assure you, Mozillians are really nice! As long as you
-follow the <a href="https://bugzilla.mozilla.org/page.cgi?id=etiquette.html">etiquette guidelines</a>,
-you&rsquo;ll be fine! One suggestion though: try to follow our
-<a href="https://developer.mozilla.org/en-US/docs/Mozilla/QA/Bug_writing_guidelines">bug writing guidelines</a>.
-Doing so will maximize the likelihood of a contributor being able to reproduce
-your problem. In addition to these suggestions for bug filing, I also suggest
-including certain types of data for specific types of problems:</p>
-
-<h3>Reporting a Bug for High Memory Usage</h3>
-
-<p>If you&rsquo;re experiencing problems with Firefox&rsquo;s memory use, open a tab, and
-point your browser to <code>about:memory</code>. This nifty feature provides a breakdown
-of Firefox memory consumption. Save that report and attach it to the bug that
-you&rsquo;ve filed.</p>
-
-<h3>Reporting a Bug for Slowness or Heavy CPU Usage</h3>
-
-<p>If you want report a problem with Firefox being slow and/or mysteriously
-consuming large amounts of CPU time, the best way to help us is
-is to include data that has been generated by the <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler">Gecko Profiler</a>.
-[<em>This data is referred to as a &ldquo;profile,&rdquo; but please do not confuse it with the
-user profile that stores your settings and browser history &ndash; they are different
-things with the same name.</em>] This tool tracks how Firefox uses your CPU over
-time. If you are able to attach a profile that was taken during a period of time
-where Firefox was running poorly, it will help us understand what exactly Firefox
-was doing. Unfortunately this is tool requires a bit of technical savvy, but
-attaching the URL of an uploaded profile to your performance bug can be very helpful.</p>
-
-<h3>Reporting a Bug for a Persistent, Reproducable Crash</h3>
-
-<p>As you can see in our <a href="https://crash-stats.mozilla.com/home/products/Firefox">crash report data</a>,
-crashes reported to Mozilla are ranked by frequency. As you might expect, this
-implies that it&rsquo;s often the squeaky wheels that get the grease.</p>
-
-<p>If you have an easily reproducable crash and you are sending your reports to
-Mozilla, you can help us by pointing Firefox to <code>about:crashes</code>. This page lists
-all of the crash reports that have been generated on your computer. If the crash
-that you are experiencing isn&rsquo;t on our list of top crashers, you can still help
-us to fix it: filing a bug that includes multiple crash report URLs from your
-<code>about:crashes</code> screen will help tremendously.</p>
-
-<h3>Reporting a Bug for a Website that Looks Wrong in Firefox</h3>
-
-<p>I&rsquo;d suggest reporting your problem over at <a href="http://webcompat.com">webcompat.com</a>.
-Volunteers will review your report and determine whether your problem is caused
-by the website or by Firefox, and file a bug with the appropriate entity.</p>
-
-<h3>I have a problem that isn&rsquo;t listed here. What should I do?</h3>
-
-<p>Send us <a href="https://input.mozilla.org/en-US/feedback">feedback</a>!</p>
-
-<h2>In Conclusion</h2>
-
-<p>If there is one idea that you can take away from this post (a TL;DR, if you will),
-it is this: <em>Mozilla cannot fix 100% of the bugs that we do not know about.</em></p>
-
-<p>Taking an active role in the Mozilla community by reporting your issues through
-the proper channels is the best way to ensure that your problems can be fixed.</p>
-
-<p><strong>EDIT:</strong> To be clear: What I am suggesting is that users who are enthusiastic
-enough to post a comment to Hacker News (for example) should also be savvy
-enough to be able to file a proper bug report. Please do not misconstrue this
-post as a demand that novice users start filing bugs.</p>
-
-<p><strong>EDIT August 15, 2014:</strong> Nick Nethercote just <a href="https://blog.mozilla.org/nnethercote/2014/08/15/the-story-of-a-tricky-bug/">blogged</a>
-about a tricky memory bug that couldn&rsquo;t have been diagnosed without the help of
-a Redditor whose complaint we steered to Bugzilla.</p>
-
-<p><strong>EDIT August 23, 2014:</strong> Wow, this has blown up. More edits to update this post
-with additional information in repose to some of the questions posted in the
-comments. Thanks for reading!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="3">&larr; Older</a>
@@ -1473,6 +1403,10 @@ comments. Thanks for reading!</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
       </li>
     
@@ -1486,10 +1420,6 @@ comments. Thanks for reading!</p>
     
       <li class="post">
         <a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a>
       </li>
     
   </ul>

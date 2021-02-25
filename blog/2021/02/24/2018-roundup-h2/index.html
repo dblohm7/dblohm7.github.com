@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>2018 Roundup: H2 - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for Q1. Yes, you are reading &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36293908-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-36293908-1');
+  </script>
+
+
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
+  <link href="https://dblohm7.ca/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">2018 Roundup: H2</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-02-24T00:00:00-07:00" pubdate data-updated="true">Feb 24th, 2021</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><em>This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
+I am trying to get caught up on documenting my past work!</p>
+
+<h2>Preparing to Enable the Launcher Process by Default</h2>
+
+<h3>CI and Developer Tooling</h3>
+
+<p>Given that the launcher process completely changes how our Win32 Firefox builds
+start, I needed to update both our CI harnesses, as well as the launcher process
+itself. I didn&rsquo;t do much that was particularly noteworthy from a technical
+standpoint, but I will mention some important points:</p>
+
+<p>During normal use, the launcher process usually exits immediately after the
+browser process is confirmed to have started. This was a deliberate design
+decision that I made. Having the launcher process wait for the browser process
+to terminate would not do any harm, however I did not want the launcher process
+hanging around in Task Manager and being misunderstood by users who are checking
+their browser&rsquo;s resource usage.</p>
+
+<p>On the other hand, such a design completely breaks scripts that expect to start
+Firefox and be able to synchronously wait for the browser to exit before
+continuing! Clearly I needed to provide an opt-in for the latter case, so I added
+the <code>--wait-for-browser</code> command-line option. The launcher process also implicitly
+enables this mode under a few <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/browser/app/winlauncher/LauncherProcessWin.cpp#92">other scenarios</a>.</p>
+
+<p>Secondly, there is the issue of debugging. Developers were previously used to
+attaching to the first <code>firefox.exe</code> process they see and expecting to be debugging
+the browser process. With the launcher process enabled by default, this is no
+longer the case.</p>
+
+<p>There are few options here:</p>
+
+<ul>
+<li>Visual Studio users may install the <a href="https://devblogs.microsoft.com/devops/introducing-the-child-process-debugging-power-tool/">Child Process Debugging Power Tool</a>,
+which enables the VS debugger to attach to child processes;</li>
+<li>WinDbg users may start their debugger with the <code>-o</code> command-line flag,
+or use the <code>Debug child processes also</code> checkbox in the GUI;</li>
+<li>I added support for a <code>MOZ_DEBUG_BROWSER_PAUSE</code> environment variable, which
+allows developers to set a timeout (in seconds) for the browser process to
+print its pid to <code>stdout</code> and wait for a debugger attachment.</li>
+</ul>
+
+
+<h3>Performance Testing</h3>
+
+<p>As I have alluded to in previous posts, I needed to measure the effect of adding
+an additional process to the critical path of Firefox startup. Since in-process
+testing will not work in this case, I needed to use something that could provide
+a holistic view across both launcher and browser processes. I decided to enhance
+our existing <code>xperf</code> suite in Talos to support my use case.</p>
+
+<p>I already had prior experience with <code>xperf</code>; I spent a significant part of 2013
+working with Joel Maher to put the <code>xperf</code> Talos suite into production. I also
+knew that the existing code was not sufficiently generic to be able to handle my
+use case.</p>
+
+<p>I threw together a rudimentary <a href="https://github.com/dblohm7/xperf">analysis framework</a>
+for working with CSV-exported xperf data. Then, after Joel&rsquo;s review, I vendored
+it into <code>mozilla-central</code> and used it to construct an analysis for startup time.
+[<em>While a more thorough discussion of this framework is definitely warranted, I
+also feel that it is tangential to the discussion at hand; I&rsquo;ll write a dedicated
+blog entry about this topic in the future. &ndash; Aaron</em>]</p>
+
+<p>In essence, the analysis considers the following facts when processing an xperf recording:</p>
+
+<ul>
+<li>The launcher process will be the first <code>firefox.exe</code> process that runs;</li>
+<li>The browser process will be started by the launcher process;</li>
+<li>The browser process will fire a <a href="https://searchfox.org/mozilla-central/source/toolkit/components/startup/mozprofilerprobe.mof">session store window restored</a> event.</li>
+</ul>
+
+
+<p>For our analysis, we needed to do the following:</p>
+
+<ol>
+<li>Find the event showing the first <code>firefox.exe</code> process being created;</li>
+<li>Find the session store window restored event from the second process;</li>
+<li>Output the time interval between the two events.</li>
+</ol>
+
+
+<p><a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/testing/talos/talos/xtalos/parse_xperf.py#36">This block of code</a>
+demonstrates how that analysis is specified using my analyzer framework.</p>
+
+<p>Overall, these test results were quite positive. We saw a very slight but
+imperceptible increase in startup time on machines with solid-state drives,
+however the security benefits from the launcher process outweigh this very small
+regression.</p>
+
+<p>Most interestingly, we saw a signficant <em>improvement</em> in startup time on Windows
+10 machines with magnetic hard disks! As I mentioned in Q2 Part 3, I believe
+this improvement is due to reduced hard disk seeking thanks to the launcher
+process forcing <code>\windows\system32</code> to the front of the dynamic linker&rsquo;s search
+path.</p>
+
+<h3>Error and Experimentation Readiness</h3>
+
+<p>By Q3 I had the launcher process in a state where it was built by default into
+Firefox, but it was still opt-in. As I have written previously, we needed the
+launcher process to gracefully fail even without having the benefit of various
+Gecko services such as telemetry and the crash reporter.</p>
+
+<h4>Error Propagation</h4>
+
+<p>First of call, I created a new class, <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/widget/windows/WinHeaderOnlyUtils.h#73"><code>WindowsError</code></a>,
+that encapsulates all types of Windows error codes. As an aside, I would strongly
+encourage all Gecko developers who are writing new code that invokes Windows APIs
+to use this class in your error handling.</p>
+
+<p><code>WindowsError</code> is currently able to store Win32 <code>DWORD</code> error codes, <code>NTSTATUS</code>
+error codes, and <code>HRESULT</code> error codes. Internally the code is stored as an
+<code>HRESULT</code>, since that type has encodings to support the other two. <code>WindowsError</code>
+also provides a method to convert its error code to a localized string for
+human-readable output.</p>
+
+<p>As for the launcher process itself, nearly every function in the launcher
+process returns a <code>mozilla::Result</code>-based type. In case of error, we return a
+<code>LauncherResult</code>, which [<em>as of 2018; this has changed more recently &ndash; Aaron</em>]
+is a structure containing the error&rsquo;s source file, line number, and <code>WindowsError</code>
+describing the failure.</p>
+
+<h4>Detecting Browser Process Failures</h4>
+
+<p>While all <code>Result</code>s in the launcher process may be indicating a successful
+start, we may not yet be out of the woods! Consider the possibility that the
+various interventions taken by the launcher process might have somehow impaired
+the browser process&rsquo;s ability to start!</p>
+
+<p>The way we deal with this is to record timestamps for both the launcher process
+and the browser process. We record these timestamps in a way that distinguishes
+between multiple distinct Firefox installations.</p>
+
+<p>In the ideal scenario where both processes are functioning correctly, we expect
+a timestamp for the launcher process to be recorded, followed by a timestamp for
+the browser process.</p>
+
+<p>If something goes wrong with the browser process, it will not be able to
+record its timestamp.</p>
+
+<p>The next time the launcher process is started, it checks for timestamps recorded
+from the previous run. If the browser process&rsquo;s timestamp is either missing or
+older than the previous launcher timestamp, then we know that something went
+wrong. In this case, the launcher process disables itself and proceeds to start
+the browser process without any of its usual interventions.</p>
+
+<p>Once the browser has successfully started, it reflects the launcher process
+state into telemetry, preferences, and <code>about:support</code>.</p>
+
+<p>Future attempts to start Firefox will bypass the launcher process until the
+next time the installation&rsquo;s binaries are updated, at which point we reset the
+timestamps and attempt once again to start with the launcher process. We do this
+in the hope that whatever was failing in version <em>n</em> might be fixed in version
+<em>n + 1</em>.</p>
+
+<p>Note that this update behaviour implies that there is no way to forcibly and
+permanently disable the launcher process. This is by design: the timestamp
+feature is designed to prevent the browser from becoming unusable, not to provide
+configurability. The launcher process is a security feature and not something
+that we should want users adjusting any more than we would want users to be
+disabling the capability system or some other important security mitigation. In
+fact, my original roadmap for InjectEject called for eventually removing the
+timestamp code once the launcher failure rate became small enough.</p>
+
+<h4>Experimentation and Emergency</h4>
+
+<p>The pref reflection built into the timestamp system is bi-directional. This
+allowed us to ship a release where we ran a study with a fraction of users
+running with the launcher process enabled by default.</p>
+
+<p>Once we rolled out the launcher process at 100%, this pref also served as a
+useful &ldquo;emergency kill switch&rdquo; that we could have flipped if necessary.</p>
+
+<p>Fortunately our experiments were successful and we rolled the launcher process
+out to release at 100% without ever needing the kill switch!</p>
+
+<p>At this point, this pref should probably be removed, as we no longer need nor
+want to control launcher process deployment in this way.</p>
+
+<h4>Error Reporting</h4>
+
+<p>When telemetry is enabled, the launcher process is able to convert its
+<code>LauncherResult</code> into a ping which is sent in the background by <code>ping-sender</code>.
+When telemetry is disabled, we perform a last-ditch effort to surface the error
+by logging details about the <code>LauncherResult</code> failure in the Windows Event Log.</p>
+
+<h3>In Conclusion</h3>
+
+<p>Thanks for reading! This concludes my 2018 Roundup series! There is so much more
+work from 2018 that I did for this project that I wish I could discuss, but for
+security reasons I must refrain. Nonetheless, I hope you enjoyed this series.
+Stay tuned for more roundups in the future!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-02-24T17:30:00-07:00" pubdate data-updated="true">2021-02-24 17:30:00 -0700</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/2018-roundup/'>2018 roundup</a>, <a class='category' href='/blog/categories/dll-injection/'>dll injection</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/roundups/'>roundups</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/" >Tweet</a>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2021/01/05/2018-roundup-q2-part3/" title="Previous Post: 2018 Roundup: Q2, Part 3">&laquo; 2018 Roundup: Q2, Part 3</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a>
+      </li>
+    
+  </ul>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2021 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/';
+        var disqus_url = 'http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

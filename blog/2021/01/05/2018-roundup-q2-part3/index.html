@@ -28,6 +28,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
   <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
   <script src="/javascripts/octopress.js" type="text/javascript"></script>
   
+
 <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
 <link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
@@ -43,6 +44,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
   </script>
 
 
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
   <link href="https://dblohm7.ca/favicon.gif" rel="icon">
 </head>
 
@@ -147,7 +149,7 @@ at a higher IL than Firefox.</p>
 
 <p>Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option
 that prevents the launcher process from de-elevating when running with a high IL. I hate that I needed to do this,
-but moral suasion was not going to be effective technique for solving this problem.</p>
+but moral suasion was not going to be an effective technique for solving this problem.</p>
 
 <h3>Process Mitigation Policies</h3>
 
@@ -173,7 +175,7 @@ for attacks to occur!</p>
 
 <p>While there are other flags that we could support in the future, the initial mitigation policy that I added was the
 <a href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute"><code>PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON</code></a>
-flag. Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations.
+flag. [<em>Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations. &ndash; Aaron</em>]
 This flag forces the Windows loader to always use the Windows <code>system32</code> directory as the first directory in its search path,
 which prevents library preload attacks. Using this mitigation also gave us an unexpected performance gain on devices with
 magnetic hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in <code>system32</code>. With
@@ -182,7 +184,7 @@ meaningful decrease in browser startup time! How I made these measurements is ad
 
 <h3>Next Time</h3>
 
-<p>This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in Q3: Preparing to Enable the Launcher Process by Default.</p>
+<p>This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/">H2</a>: Preparing to Enable the Launcher Process by Default.</p>
 </div>
 
 
@@ -228,6 +230,8 @@ meaningful decrease in browser startup time! How I made these measurements is ad
         <a class="basic-alignment left" href="/blog/2021/01/04/2018-roundup-q2-part2/" title="Previous Post: 2018 Roundup: Q2, Part 2">&laquo; 2018 Roundup: Q2, Part 2</a>
       
       
+        <a class="basic-alignment right" href="/blog/2021/02/24/2018-roundup-h2/" title="Next Post: 2018 Roundup: H2">2018 Roundup: H2 &raquo;</a>
+      
     </p>
   </footer>
 </article>
@@ -247,6 +251,10 @@ meaningful decrease in browser startup time! How I made these measurements is ad
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
       </li>
     
@@ -260,10 +268,6 @@ meaningful decrease in browser startup time! How I made these measurements is ad
     
       <li class="post">
         <a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/01/18/2018-roundup-q1/">2018 Roundup: Q1</a>
       </li>
     
   </ul>
