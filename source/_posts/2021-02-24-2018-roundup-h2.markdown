@@ -8,7 +8,7 @@ categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
 *This is the fifth post in my "2018 Roundup" series. For an index of all entries, please see my 
 blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
 
-Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series. 
+Yes, you are reading the dates correctly: I am posting this over two years after I began this series. 
 I am trying to get caught up on documenting my past work!
 
 Preparing to Enable the Launcher Process by Default
