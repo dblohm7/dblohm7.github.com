@@ -4,7 +4,7 @@
   <title><![CDATA[Category: roundups | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/roundups/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-02-26T10:45:06-07:00</updated>
+  <updated>2021-02-26T12:01:41-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -21,7 +21,7 @@
     <content type="html"><![CDATA[<p><em>This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
-<p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
+<p>Yes, you are reading the dates correctly: I am posting this over two years after I began this series.
 I am trying to get caught up on documenting my past work!</p>
 
 <h2>Preparing to Enable the Launcher Process by Default</h2>
