@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-02-26T12:01:41-07:00</updated>
+  <updated>2021-02-26T12:07:42-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -166,13 +166,13 @@ attempt once again to start with the launcher process. We do this in the hope
 that whatever was failing in version <em>n</em> might be fixed in version <em>n + 1</em>.</p>
 
 <p>Note that this update behaviour implies that there is no way to forcibly and
-permanently disable the launcher process. This is by design: the feature is
-designed to prevent the browser from becoming unusable, not to provide
+permanently disable the launcher process. This is by design: the error detection
+feature is designed to prevent the browser from becoming unusable, not to provide
 configurability. The launcher process is a security feature and not something
 that we should want users adjusting any more than we would want users to be
 disabling the capability system or some other important security mitigation. In
 fact, my original roadmap for InjectEject called for eventually removing the
-timestamp code if the launcher failure rate reached zero.</p>
+failure detection code if the launcher failure rate ever reached zero.</p>
 
 <h4>Experimentation and Emergency</h4>
 
