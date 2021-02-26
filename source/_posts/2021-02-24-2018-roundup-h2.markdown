@@ -145,13 +145,13 @@ attempt once again to start with the launcher process. We do this in the hope
 that whatever was failing in version *n* might be fixed in version *n + 1*.
 
 Note that this update behaviour implies that there is no way to forcibly and 
-permanently disable the launcher process. This is by design: the feature is 
-designed to prevent the browser from becoming unusable, not to provide 
+permanently disable the launcher process. This is by design: the error detection 
+feature is designed to prevent the browser from becoming unusable, not to provide 
 configurability. The launcher process is a security feature and not something 
 that we should want users adjusting any more than we would want users to be 
 disabling the capability system or some other important security mitigation. In 
 fact, my original roadmap for InjectEject called for eventually removing the 
-timestamp code if the launcher failure rate reached zero.
+failure detection code if the launcher failure rate ever reached zero.
 
 #### Experimentation and Emergency
 
