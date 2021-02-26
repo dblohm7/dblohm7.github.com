@@ -210,7 +210,7 @@ path.</p>
 <p>By Q3 I had the launcher process in a state where it was built by default into
 Firefox, but it was still opt-in. As I have written previously, we needed the
 launcher process to gracefully fail even without having the benefit of various
-Gecko services such as telemetry and the crash reporter.</p>
+Gecko services such as preferences and the crash reporter.</p>
 
 <h4>Error Propagation</h4>
 
@@ -238,45 +238,35 @@ start, we may not yet be out of the woods! Consider the possibility that the
 various interventions taken by the launcher process might have somehow impaired
 the browser process&rsquo;s ability to start!</p>
 
-<p>The way we deal with this is to record timestamps for both the launcher process
-and the browser process. We record these timestamps in a way that distinguishes
-between multiple distinct Firefox installations.</p>
+<p>The launcher process and the browser process share code that tracks whether
+both processes successfully started in sequence.</p>
 
-<p>In the ideal scenario where both processes are functioning correctly, we expect
-a timestamp for the launcher process to be recorded, followed by a timestamp for
-the browser process.</p>
-
-<p>If something goes wrong with the browser process, it will not be able to
-record its timestamp.</p>
-
-<p>The next time the launcher process is started, it checks for timestamps recorded
-from the previous run. If the browser process&rsquo;s timestamp is either missing or
-older than the previous launcher timestamp, then we know that something went
-wrong. In this case, the launcher process disables itself and proceeds to start
-the browser process without any of its usual interventions.</p>
+<p>When the launcher process is started, it checks information recorded about the
+previous run. If the browser process previously failed to start correctly, the
+launcher process disables itself and proceeds to start the browser process
+without any of its typical interventions.</p>
 
 <p>Once the browser has successfully started, it reflects the launcher process
 state into telemetry, preferences, and <code>about:support</code>.</p>
 
 <p>Future attempts to start Firefox will bypass the launcher process until the
-next time the installation&rsquo;s binaries are updated, at which point we reset the
-timestamps and attempt once again to start with the launcher process. We do this
-in the hope that whatever was failing in version <em>n</em> might be fixed in version
-<em>n + 1</em>.</p>
+next time the installation&rsquo;s binaries are updated, at which point we reset and
+attempt once again to start with the launcher process. We do this in the hope
+that whatever was failing in version <em>n</em> might be fixed in version <em>n + 1</em>.</p>
 
 <p>Note that this update behaviour implies that there is no way to forcibly and
-permanently disable the launcher process. This is by design: the timestamp
-feature is designed to prevent the browser from becoming unusable, not to provide
+permanently disable the launcher process. This is by design: the feature is
+designed to prevent the browser from becoming unusable, not to provide
 configurability. The launcher process is a security feature and not something
 that we should want users adjusting any more than we would want users to be
 disabling the capability system or some other important security mitigation. In
 fact, my original roadmap for InjectEject called for eventually removing the
-timestamp code once the launcher failure rate became small enough.</p>
+timestamp code if the launcher failure rate reached zero.</p>
 
 <h4>Experimentation and Emergency</h4>
 
-<p>The pref reflection built into the timestamp system is bi-directional. This
-allowed us to ship a release where we ran a study with a fraction of users
+<p>The pref reflection built into the failure detection system is bi-directional.
+This allowed us to ship a release where we ran a study with a fraction of users
 running with the launcher process enabled by default.</p>
 
 <p>Once we rolled out the launcher process at 100%, this pref also served as a
