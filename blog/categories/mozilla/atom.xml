@@ -4,7 +4,7 @@
   <title><![CDATA[Category: mozilla | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/mozilla/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-01T12:50:32-07:00</updated>
+  <updated>2021-03-01T12:54:53-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -203,7 +203,7 @@ method, which writes an absolute address into the trampoline&rsquo;s literal poo
 followed by writing an <code>LDR</code> instruction referencing that literal into the
 trampoline.</p>
 
-<h3>Conclusion</h3>
+<hr />
 
 <p>Thanks for reading! Coming up next time: My Untrusted Modules Opus.</p>
 ]]></content>
