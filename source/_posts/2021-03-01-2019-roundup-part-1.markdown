@@ -12,7 +12,7 @@ roundup by project.
 
 Here is an index of all the entries in this series:
 
-* [2019 Roundup: Part 1](https://dblohm7.ca/blog/2021/02/26/2019-roundup-part-1/) (this post)
+* [2019 Roundup: Part 1](https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/) (this post)
 
 Porting the DLL Interceptor to AArch64
 --------------------------------------
