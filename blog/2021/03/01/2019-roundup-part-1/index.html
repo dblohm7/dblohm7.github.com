@@ -1,0 +1,431 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>2019 Roundup: Part 1 - Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="In my continuing efforts to get caught up on discussing my work, I am now
+commencing a roundup for 2019. I think I am going to structure this one &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36293908-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-36293908-1');
+  </script>
+
+
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
+  <link href="https://dblohm7.ca/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">2019 Roundup: Part 1</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-03-01T00:00:00-07:00" pubdate data-updated="true">Mar 1st, 2021</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>In my continuing efforts to get caught up on discussing my work, I am now
+commencing a roundup for 2019. I think I am going to structure this one
+slightly differently from the last one: I am going to try to segment this
+roundup by project.</p>
+
+<p>Here is an index of all the entries in this series:</p>
+
+<ul>
+<li><a href="https://dblohm7.ca/blog/2021/02/26/2019-roundup-part-1/">2019 Roundup: Part 1</a> (this post)</li>
+</ul>
+
+
+<h2>Porting the DLL Interceptor to AArch64</h2>
+
+<p>During early 2019, Mozilla was working to port Firefox to run on the new
+AArch64 builds of Windows. At our December 2018 all-hands, I brought up the
+necessity of including the DLL Interceptor in our porting efforts. Since no deed
+goes unpunished, I was put in charge of doing the work! [<em>I&rsquo;m actually kidding
+here; this project was right up my alley and I was happy to do it! &ndash; Aaron</em>]</p>
+
+<p>Before continuing, you might want to review my <a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">previous entry</a>
+describing the Great Interceptor Refactoring of 2019, as this post revisits some
+of the concepts introduced there.</p>
+
+<p>Let us review some DLL Interceptor terminology:</p>
+
+<ul>
+<li>The <em>target function</em> is the function we want to hook (Note that this is a
+distinct concept from a <em>branch target</em>, which is also discussed in this post);</li>
+<li>The <em>hook function</em> is our function that we want the intercepted target function
+to invoke;</li>
+<li>The <em>trampoline</em> is a small chunk of executable code generated by the DLL
+interceptor that facilitates calling the target function&rsquo;s original implementation.</li>
+</ul>
+
+
+<p>On more than one occasion I had to field questions about why this work was
+even necessary for AArch64: there aren&rsquo;t going to be many injected DLLs in a
+Win32 ecosystem running on a shiny new processor architecture! In fact, the DLL
+Interceptor is used for more than just facilitating the blocking of injected
+DLLs; we also use it for other purposes.</p>
+
+<p>Not all of this work was done in one bug: some tasks were more urgent than
+others. I began this project by enumerating our extant uses of the interceptor to
+determine which instances were relevant to the new AArch64 port. I threw a record
+of each instance into a colour-coded spreadsheet, which proved to be very useful
+for tracking progress: Reds were &ldquo;must fix&rdquo; instances, yellows were &ldquo;nice to have&rdquo;
+instances, and greens were &ldquo;fixed&rdquo; instances. Coordinating with the milestones
+laid out by program management, I was able to assign each instance to a bucket
+which would help determine a total ordering for the various fixes. I landed the
+first set of changes in <a title="nsWindowsDllInterceptor porting to aarch64" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1526383">bug 1526383</a>, and the second set in <a title="ARM64: nsWindowsDllInterceptor support for Milestone 4 (accessibility)" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1532470">bug 1532470</a>.</p>
+
+<p>It was now time to sit down, download some AArch64 programming manuals, and
+take a look at what I was dealing with. While I have been messing around with
+x86 assembly since I was a teenager, my first exposure to RISC architectures was
+via the <a href="https://en.wikipedia.org/wiki/DLX">DLX architecture</a> introduced by
+Hennessy and Patterson in their textbooks. While DLX was crafted specifically
+for educational purposes, it served for me as a great point of reference. When
+I was a student taking CS 241 at the University of Waterloo, we had to write a
+toy compiler that generated DLX code. That experience ended up saving me a lot
+of time when looking into AArch64! While the latter is definitely more
+sophisticated, I could clearly recognize analogs between the two architectures.</p>
+
+<p>In some ways, targeting a RISC architecture greatly simplifies things: The
+DLL Interceptor only needs to concern itself with a small subset of the AArch64
+instruction set: loads and branches. In fact, the DLL Interceptor&rsquo;s AArch64
+disassembler only looks for <a href="https://searchfox.org/mozilla-central/rev/362676fcadac37f9f585141a244a9a640948794a/mozglue/misc/interceptor/Arm64.cpp#53">nine distinct instructions</a>!
+As a bonus, since the instruction length is fixed, we can easily copy over
+verbatim any instructions that are not loads or branches!</p>
+
+<p>On the other hand, one thing that <em>increased</em> complexity of the port is that
+some branch instructions to relative addresses have maximum offsets. If we must
+branch farther than that maximum, we must take alternate measures. For example,
+in AArch64, an unconditional branch with an immediate offset must land in the
+range of &plusmn;128 MiB from the current program counter.</p>
+
+<p>Why is this a problem, you ask? Well, Detours-style interception must overwrite
+the first several instructions of the target function. To write an absolute jump,
+we require at least 16 bytes: 4 for an <code>LDR</code> instruction, 4 for a <code>BR</code>
+instruction, and another 8 for the 64-bit absolute branch target address.</p>
+
+<p>Unfortunately, target functions may be <em>really short</em>! Some of the target
+functions that we need to patch consist only of a single 4-byte instruction!</p>
+
+<p>In this case, our only option for patching the target is to use an immediate <code>B</code>
+instruction, but that only works if our hook function falls within that &plusmn;128MiB
+limit. If it does not, we need to construct a <em>veneer</em>. A veneer is a special
+trampoline whose location falls within the target range of a branch instruction.
+Its sole purpose is to provide an unconditional jump to the &ldquo;real&rdquo; desired
+branch target that lies outside of the range of the original branch. Using
+veneers, we can successfully hook a target function even if it is only one
+instruction (ie, 4 bytes) in length, and the hook function lies more than 128MiB
+away from it. The AArch64 Procedure Call Standard specifies <code>X16</code> as a volatile
+register that is explicitly intended for use by veneers: veneers load an
+absolute target address into <code>X16</code> (without needing to worry about whether or
+not they&rsquo;re clobbering anything), and then unconditionally jump to it.</p>
+
+<h3>Measuring Target Function Instruction Length</h3>
+
+<p>To determine how many instructions the target function has for us to work with,
+we make two passes over the target function&rsquo;s code. The first pass simply counts
+how many instructions are available for patching (up to the 4 instruction
+maximum needed for absolute branches; we don&rsquo;t really care beyond that).</p>
+
+<p>The second pass actually populates the trampoline, builds the veneer (if
+necessary), and patches the target function.</p>
+
+<h3>Veneer Support</h3>
+
+<p>Since the DLL interceptor is already well-equipped to build trampolines, it did
+not take much effort to add support for <a href="https://searchfox.org/mozilla-central/rev/362676fcadac37f9f585141a244a9a640948794a/mozglue/misc/interceptor/Arm64.h#193">constructing veneers</a>.
+However, <em>where</em> to write out a veneer is just as important as <em>what</em> to write
+to a veneer.</p>
+
+<p>Recall that we need our veneer to reside within &plusmn;128 MiB of an immediate
+branch. Therefore, we need to be able to exercise some control over where
+the trampoline memory for veneers is allocated. Until this point, our trampoline
+allocator had no need to care about this; I had to add this capability.</p>
+
+<h4>Adding Range-Aware VM Allocation</h4>
+
+<p>Firstly, I needed to make the <code>MMPolicy</code> classes range-aware: we need to be able
+to allocate tranpoline space within acceptable distances from branch instructions.</p>
+
+<p>Consider that, as described above, a branch instruction may have limits on the
+extents of its target. As data, this is easily formatted as a <em>pivot</em> (ie, the
+PC at the location where the branch instruction is encoutered), and a maximum
+<em>distance</em> in either direction from that pivot.</p>
+
+<p>On the other hand, range-constrained memory allocation tends to work in terms
+of lower and upper bounds. I wrote a conversion method, <code>MMPolicyBase::SpanFromPivotAndDistance</code>,
+to convert between the two formats. In addition to format conversion, this method
+also constrains resulting bounds such that they are above the 1MiB mark of the
+process&#8217; address space (to avoid reserving memory in VM regions that are
+sensitive to compatiblity concerns), as well as below the maximum allowable
+user-mode VM address.</p>
+
+<p>Another issue with range-aware VM allocation is determining the location, within
+the allowable range, for the actual VM reservation. Ideally we would like the
+kernel&rsquo;s memory manager to choose the best location for us; its holistic view of
+existing VM layout (not to mention ASLR) across all processess will provide
+superior VM reservations. On the other hand, the Win32 APIs that facilitate this
+are specific to Windows 10. When available, <code>MMPolicyInProcess</code> uses <a href="https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2"><code>VirtualAlloc2</code></a>
+and <code>MMPolicyOutOfProcess</code> uses <a href="https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile3"><code>MapViewOfFile3</code></a>.
+When we&rsquo;re running on Windows versions where those APIs are not yet available,
+we need to fall back to finding and reserving our own range. The
+<code>MMPolicyBase::FindRegion</code> method handles this for us.</p>
+
+<p>All of this logic is wrapped up in the <code>MMPolicyBase::Reserve</code> method. In
+addition to the desired VM size and range, the method also accepts two functors
+that wrap the OS APIs for reserving VM. <code>Reserve</code> uses those functors when
+available, otherwise it falls back to <code>FindRegion</code> to manually locate a suitable
+reservation.</p>
+
+<p>Now that our memory management primatives were range-aware, I needed to shift my
+focus over to our VM sharing policies.</p>
+
+<p>One impetus for the Great Interceptor Refactoring was to enable separate
+Interceptor instances to share a unified pool of VM for trampoline memory.
+To make this range-aware, I needed to make some additional changes to
+<code>VMSharingPolicyShared</code>: it would not longer be sufficient to assume that we
+could just share a single block of trampoline VM; now we would need to make the
+shared VM policy capable of potentially allocating multiple blocks of VM.</p>
+
+<p><code>VMSharingPolicyShared</code> now contains a mapping of ranges to VM blocks; if we
+request a reservation which an existing block satisfies, we re-use that block.
+On the other hand, if we require a range that is yet unsatisfied, then we need to
+allocate a new one. I admit that I kind of half-assed the implementation of the
+data structure we use for the mapping; I was too lazy to implement a fully-fledged
+interval tree. The current implementation is probably &ldquo;good enough,&rdquo; however
+it&rsquo;s probably worth fixing at some point.</p>
+
+<p>Finally, I added a new generic class, <code>TrampolinePool</code>, that acts as an
+abstraction of a reserved block of VM address space. The main interceptor code
+requests a pool by calling the VM sharing policy&rsquo;s <code>Reserve</code> method, then it
+uses the pool to retrieve new <code>Trampoline</code> instances to be populated.</p>
+
+<h3>AArch64 Trampolines</h3>
+
+<p>It is much simpler to generate trampolines for AArch64 than it is for x86(-64).
+The most noteworthy addition to the <code>Trampoline</code> class is the <code>WriteLoadLiteral</code>
+method, which writes an absolute address into the trampoline&rsquo;s literal pool,
+followed by writing an <code>LDR</code> instruction referencing that literal into the
+trampoline.</p>
+
+<h3>Conclusion</h3>
+
+<p>Thanks for reading! Coming up next time: My Untrusted Modules Opus.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-03-01T12:50:00-07:00" pubdate data-updated="true">2021-03-01 12:50:00 -0700</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/2019-roundup/'>2019 roundup</a>, <a class='category' href='/blog/categories/mozilla/'>mozilla</a>, <a class='category' href='/blog/categories/roundups/'>roundups</a>, <a class='category' href='/blog/categories/win32/'>win32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/" data-via="dblohm7" data-counturl="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/" >Tweet</a>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2021/02/24/2018-roundup-h2/" title="Previous Post: 2018 Roundup: H2">&laquo; 2018 Roundup: H2</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
+      </li>
+    
+  </ul>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2021 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/';
+        var disqus_url = 'http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
