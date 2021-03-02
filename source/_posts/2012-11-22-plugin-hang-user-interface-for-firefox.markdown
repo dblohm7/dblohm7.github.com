@@ -41,7 +41,7 @@ but its semantics change a little bit. Once the Plugin Hang UI has been
 displayed, Firefox will wait `dom.ipc.plugins.timeoutSecs` seconds before 
 terminating the plugin automatically, even if the user did not elect to 
 stop the plugin using the Hang UI. This is nearly identical to the way that 
-Firefox behaves without the Hang UI -- the only difference is that now this 
+Firefox behaves without the Hang UI &mdash; the only difference is that now this 
 timeout period doesn't commence until the Hang UI is displayed.
 
 * `dom.ipc.plugins.hangUIMinDisplaySecs`: This is the minimum number 

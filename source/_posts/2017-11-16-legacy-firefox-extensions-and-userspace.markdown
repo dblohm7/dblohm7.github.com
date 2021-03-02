@@ -6,7 +6,7 @@ comments: true
 categories: [Mozilla, Extensions, Philosophizing]
 ---
 This week's release of Firefox Quantum has prompted all kinds of feedback, both 
-positive and negative. That is not surprising to anybody -- any software that 
+positive and negative. That is not surprising to anybody &mdash; any software that 
 has a large number of users is going to be a topic for discussion, especially 
 when the release in question is undoubtedly a watershed.
 

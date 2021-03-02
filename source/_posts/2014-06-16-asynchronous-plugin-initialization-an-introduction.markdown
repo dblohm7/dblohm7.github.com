@@ -37,7 +37,7 @@ The typical steps involved can be broken down as follows:
 about the plugin's scriptable object.
 
 The patch that I am working on modifies steps 1 through 4 to run asynchronously.
-Step 5 is a special case -- we asynchronously return a proxy object, but if a 
+Step 5 is a special case &mdash; we asynchronously return a proxy object, but if a 
 synchronous JS method is called on that object, we must wait for the plugin to 
 initialize (if it has not yet done so). My hope is that if we have to call a 
 synchronous JS method on the proxy object, plugin initialization will be far 

@@ -50,7 +50,7 @@ code that had nothing to do with IPC or Win32. For example, the first stack that
 I looked at was `js::CreateRegExpMatchResult`!
 
 When it is just not clear where to begin, I like to start by looking at our
-correlation data in Socorro -- you'd be surprised how often they can bring
+correlation data in Socorro &mdash; you'd be surprised how often they can bring
 problems into sharp relief!
 
 In this case, the correlation data didn't disappoint: there
@@ -277,7 +277,7 @@ The first thing to keep in mind is that Mozilla's function interception code
 takes advantage of [hot-patch points](https://blogs.msdn.microsoft.com/oldnewthing/20110921-00/?p=9583)
 in Windows. If the target function begins with a `mov edi, edi` prolog, we
 use a hot-patch style hook instead of a trampoline hook. I am not going to go
-into detail about hot-patch hooks here -- the above Raymond Chen link contains
+into detail about hot-patch hooks here &mdash; the above Raymond Chen link contains
 enough details to answer your questions. For the purposes of this blog post, the
 important point is that Mozilla's code patches the `mov edi, edi`, so NVIDIA's
 Detours library would need to recognize and follow the `jmp`s that our code

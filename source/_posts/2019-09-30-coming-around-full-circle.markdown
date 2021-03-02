@@ -9,7 +9,7 @@ One thing about me that most Mozillians don't know is that, when I first applied
 I had applied to work on the mobile platform. When all was said and done, it was decided at the time 
 that I would be a better fit for an opening on Taras Glek's platform performance team.
 
-My first day at Mozilla was October 15, 2012 -- I will be celebrating my seventh anniversary at MoCo in 
+My first day at Mozilla was October 15, 2012 &mdash; I will be celebrating my seventh anniversary at MoCo in 
 just a couple short weeks! Some people with similar tenures have suggested to me that we are now 
 "old guard," but I'm not sure that I feel that way! Anyway, I digress.
 
