@@ -4,7 +4,7 @@
   <title><![CDATA[Category: debugging | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/debugging/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-02T10:50:50-07:00</updated>
+  <updated>2021-03-02T10:56:26-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -273,7 +273,7 @@ code that had nothing to do with IPC or Win32. For example, the first stack that
 I looked at was <code>js::CreateRegExpMatchResult</code>!</p>
 
 <p>When it is just not clear where to begin, I like to start by looking at our
-correlation data in Socorro &ndash; you&rsquo;d be surprised how often they can bring
+correlation data in Socorro &mdash; you&rsquo;d be surprised how often they can bring
 problems into sharp relief!</p>
 
 <p>In this case, the correlation data didn&rsquo;t disappoint: there
@@ -504,7 +504,7 @@ address to install its <code>jmp</code>.</p>
 takes advantage of <a href="https://blogs.msdn.microsoft.com/oldnewthing/20110921-00/?p=9583">hot-patch points</a>
 in Windows. If the target function begins with a <code>mov edi, edi</code> prolog, we
 use a hot-patch style hook instead of a trampoline hook. I am not going to go
-into detail about hot-patch hooks here &ndash; the above Raymond Chen link contains
+into detail about hot-patch hooks here &mdash; the above Raymond Chen link contains
 enough details to answer your questions. For the purposes of this blog post, the
 important point is that Mozilla&rsquo;s code patches the <code>mov edi, edi</code>, so NVIDIA&rsquo;s
 Detours library would need to recognize and follow the <code>jmp</code>s that our code

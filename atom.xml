@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-02T10:50:50-07:00</updated>
+  <updated>2021-03-02T10:56:26-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -583,7 +583,7 @@ code, but this was also not yet an issue because the launcher process was opt-in
 I had applied to work on the mobile platform. When all was said and done, it was decided at the time
 that I would be a better fit for an opening on Taras Glek&rsquo;s platform performance team.</p>
 
-<p>My first day at Mozilla was October 15, 2012 &ndash; I will be celebrating my seventh anniversary at MoCo in
+<p>My first day at Mozilla was October 15, 2012 &mdash; I will be celebrating my seventh anniversary at MoCo in
 just a couple short weeks! Some people with similar tenures have suggested to me that we are now
 &ldquo;old guard,&rdquo; but I&rsquo;m not sure that I feel that way! Anyway, I digress.</p>
 
@@ -835,7 +835,7 @@ series of retrospectives on last year&rsquo;s work, broken up by quarter.</p>
 <h2>Overview</h2>
 
 <p>The general theme of my work in 2018 was dealing with the DLL injection problem: On Windows,
-third parties love to forcibly load their DLLs into other processes &ndash; web browsers in particular,
+third parties love to forcibly load their DLLs into other processes &mdash; web browsers in particular,
 thus making Firefox a primary target.</p>
 
 <p>Many of these libraries tend to alter Firefox processes in ways that hurt the stability and/or performance
@@ -931,7 +931,7 @@ Refactoring the DLL Interceptor!</p>
     <updated>2017-11-16T13:30:00-07:00</updated>
     <id>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace</id>
     <content type="html"><![CDATA[<p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
-positive and negative. That is not surprising to anybody &ndash; any software that
+positive and negative. That is not surprising to anybody &mdash; any software that
 has a large number of users is going to be a topic for discussion, especially
 when the release in question is undoubtedly a watershed.</p>
 
@@ -1212,7 +1212,7 @@ the plugin to initialize before returning a result back to the DOM.</p>
 
 <p>If the DOM subsequently called into that surrogate object, the surrogate would
 be forced to synchronize with the plugin. There was a limit on how much fakery
-the async surrogate could do once the DOM needed a definitive answer &ndash; after
+the async surrogate could do once the DOM needed a definitive answer &mdash; after
 all, the NPAPI itself is entirely synchronous. While you may question whether
 the asynchronous surrogate actually bought us any responsiveness, performance
 profiles and measurements that I took at the time did indeed demonstrate that
@@ -1607,7 +1607,7 @@ code that had nothing to do with IPC or Win32. For example, the first stack that
 I looked at was <code>js::CreateRegExpMatchResult</code>!</p>
 
 <p>When it is just not clear where to begin, I like to start by looking at our
-correlation data in Socorro &ndash; you&rsquo;d be surprised how often they can bring
+correlation data in Socorro &mdash; you&rsquo;d be surprised how often they can bring
 problems into sharp relief!</p>
 
 <p>In this case, the correlation data didn&rsquo;t disappoint: there
@@ -1852,7 +1852,7 @@ address to install its <code>jmp</code>.</p>
 takes advantage of <a href="https://blogs.msdn.microsoft.com/oldnewthing/20110921-00/?p=9583">hot-patch points</a>
 in Windows. If the target function begins with a <code>mov edi, edi</code> prolog, we
 use a hot-patch style hook instead of a trampoline hook. I am not going to go
-into detail about hot-patch hooks here &ndash; the above Raymond Chen link contains
+into detail about hot-patch hooks here &mdash; the above Raymond Chen link contains
 enough details to answer your questions. For the purposes of this blog post, the
 important point is that Mozilla&rsquo;s code patches the <code>mov edi, edi</code>, so NVIDIA&rsquo;s
 Detours library would need to recognize and follow the <code>jmp</code>s that our code

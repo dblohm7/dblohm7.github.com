@@ -4,7 +4,7 @@
   <title><![CDATA[Category: extensions | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/extensions/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-02T10:50:50-07:00</updated>
+  <updated>2021-03-02T10:56:26-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -19,7 +19,7 @@
     <updated>2017-11-16T13:30:00-07:00</updated>
     <id>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace</id>
     <content type="html"><![CDATA[<p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
-positive and negative. That is not surprising to anybody &ndash; any software that
+positive and negative. That is not surprising to anybody &mdash; any software that
 has a large number of users is going to be a topic for discussion, especially
 when the release in question is undoubtedly a watershed.</p>
 
