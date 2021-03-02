@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-01T12:54:53-07:00</updated>
+  <updated>2021-03-02T06:26:42-07:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -39,7 +39,7 @@ goes unpunished, I was put in charge of doing the work! [<em>I&rsquo;m actually 
 here; this project was right up my alley and I was happy to do it! &ndash; Aaron</em>]</p>
 
 <p>Before continuing, you might want to review my <a href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">previous entry</a>
-describing the Great Interceptor Refactoring of 2019, as this post revisits some
+describing the Great Interceptor Refactoring of 2018, as this post revisits some
 of the concepts introduced there.</p>
 
 <p>Let us review some DLL Interceptor terminology:</p>
@@ -140,7 +140,7 @@ allocator had no need to care about this; I had to add this capability.</p>
 <h4>Adding Range-Aware VM Allocation</h4>
 
 <p>Firstly, I needed to make the <code>MMPolicy</code> classes range-aware: we need to be able
-to allocate tranpoline space within acceptable distances from branch instructions.</p>
+to allocate trampoline space within acceptable distances from branch instructions.</p>
 
 <p>Consider that, as described above, a branch instruction may have limits on the
 extents of its target. As data, this is easily formatted as a <em>pivot</em> (ie, the
@@ -157,7 +157,7 @@ user-mode VM address.</p>
 
 <p>Another issue with range-aware VM allocation is determining the location, within
 the allowable range, for the actual VM reservation. Ideally we would like the
-kernel&rsquo;s memory manager to choose the best location for us; its holistic view of
+kernel&rsquo;s memory manager to choose the best location for us: its holistic view of
 existing VM layout (not to mention ASLR) across all processess will provide
 superior VM reservations. On the other hand, the Win32 APIs that facilitate this
 are specific to Windows 10. When available, <code>MMPolicyInProcess</code> uses <a href="https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2"><code>VirtualAlloc2</code></a>
@@ -178,11 +178,11 @@ focus over to our VM sharing policies.</p>
 <p>One impetus for the Great Interceptor Refactoring was to enable separate
 Interceptor instances to share a unified pool of VM for trampoline memory.
 To make this range-aware, I needed to make some additional changes to
-<code>VMSharingPolicyShared</code>: it would not longer be sufficient to assume that we
-could just share a single block of trampoline VM; now we would need to make the
+<code>VMSharingPolicyShared</code>. It would no longer be sufficient to assume that we
+could just share a single block of trampoline VM &ndash; we now needed to make the
 shared VM policy capable of potentially allocating multiple blocks of VM.</p>
 
-<p><code>VMSharingPolicyShared</code> now contains a mapping of ranges to VM blocks; if we
+<p><code>VMSharingPolicyShared</code> now contains a mapping of ranges to VM blocks. If we
 request a reservation which an existing block satisfies, we re-use that block.
 On the other hand, if we require a range that is yet unsatisfied, then we need to
 allocate a new one. I admit that I kind of half-assed the implementation of the
