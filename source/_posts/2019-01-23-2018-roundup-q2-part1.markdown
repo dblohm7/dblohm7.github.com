@@ -1,15 +1,12 @@
 ---
 layout: post
-title: "2018 Roundup: Q2, Part 1"
+title: "2018 Roundup: Q2, Part 1 - Refactoring the DLL Interceptor"
 date: 2019-01-23 18:30:00 -0700
 comments: true
 categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
 ---
 *This is the second post in my "2018 Roundup" series. For an index of all entries, please see my 
 blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
-
-Refactoring the DLL Interceptor
--------------------------------
 
 As I have alluded to [previously](https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/), 
 Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to 

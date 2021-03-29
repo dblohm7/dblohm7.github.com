@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "2018 Roundup: Q2, Part 2"
+title: "2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process"
 date: 2021-01-04 15:45:00 -0700
 comments: true
 categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
@@ -10,9 +10,6 @@ blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
 
 Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series. 
 I am trying to get caught up on documenting my past work!
-
-Implementing a Skeletal Launcher Process
-----------------------------------------
 
 One of the things I added to Firefox for Windows was a new process called the "launcher process."
 "Bootstrap process" would be a better name, but we already used the term "bootstrap" 
@@ -40,7 +37,7 @@ conscious of how we affect overall browser startup time.
 
 Since the launcher process is built into `firefox.exe`, I needed to examine that executable's existing 
 dependencies to ensure that it is not loading any dependent libraries that are not actually needed 
-by the launcher process. Other than the essential Win32 DLLs `kernel32.dll`, `advapi32.dll` (and their 
+by the launcher process. Other than the essential Win32 DLLs `kernel32.dll` and `advapi32.dll` (and their 
 dependencies), I did not want anything else to load. In particular, I wanted to avoid loading `user32.dll` 
 and/or `gdi32.dll`, as this would trigger the initialization of Windows' GUI facilities, which would be a 
 huge performance killer. For that reason, most browser-mode library dependencies of `firefox.exe` 
@@ -72,7 +69,7 @@ These capabilities were not yet an issue because the launcher process was opt-in
 
 ### Error Recovery
 We wanted the launcher process to gracefully handle failures even though, also by definition, it does not
-have access to facilities that internal Gecko code has, such as telemetry and the crash reporter.
+have access to facilities that internal Gecko code has, such as preferences and the crash reporter.
 
 The skeletal launcher process that I landed in Q2 did not yet utilize any special error handling
 code, but this was also not yet an issue because the launcher process was opt-in at this point.

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "2018 Roundup: Q2, Part 3"
+title: "2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process"
 date: 2021-01-05 09:45:00 -0700
 comments: true
 categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
@@ -11,19 +11,16 @@ blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
 Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series. 
 I am trying to get caught up on documenting my past work!
 
-Fleshing Out the Launcher Process
----------------------------------
-
 Once I had landed the [skeletal implementation](https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/) 
 of the launcher process, it was time to start making it do useful things.
 
 ### Ensuring Medium Integrity
 [*For an overview of Windows integrity levels, check out [this MSDN page](https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control) -- Aaron*]
 
-Since Windows Vista, security tokens for standard users have declared a medium integrity level by default.
+Since Windows Vista, security tokens for standard users have run at a medium integrity level (IL) by default.
 When UAC is enabled, members of the `Administrators` group also run as a standard user with a medium IL, with 
-the additional ability of being able to "elevate" themselves to a high IL. An administrator who disables UAC 
-has a token that is always high integrity.
+the additional ability of being able to "elevate" themselves to a high IL. When UAC is disabled, an administrator 
+receives a token that always runs at the high integrity level.
 
 Running a process at a high IL is something that is not to be taken lightly: at that level, the process may 
 alter system settings and access files that would otherwise be restricted by the OS.
@@ -42,7 +39,7 @@ run with this configuration do so deliberately, and they have no interest in bei
 
 Unfortunately, users running under this account configuration will experience side-effects of the Firefox browser 
 process running at medium IL. Specifically, a medium IL process is unable to initiate IPC connections with a process 
-running at a higher IL. This will break features such as drag-and-drop, since even the user's shell processes are running 
+running at a higher IL. This will break features such as drag-and-drop, since even the administrator's shell processes are running 
 at a higher IL than Firefox.
 
 Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option 

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "2018 Roundup: H2"
+title: "2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default"
 date: 2021-02-24 17:30:00 -0700
 comments: true
 categories: [Mozilla, roundups, 2018 roundup, DLL Injection]
@@ -10,9 +10,6 @@ blog entry for [Q1](https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/).*
 
 Yes, you are reading the dates correctly: I am posting this over two years after I began this series. 
 I am trying to get caught up on documenting my past work!
-
-Preparing to Enable the Launcher Process by Default
----------------------------------------------------
 
 ### CI and Developer Tooling
 
@@ -126,10 +123,10 @@ describing the failure.
 While all `Result`s in the launcher process may be indicating a successful 
 start, we may not yet be out of the woods! Consider the possibility that the 
 various interventions taken by the launcher process might have somehow impaired 
-the browser process's ability to start!
+the browser process' ability to start!
 
-The launcher process and the browser process share code that tracks whether 
-both processes successfully started in sequence.
+To deal with this situation, the launcher process and the browser process share 
+code that tracks whether both processes successfully started in sequence.
 
 When the launcher process is started, it checks information recorded about the 
 previous run. If the browser process previously failed to start correctly, the 
