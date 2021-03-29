@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 2019 roundup | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/2019-roundup/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-02T10:56:26-07:00</updated>
+  <updated>2021-03-29T16:52:17-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[2019 Roundup: Part 1]]></title>
+    <title type="html"><![CDATA[2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64]]></title>
     <link href="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/"/>
     <updated>2021-03-01T12:50:00-07:00</updated>
     <id>http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1</id>
@@ -26,7 +26,7 @@ roundup by project.</p>
 <p>Here is an index of all the entries in this series:</p>
 
 <ul>
-<li><a href="https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1</a> (this post)</li>
+<li><a href="https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/">Part 1 - Porting the DLL Interceptor to AArch64</a> (this post)</li>
 </ul>
 
 

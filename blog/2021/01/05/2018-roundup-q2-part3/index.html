@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>2018 Roundup: Q2, Part 3 - Aaron Klotz at Mozilla</title>
+  <title>2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process - Aaron Klotz at Mozilla</title>
   <meta name="author" content="Aaron Klotz">
 
   
@@ -82,7 +82,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
   
   <header>
     
-      <h1 class="entry-title">2018 Roundup: Q2, Part 3</h1>
+      <h1 class="entry-title">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</h1>
     
     
       <p class="meta">
@@ -113,8 +113,6 @@ blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1<
 <p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
 I am trying to get caught up on documenting my past work!</p>
 
-<h2>Fleshing Out the Launcher Process</h2>
-
 <p>Once I had landed the <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">skeletal implementation</a>
 of the launcher process, it was time to start making it do useful things.</p>
 
@@ -122,10 +120,10 @@ of the launcher process, it was time to start making it do useful things.</p>
 
 <p>[<em>For an overview of Windows integrity levels, check out <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control">this MSDN page</a> &ndash; Aaron</em>]</p>
 
-<p>Since Windows Vista, security tokens for standard users have declared a medium integrity level by default.
+<p>Since Windows Vista, security tokens for standard users have run at a medium integrity level (IL) by default.
 When UAC is enabled, members of the <code>Administrators</code> group also run as a standard user with a medium IL, with
-the additional ability of being able to &ldquo;elevate&rdquo; themselves to a high IL. An administrator who disables UAC
-has a token that is always high integrity.</p>
+the additional ability of being able to &ldquo;elevate&rdquo; themselves to a high IL. When UAC is disabled, an administrator
+receives a token that always runs at the high integrity level.</p>
 
 <p>Running a process at a high IL is something that is not to be taken lightly: at that level, the process may
 alter system settings and access files that would otherwise be restricted by the OS.</p>
@@ -144,7 +142,7 @@ run with this configuration do so deliberately, and they have no interest in bei
 
 <p>Unfortunately, users running under this account configuration will experience side-effects of the Firefox browser
 process running at medium IL. Specifically, a medium IL process is unable to initiate IPC connections with a process
-running at a higher IL. This will break features such as drag-and-drop, since even the user&rsquo;s shell processes are running
+running at a higher IL. This will break features such as drag-and-drop, since even the administrator&rsquo;s shell processes are running
 at a higher IL than Firefox.</p>
 
 <p>Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option
@@ -227,10 +225,10 @@ meaningful decrease in browser startup time! How I made these measurements is ad
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2021/01/04/2018-roundup-q2-part2/" title="Previous Post: 2018 Roundup: Q2, Part 2">&laquo; 2018 Roundup: Q2, Part 2</a>
+        <a class="basic-alignment left" href="/blog/2021/01/04/2018-roundup-q2-part2/" title="Previous Post: 2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process">&laquo; 2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
       
       
-        <a class="basic-alignment right" href="/blog/2021/02/24/2018-roundup-h2/" title="Next Post: 2018 Roundup: H2">2018 Roundup: H2 &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2021/02/24/2018-roundup-h2/" title="Next Post: 2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default &raquo;</a>
       
     </p>
   </footer>
@@ -251,19 +249,19 @@ meaningful decrease in browser startup time! How I made these measurements is ad
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1</a>
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a>
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
       </li>
     
       <li class="post">

@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>2018 Roundup: H2 - Aaron Klotz at Mozilla</title>
+  <title>2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default - Aaron Klotz at Mozilla</title>
   <meta name="author" content="Aaron Klotz">
 
   
@@ -82,7 +82,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
   
   <header>
     
-      <h1 class="entry-title">2018 Roundup: H2</h1>
+      <h1 class="entry-title">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</h1>
     
     
       <p class="meta">
@@ -112,8 +112,6 @@ blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1<
 
 <p>Yes, you are reading the dates correctly: I am posting this over two years after I began this series.
 I am trying to get caught up on documenting my past work!</p>
-
-<h2>Preparing to Enable the Launcher Process by Default</h2>
 
 <h3>CI and Developer Tooling</h3>
 
@@ -236,10 +234,10 @@ describing the failure.</p>
 <p>While all <code>Result</code>s in the launcher process may be indicating a successful
 start, we may not yet be out of the woods! Consider the possibility that the
 various interventions taken by the launcher process might have somehow impaired
-the browser process&rsquo;s ability to start!</p>
+the browser process&#8217; ability to start!</p>
 
-<p>The launcher process and the browser process share code that tracks whether
-both processes successfully started in sequence.</p>
+<p>To deal with this situation, the launcher process and the browser process share
+code that tracks whether both processes successfully started in sequence.</p>
 
 <p>When the launcher process is started, it checks information recorded about the
 previous run. If the browser process previously failed to start correctly, the
@@ -333,10 +331,10 @@ Stay tuned for more roundups in the future!</p>
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2021/01/05/2018-roundup-q2-part3/" title="Previous Post: 2018 Roundup: Q2, Part 3">&laquo; 2018 Roundup: Q2, Part 3</a>
+        <a class="basic-alignment left" href="/blog/2021/01/05/2018-roundup-q2-part3/" title="Previous Post: 2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process">&laquo; 2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
       
       
-        <a class="basic-alignment right" href="/blog/2021/03/01/2019-roundup-part-1/" title="Next Post: 2019 Roundup: Part 1">2019 Roundup: Part 1 &raquo;</a>
+        <a class="basic-alignment right" href="/blog/2021/03/01/2019-roundup-part-1/" title="Next Post: 2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64 &raquo;</a>
       
     </p>
   </footer>
@@ -357,19 +355,19 @@ Stay tuned for more roundups in the future!</p>
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1</a>
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2</a>
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3</a>
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
       </li>
     
       <li class="post">
-        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2</a>
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
       </li>
     
       <li class="post">
