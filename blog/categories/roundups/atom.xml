@@ -4,7 +4,7 @@
   <title><![CDATA[Category: roundups | Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/blog/categories/roundups/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-29T16:52:17-06:00</updated>
+  <updated>2021-03-29T16:58:50-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -291,7 +291,7 @@ blog entry about this topic in the future. &ndash; Aaron</em>]</p>
 
 <ol>
 <li>Find the event showing the first <code>firefox.exe</code> process being created;</li>
-<li>Find the session store window restored event from the second process;</li>
+<li>Find the session store window restored event from the second <code>firefox.exe</code> process;</li>
 <li>Output the time interval between the two events.</li>
 </ol>
 
