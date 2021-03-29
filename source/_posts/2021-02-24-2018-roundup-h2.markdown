@@ -75,7 +75,7 @@ In essence, the analysis considers the following facts when processing an xperf 
 For our analysis, we needed to do the following:
 
 1. Find the event showing the first `firefox.exe` process being created;
-2. Find the session store window restored event from the second process;
+2. Find the session store window restored event from the second `firefox.exe` process;
 3. Output the time interval between the two events.
 
 [This block of code](https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/testing/talos/talos/xtalos/parse_xperf.py#36) 
