@@ -137,3 +137,5 @@ a Redditor whose complaint we steered to Bugzilla.
 **EDIT August 23, 2014:** Wow, this has blown up. More edits to update this post 
 with additional information in repose to some of the questions posted in the 
 comments. Thanks for reading!
+
+**EDIT March 30, 2021:** I updated various links that had rotted since 2014.
