@@ -4,7 +4,7 @@
   <title><![CDATA[Aaron Klotz at Mozilla]]></title>
   <link href="http://dblohm7.ca/atom.xml" rel="self"/>
   <link href="http://dblohm7.ca/"/>
-  <updated>2021-03-30T16:52:53-06:00</updated>
+  <updated>2021-03-31T10:59:45-06:00</updated>
   <id>http://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -319,7 +319,7 @@ Gecko services such as preferences and the crash reporter.</p>
 
 <h4>Error Propagation</h4>
 
-<p>First of call, I created a new class, <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/widget/windows/WinHeaderOnlyUtils.h#73"><code>WindowsError</code></a>,
+<p>Firstly, I created a new class, <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/widget/windows/WinHeaderOnlyUtils.h#73"><code>WindowsError</code></a>,
 that encapsulates all types of Windows error codes. As an aside, I would strongly
 encourage all Gecko developers who are writing new code that invokes Windows APIs
 to use this class in your error handling.</p>
