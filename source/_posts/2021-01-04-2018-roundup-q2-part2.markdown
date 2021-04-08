@@ -24,7 +24,7 @@ In {% bug 1454745 %} I implemented an initial skeletal (and opt-in) implementati
 launcher process.
 
 This seems like pretty straightforward code, right? Na&iuml;vely, one could just rip a `CreateProcess` 
-sample off of MSDN and call it day. The actual launcher process implmentation is more complicated than 
+sample off of MSDN and call it day. The actual launcher process implementation is more complicated than 
 that, for reasons that I will outline in the following sections.
 
 ### Built into `firefox.exe`
