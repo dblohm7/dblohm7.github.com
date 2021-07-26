@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="There has been enough that has been said over the past week about WebExtensions
+that I wasn&rsquo;t sure if I wanted to write this post. As usual, I &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/posts/6">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36293908-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-36293908-1');
+  </script>
+
+
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
+  <link href="https://dblohm7.ca/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/30/on-webextensions/">On WebExtensions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2015-08-30T00:00:00-06:00" pubdate data-updated="true">Aug 30th, 2015</time>
+        
+           | <a href="/blog/2015/08/30/on-webextensions/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2015/08/30/on-webextensions/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>There has been enough that has been said over the past week about <a href="https://blog.mozilla.org/addons/2015/08/21/the-future-of-developing-firefox-add-ons/">WebExtensions</a>
+that I wasn&rsquo;t sure if I wanted to write this post. As usual, I can&rsquo;t seem to
+help myself. Note the usual disclaimer that this is my personal opinion. Further
+note that I have no involvement with WebExtensions at this time, so I write this
+from the point of view of an observer.</p>
+
+<h2>API? What API?</h2>
+
+<p>I shall begin with the proposition that the legacy, non-jetpack
+environment for addons is not an API. As ridiculous as some readers might
+consider this to be, please humour me for a moment.</p>
+
+<p>Let us go back to the acronym, &ldquo;API.&rdquo; <strong>A</strong>pplication <strong>P</strong>rogramming <strong>I</strong>nterface.
+While the usage of the term &ldquo;API&rdquo; seems to have expanded over the years to encompass
+just about any type of interface whatsoever, I&rsquo;d like to explore the first letter of that
+acronym: <em>Application</em>.</p>
+
+<p>An <em>Application</em> Programming Interface is a specific type of interface that is
+exposed for the purposes of building applications. It typically provides a
+formal abstraction layer that isolates applications from the implementation
+details behind the lower tier(s) in the software stack. In the case of web
+browsers, I suggest that there are two distinct types of applications:
+web content, and extensions.</p>
+
+<p>There is obviously a very well defined API for web content. On the other hand,
+I would argue that Gecko&rsquo;s legacy addon environment is not an API at all! From
+the point of view of an extension, there is no abstraction, limited formality,
+and not necessarily an intention to be used by applications.</p>
+
+<p>An extension is imported into Firefox with full privileges and can access whatever
+it wants. Does it have access to interfaces? Yes, but are those interfaces intended
+for <em>applications</em>? Some are, but many are not. The environment that Gecko
+currently provides for legacy addons is analagous to an operating system running
+every single application in kernel mode. Is that powerful? Absolutely! Is that
+the best thing to do for maintainability and robustness? Absolutely not!</p>
+
+<p>Somewhere a line needs to be drawn to demarcate this abstraction layer and
+improve Gecko developers&#8217; ability to make improvements under the hood. Last
+week&rsquo;s announcement was an invitation to addon developers to help shape that
+future. Please participate and please do so constructively!</p>
+
+<h2>WebExtensions are not Chrome Extensions</h2>
+
+<p>When I first heard rumors about WebExtensions in Whistler, my source made it
+very clear to me that the WebExtensions initiative is not about making Chrome
+extensions run in Firefox. In fact, I am quite disappointed with some of the
+press coverage that seems to completely miss this point.</p>
+
+<p>Yes, WebExtensions will be implementing some APIs to be <em>source compatible</em>
+with Chrome. That makes it easier to port a Chrome extension, but porting will
+still be necessary. I like the Venn Diagram concept that the <a href="https://wiki.mozilla.org/WebExtensions/FAQ">WebExtensions FAQ</a>
+uses: Some Chrome APIs will not be available in WebExtensions. On the other hand,
+WebExtensions will be providing APIs above and beyond the Chrome API set that
+will maintain Firefox&rsquo;s legacy of extensibility.</p>
+
+<p>Please try not to think of this project as Mozilla taking functionality away.
+In general I think it is safe to think of this as an opportunity to move that
+same functionality to a mechanism that is more formal and abstract.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2015-07-28T00:00:00-06:00" pubdate data-updated="true">Jul 28th, 2015</time>
+        
+           | <a href="/blog/2015/07/28/interesting-win32-apis/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
+changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
+many changes, but the ones that were there are quite exciting IMHO. While
+researching these new APIs, I also stumbled across some others that were
+added during the Windows 8 timeframe that we should be considering as well.</p>
+
+<h2>Volatile Ranges</h2>
+
+<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
+claim that these APIs are actually new for the Windows 8.1 Update. Using the
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
+functions, we can now specify ranges of virtual memory that are safe to
+discarded under memory pressure. Later on, should we request that access be
+restored to that memory, the kernel will either return that virtual memory to us
+unmodified, or advise us that the associated pages have been discarded.</p>
+
+<p>A couple of years ago we had an intern on the Perf Team who was working on
+bringing this capability to Linux. I am pleasantly surprised that this is now
+offered on Windows.</p>
+
+<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
+
+<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
+API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
+files when we want the kernel to read ahead. On Win32, we were opening the
+backing file and then doing a series of sequential reads through the file to
+force the kernel to cache the file data. As of Windows 8, we can now call
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
+for a similar effect.</p>
+
+<h2>Operation Recorder: An API for SuperFetch</h2>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
+APIs are intended to record access patterns during a file I/O operation.
+SuperFetch will then create prefetch files for the operation, enabling prefetch
+capabilities above and beyond the use case of initial process startup.</p>
+
+<h2>Memory Pressure Notifications</h2>
+
+<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
+Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
+allocates a kernel handle that becomes signalled when physical memory is running
+low. Gecko already has facilities for handling memory pressure events on other
+platforms, so we should probably add this to the Win32 port.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/12/waitmessage-considered-harmful/">WaitMessage Considered Harmful</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2015-03-12T00:00:00-06:00" pubdate data-updated="true">Mar 12th, 2015</time>
+        
+           | <a href="/blog/2015/03/12/waitmessage-considered-harmful/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
+
+<p>Today I want to talk about some code that we imported from Chromium some time
+ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
+
+<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>    <span class="c1">// A WM_* message is available.</span>
+</span><span class='line'>    <span class="c1">// If a parent child relationship exists between windows across threads</span>
+</span><span class='line'>    <span class="c1">// then their thread inputs are implicitly attached.</span>
+</span><span class='line'>    <span class="c1">// This causes the MsgWaitForMultipleObjectsEx API to return indicating</span>
+</span><span class='line'>    <span class="c1">// that messages are ready for processing (Specifically, mouse messages</span>
+</span><span class='line'>    <span class="c1">// intended for the child window may appear if the child window has</span>
+</span><span class='line'>    <span class="c1">// capture).</span>
+</span><span class='line'>    <span class="c1">// The subsequent PeekMessages call may fail to return any messages thus</span>
+</span><span class='line'>    <span class="c1">// causing us to enter a tight loop at times.</span>
+</span><span class='line'>    <span class="c1">// The WaitMessage call below is a workaround to give the child window</span>
+</span><span class='line'>    <span class="c1">// some time to process its input messages.</span>
+</span><span class='line'>    <span class="n">MSG</span> <span class="n">msg</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="n">DWORD</span> <span class="n">queue_status</span> <span class="o">=</span> <span class="n">GetQueueStatus</span><span class="p">(</span><span class="n">QS_MOUSE</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">HIWORD</span><span class="p">(</span><span class="n">queue_status</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">QS_MOUSE</span> <span class="o">&amp;&amp;</span>
+</span><span class='line'>        <span class="o">!</span><span class="n">PeekMessage</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">WM_MOUSEFIRST</span><span class="p">,</span> <span class="n">WM_MOUSELAST</span><span class="p">,</span> <span class="n">PM_NOREMOVE</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">WaitMessage</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code is wrong. <strong>Very</strong> wrong.</p>
+
+<p>Let us start with the calls to <code>GetQueueStatus</code> and <code>PeekMessage</code>. Those APIs
+mark any messages already in the thread&rsquo;s message queue as having been seen,
+such that they are no longer considered &ldquo;new.&rdquo; Even though those function calls
+do not remove messages from the queue, any messages that were in the queue at
+this point are considered to be &ldquo;old.&rdquo;</p>
+
+<p>The logic in this code snippet is essentially saying, &ldquo;if the queue contains
+mouse messages that do not belong to this thread, then they must belong to an
+attached thread.&rdquo; The code then calls <code>WaitMessage</code> in an effort to give the
+other thread(s) a chance to process their mouse messages. This is where the code
+goes off the rails.</p>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms644956%28v=vs.85%29.aspx">documentation</a>
+for <code>WaitMessage</code> states the following:</p>
+
+<blockquote><p>Note that <code>WaitMessage</code> does not return if there is unread input in the message
+queue after the thread has called a function to check the queue. This is
+because functions such as <code>PeekMessage</code>, <code>GetMessage</code>, <code>GetQueueStatus</code>,
+<code>WaitMessage</code>, <code>MsgWaitForMultipleObjects</code>, and <code>MsgWaitForMultipleObjectsEx</code>
+check the queue and then change the state information for the queue so that
+the input is no longer considered new. A subsequent call to <code>WaitMessage</code> will
+not return until new input of the specified type arrives. The existing unread
+input (received prior to the last time the thread checked the queue) is ignored.</p></blockquote>
+
+<p><code>WaitMessage</code> will only return if there is <em>a new</em> (as opposed to <em>any</em>) message
+in the queue for the calling thread. Any messages for the calling thread that
+were already in there at the time of the <code>GetQueueStatus</code> and <code>PeekMessage</code> calls
+are no longer new, so they are ignored.</p>
+
+<p>There might very well be a message at the head of that queue that should be
+processed by the current thread. Instead it is ignored while we wait for other
+threads. Here is the crux of the problem: we&rsquo;re waiting on other threads whose
+input queues are attached to our own! That other thread can&rsquo;t process its
+messages because our thread has messages in front of its messages; on the other
+hand, our thread has blocked itself!</p>
+
+<p>The only way to break this deadlock is for new messages to be added to the queue.
+That is a big reason why we&rsquo;re seeing things like <a title="Page doesn't load/render if the mouse is not moving" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1105386">bug 1105386</a>: Moving the
+mouse adds new messages to the queue, making <code>WaitMessage</code> unblock.</p>
+
+<p>I&rsquo;ve already eliminated this code in Mozilla&rsquo;s codebase, but the challenge is
+going to be getting rid of this code in third-party binaries that attach their
+own windows to Firefox&rsquo;s windows.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/7">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/5">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
+      </li>
+    
+  </ul>
+</section>
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2021 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

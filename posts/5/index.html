@@ -1,24 +1,115 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: debugging | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/debugging/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:13:27-06:00</updated>
-  <id>http://dblohm7.ca/</id>
-  <author>
-    <name><![CDATA[Aaron Klotz]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Aaron Klotz at Mozilla</title>
+  <meta name="author" content="Aaron Klotz">
 
   
-  <entry>
-    <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
-    <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
-    <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
+  <meta name="description" content="As of today I have added a new command to mozdbgext: !iat. The syntax is pretty simple: !iat &lt;hexadecimal address&gt; This address shouldn&rsquo;t &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://dblohm7.ca/posts/5">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36293908-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-36293908-1');
+  </script>
+
+
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
+  <link href="https://dblohm7.ca/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  
+    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/11/new-mozdbgext-command-iat/">New Mozdbgext Command: !iat</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2016-02-11T00:00:00-07:00" pubdate data-updated="true">Feb 11th, 2016</time>
+        
+           | <a href="/blog/2016/02/11/new-mozdbgext-command-iat/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
 
 <p>The syntax is pretty simple:</p>
 
@@ -118,15 +209,44 @@ symbol engine as necessary.</p>
 <p>Further note that the <code>!iat</code> command does not yet accept the <code>_imp_</code> symbolic
 names for the IAT entries, you need to enter the hexadecimal representation of
 the pointer.</p>
-]]></content>
-  </entry>
+</div>
   
-  <entry>
-    <title type="html"><![CDATA[Announcing mozdbgext]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
-    <updated>2016-01-26T12:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
-    <content type="html"><![CDATA[<p>A well-known problem at Mozilla is that, while most of our desktop users run
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/01/26/announcing-mozdbgext/">Announcing Mozdbgext</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2016-01-26T00:00:00-07:00" pubdate data-updated="true">Jan 26th, 2016</time>
+        
+           | <a href="/blog/2016/01/26/announcing-mozdbgext/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>A well-known problem at Mozilla is that, while most of our desktop users run
 Windows, most of Mozilla&rsquo;s developers do not. There are a lot of problems that
 result from that, but one of the most frustrating to me is that sometimes
 those of us that actually use Windows for development find ourselves at a
@@ -222,15 +342,44 @@ time.</p>
 <p><sup><a href="#r1" id="fn1">*</a></sup> When I write &ldquo;WinDbg&rdquo;, I am really
 referring to any debugger in the <em>Debugging Tools for Windows</em> package,
 including <code>cdb</code>.</p>
-]]></content>
-  </entry>
+</div>
   
-  <entry>
-    <title type="html"><![CDATA[Bugs from Hell: Injected Third-party Code + Detours = A Bad Time]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/"/>
-    <updated>2016-01-11T13:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time</id>
-    <content type="html"><![CDATA[<p>Happy New Year!</p>
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">Bugs From Hell: Injected Third-party Code + Detours = a Bad Time</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2016-01-11T00:00:00-07:00" pubdate data-updated="true">Jan 11th, 2016</time>
+        
+           | <a href="/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/#disqus_thread"
+             data-disqus-identifier="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Happy New Year!</p>
 
 <p>I&rsquo;m finally getting &lsquo;round to writing about a nasty bug that I had to spend a
 bunch of time with in Q4 2015. It&rsquo;s one of the more challenging problems that
@@ -454,24 +603,38 @@ under the name &ldquo;Detours Express.&rdquo;</p>
 to know where all of these <code>0xcc</code> bytes were coming from. A quick <code>grep</code> turned
 up what I was looking for:</p>
 
-<pre><code class="c++ detours.cpp start:93">inline PBYTE detour_gen_brk(PBYTE pbCode, PBYTE pbLimit)
-{
-    while (pbCode &lt; pbLimit) {
-        *pbCode++ = 0xcc;   // brk;
-    }
-    return pbCode;
-}
-</code></pre>
+<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="kr">inline</span> <span class="n">PBYTE</span> <span class="nf">detour_gen_brk</span><span class="p">(</span><span class="n">PBYTE</span> <span class="n">pbCode</span><span class="p">,</span> <span class="n">PBYTE</span> <span class="n">pbLimit</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span> <span class="p">(</span><span class="n">pbCode</span> <span class="o">&lt;</span> <span class="n">pbLimit</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="o">*</span><span class="n">pbCode</span><span class="o">++</span> <span class="o">=</span> <span class="mh">0xcc</span><span class="p">;</span>   <span class="c1">// brk;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">pbCode</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>Now that I knew which function was generating the <code>int 3</code> instructions, I then
 wanted to find its callers. Soon I found:</p>
 
-<pre><code class="c++ detours.cpp start:1247">#ifdef DETOURS_X86
-    pbSrc = detour_gen_jmp_immediate(pTrampoline-&gt;rbCode + cbTarget, pTrampoline-&gt;pbRemain);
-    pbSrc = detour_gen_brk(pbSrc,
-                           pTrampoline-&gt;rbCode + sizeof(pTrampoline-&gt;rbCode));
-#endif // DETOURS_X86
-</code></pre>
+<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1247</span>
+<span class='line-number'>1248</span>
+<span class='line-number'>1249</span>
+<span class='line-number'>1250</span>
+<span class='line-number'>1251</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'><span class="cp">#ifdef DETOURS_X86</span>
+</span><span class='line'>    <span class="n">pbSrc</span> <span class="o">=</span> <span class="n">detour_gen_jmp_immediate</span><span class="p">(</span><span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span> <span class="o">+</span> <span class="n">cbTarget</span><span class="p">,</span> <span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">pbRemain</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">pbSrc</span> <span class="o">=</span> <span class="n">detour_gen_brk</span><span class="p">(</span><span class="n">pbSrc</span><span class="p">,</span>
+</span><span class='line'>                           <span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">pTrampoline</span><span class="o">-&gt;</span><span class="n">rbCode</span><span class="p">));</span>
+</span><span class='line'><span class="cp">#endif </span><span class="c1">// DETOURS_X86</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>Okay, so Detours writes the breakpoints out immediately after it has written a
 <code>jmp</code> pointing to its trampoline.</p>
@@ -514,8 +677,10 @@ patched in, in order to write its own <code>jmp</code> at <code>CreateWindowExWH
 hot-patch hook and follows the <code>jmp</code> if necessary. While examining a function
 called <code>detour_skip_jmp</code>, I found the bug:</p>
 
-<pre><code class="c++ detours.cpp start:124">            pbNew = pbCode + *(INT32 *)&amp;pbCode[1];
-</code></pre>
+<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>124</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>        <span class="n">pbNew</span> <span class="o">=</span> <span class="n">pbCode</span> <span class="o">+</span> <span class="o">*</span><span class="p">(</span><span class="n">INT32</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pbCode</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>This code is supposed to be telling Detours where the target address of a <code>jmp</code>
 is, so that Detours can follow it. <code>pbNew</code> is supposed to be the target address
@@ -529,8 +694,10 @@ target address!</p>
 <p>I went and checked the source code for Detours Express 3.0 to see if this had
 been fixed, and indeed it had:</p>
 
-<pre><code class="c++ detours.cpp start:163">            PBYTE pbNew = pbCode + 5 + *(INT32 *)&amp;pbCode[1];
-</code></pre>
+<figure class='code'><figcaption><span>detours.cpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>163</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>        <span class="n">PBYTE</span> <span class="n">pbNew</span> <span class="o">=</span> <span class="n">pbCode</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="o">*</span><span class="p">(</span><span class="n">INT32</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pbCode</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>That doesn&rsquo;t do much for me right now, however, since the NVIDIA stuff is still
 using Detours 2.x.</p>
@@ -580,7 +747,93 @@ the presence of NVIDIA Optimus, it disables hot-patch style hooks.</p>
 whose relationship to this bug was not obvious.</p>
 
 <p>That concludes this episode of <em>Bugs from Hell</em>. Until next time&hellip;</p>
-]]></content>
-  </entry>
+</div>
   
-</feed>
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/6">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/4">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
+      </li>
+    
+  </ul>
+</section>
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2021 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
