@@ -2,12 +2,12 @@
 #      Main Configs       #
 # ----------------------- #
 
-url: http://dblohm7.ca
-title: Aaron Klotz at Mozilla
-subtitle: My adventures as a member of Mozilla's GeckoView Team
+url: https://dblohm7.ca
+title: Aaron Klotz's Software Blog
+subtitle: My Adventures as a Former Mozilla Employee
 author: Aaron Klotz
 simple_search: http://google.com/search
-description: Blog by Aaron Klotz, a Staff Platform Engineer at Mozilla, discussing his work.
+description: Blog by software engineer Aaron Klotz, discussing his work.
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
