@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: win32 | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:21:35-06:00</updated>
-  <id>http://dblohm7.ca/</id>
+  <title><![CDATA[Category: win32 | Aaron Klotz's Software Blog]]></title>
+  <link href="https://dblohm7.ca/blog/categories/win32/atom.xml" rel="self"/>
+  <link href="https://dblohm7.ca/"/>
+  <updated>2021-08-13T13:58:43-06:00</updated>
+  <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64]]></title>
-    <link href="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/"/>
+    <link href="https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/"/>
     <updated>2021-03-01T12:50:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1</id>
+    <id>https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1</id>
     <content type="html"><![CDATA[<p>In my continuing efforts to get caught up on discussing my work, I am now
 commencing a roundup for 2019. I think I am going to structure this one
 slightly differently from the last one: I am going to try to segment this
@@ -211,9 +211,9 @@ trampoline.</p>
   
   <entry>
     <title type="html"><![CDATA[Win32 Gotchas]]></title>
-    <link href="http://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
+    <link href="https://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
     <updated>2017-07-17T12:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
+    <id>https://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
     <content type="html"><![CDATA[<p>For the second time since I have been at Mozilla I have encountered a situation
 where hooks are called for notifications of a newly created window, but that
 window has not yet been initialized properly, causing the hooks to behave badly.</p>
@@ -307,9 +307,9 @@ window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
   
   <entry>
     <title type="html"><![CDATA[Why I prefer using CRITICAL_SECTIONs for mutexes in Windows Nightly builds]]></title>
-    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <link href="https://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
     <updated>2017-06-12T15:50:43-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <id>https://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
     <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
 use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
 <code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
@@ -358,9 +358,9 @@ archived article from MSDN Magazine.</p>
   
   <entry>
     <title type="html"><![CDATA[New Team, New Project]]></title>
-    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
+    <link href="https://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
     <updated>2016-04-06T21:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
+    <id>https://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
     <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
 Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
 in some form or another for several years prior to that, I decided that it was
@@ -422,9 +422,9 @@ Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MS
   
   <entry>
     <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
+    <link href="https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
     <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
+    <id>https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
     <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
 
 <p>The syntax is pretty simple:</p>

@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Aaron Klotz at Mozilla</title>
+  <title>Aaron Klotz&#8217;s Software Blog</title>
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="This is the third post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+  <meta name="description" content="This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for Q1. Yes, you are reading &hellip;">
   
 
@@ -19,9 +19,9 @@ blog entry for Q1. Yes, you are reading &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://dblohm7.ca/posts/2">
+  <link rel="canonical" href="https://dblohm7.ca/posts/2">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz's Software Blog" type="application/atom+xml">
   <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -49,9 +49,9 @@ blog entry for Q1. Yes, you are reading &hellip;">
 
 <body   >
   <header role="banner"><hgroup>
-  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  <h1><a href="/">Aaron Klotz&#8217;s Software Blog</a></h1>
   
-    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+    <h2>My Adventures as a Former Mozilla Employee</h2>
   
 </hgroup>
 
@@ -84,6 +84,119 @@ blog entry for Q1. Yes, you are reading &hellip;">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-01-05T00:00:00-07:00" pubdate data-updated="true">Jan 5th, 2021</time>
+        
+           | <a href="/blog/2021/01/05/2018-roundup-q2-part3/#disqus_thread"
+             data-disqus-identifier="https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><em>This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<p>Yes, you are reading the dates correctly: I am posting this nearly two years after I began this series.
+I am trying to get caught up on documenting my past work!</p>
+
+<p>Once I had landed the <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">skeletal implementation</a>
+of the launcher process, it was time to start making it do useful things.</p>
+
+<h3>Ensuring Medium Integrity</h3>
+
+<p>[<em>For an overview of Windows integrity levels, check out <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control">this MSDN page</a> &ndash; Aaron</em>]</p>
+
+<p>Since Windows Vista, security tokens for standard users have run at a medium integrity level (IL) by default.
+When UAC is enabled, members of the <code>Administrators</code> group also run as a standard user with a medium IL, with
+the additional ability of being able to &ldquo;elevate&rdquo; themselves to a high IL. When UAC is disabled, an administrator
+receives a token that always runs at the high integrity level.</p>
+
+<p>Running a process at a high IL is something that is not to be taken lightly: at that level, the process may
+alter system settings and access files that would otherwise be restricted by the OS.</p>
+
+<p>While our sandboxed content processes always run at a low IL, I believed that defense-in-depth called for ensuring
+that the browser process did not run at a high IL. In particular, I was concerned about cases where elevation
+might be accidental. Consider, for example, a hypothetical scenario where a system administrator is running two
+open command prompts, one elevated and one not, and they accidentally start Firefox from the one that is elevated.</p>
+
+<p>This was a perfect use case for the launcher process: it detects whether it is running at high IL, and if so,
+it launches the browser with medium integrity.</p>
+
+<p>Unfortunately some users prefer to configure their accounts to run at all times as <code>Administrator</code> with high integrity!
+This is <em>terrible</em> idea from a security perspective, but it is what it is; in my experience, most users who
+run with this configuration do so deliberately, and they have no interest in being lectured about it.</p>
+
+<p>Unfortunately, users running under this account configuration will experience side-effects of the Firefox browser
+process running at medium IL. Specifically, a medium IL process is unable to initiate IPC connections with a process
+running at a higher IL. This will break features such as drag-and-drop, since even the administrator&rsquo;s shell processes are running
+at a higher IL than Firefox.</p>
+
+<p>Being acutely aware of this issue, I included an escape hatch for these users: I implemented a command line option
+that prevents the launcher process from de-elevating when running with a high IL. I hate that I needed to do this,
+but moral suasion was not going to be an effective technique for solving this problem.</p>
+
+<h3>Process Mitigation Policies</h3>
+
+<p>Another tool that the launcher process enables us to utilize is process mitigation options. Introduced in Windows 8,
+the kernel provides several opt-in flags that allows us to add prophylactic policies to our processes in an effort to
+harden them against attacks.</p>
+
+<p>Additional flags have been added over time, so we must be careful to only set flags that are supported by the version
+of Windows on which we&rsquo;re running.</p>
+
+<p>We could have set some of these policies by calling the
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setprocessmitigationpolicy"><code>SetProcessMitigationPolicy</code></a> API.
+Unfortunately this API is designed for a process to use on itself once it is already running. This implies that there
+is a window of time between process creation and the time that the process enables its mitigations where an attack could occur.</p>
+
+<p>Fortunately, Windows provides a second avenue for setting process mitigation flags: These flags may be set as part of
+an attribute list in the <a href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-startupinfoexw"><code>STARTUPINFOEX</code></a>
+structure that we pass into <code>CreateProcess</code>.</p>
+
+<p>Perhaps you can now see where I am going with this: The launcher process enables us to specify process mitigation flags
+for the browser process <em>at the time of browser process creation</em>, thus preventing the aforementioned window of opportunity
+for attacks to occur!</p>
+
+<p>While there are other flags that we could support in the future, the initial mitigation policy that I added was the
+<a href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute"><code>PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON</code></a>
+flag. [<em>Note that I am only discussing flags applied to the browser process; sandboxed processes receive additional mitigations. &ndash; Aaron</em>]
+This flag forces the Windows loader to always use the Windows <code>system32</code> directory as the first directory in its search path,
+which prevents library preload attacks. Using this mitigation also gave us an unexpected performance gain on devices with
+magnetic hard drives: most of our DLL dependencies are either loaded using absolute paths, or reside in <code>system32</code>. With
+<code>system32</code> at the front of the loader&rsquo;s search path, the resulting reduction in hard disk seek times produced a slight but
+meaningful decrease in browser startup time! How I made these measurements is addressed in a future post.</p>
+
+<h3>Next Time</h3>
+
+<p>This concludes the Q2 topics that I wanted to discuss. Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/">H2</a>: Preparing to Enable the Launcher Process by Default.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a></h1>
     
     
@@ -102,7 +215,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
 <time datetime="2021-01-04T00:00:00-07:00" pubdate data-updated="true">Jan 4th, 2021</time>
         
            | <a href="/blog/2021/01/04/2018-roundup-q2-part2/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">Comments</a>
+             data-disqus-identifier="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">Comments</a>
         
       </p>
     
@@ -216,7 +329,7 @@ code, but this was also not yet an issue because the launcher process was opt-in
 <time datetime="2019-09-30T00:00:00-06:00" pubdate data-updated="true">Sep 30th, 2019</time>
         
            | <a href="/blog/2019/09/30/coming-around-full-circle/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/">Comments</a>
+             data-disqus-identifier="https://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/">Comments</a>
         
       </p>
     
@@ -291,201 +404,6 @@ which is something that I never really had a chance to try.</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2019/01/23/2018-roundup-q2-part1/">2018 Roundup: Q2, Part 1 - Refactoring the DLL Interceptor</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2019-01-23T00:00:00-07:00" pubdate data-updated="true">Jan 23rd, 2019</time>
-        
-           | <a href="/blog/2019/01/23/2018-roundup-q2-part1/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
-blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
-
-<p>As I have alluded to <a href="https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/">previously</a>,
-Gecko includes a Detours-style API hooking mechanism for Windows. In Gecko, this code is referred to
-as the &ldquo;DLL Interceptor.&rdquo; We use the DLL interceptor to instrument various functions within our own
-processes. As a prerequisite for future DLL injection mitigations, I needed to spend a good chunk of
-Q2 refactoring this code. While I was in there, I took the opportunity to improve the interceptor&rsquo;s
-memory efficiency, thus benefitting the Fission MemShrink project. [<em>When these changes landed, we were
-not yet tracking the memory savings, but I will include a rough estimate <a href="#vmsharing">later</a> in this post.</em>]</p>
-
-<h3>A Brief Overview of Detours-style API Hooking</h3>
-
-<p>While many distinct function hooking techniques are used in the Windows ecosystem, the Detours-style
-hook is one of the most effective and most popular. While I am not going to go into too many specifics
-here, I&rsquo;d like to offer a quick overview. In this description, &ldquo;target&rdquo; is the function being hooked.</p>
-
-<p>Here is what happens when a function is detoured:</p>
-
-<ol>
-<li><p>Allocate a chunk of memory to serve as a &ldquo;trampoline.&rdquo; We must be able to adjust the protection
-attributes on that memory.</p></li>
-<li><p>Disassemble enough of the target to make room for a <code>jmp</code> instruction. On 32-bit x86 processors,
-this requires 5 bytes. x86-64 is more complicated, but generally, to <code>jmp</code> to an absolute address, we
-try to make room for 13 bytes.</p></li>
-<li><p>Copy the instructions from step 2 over to the trampoline.</p></li>
-<li><p>At the beginning of the target function, write a <code>jmp</code> to the hook function.</p></li>
-<li><p>Append additional instructions to the trampoline that, when executed, will cause the processor to
-jump back to the first valid instruction after the <code>jmp</code> written in step 4.</p></li>
-<li><p>If the hook function wants to pass control on to the original target function, it calls the
-trampoline.</p></li>
-</ol>
-
-
-<p>Note that these steps don&rsquo;t occur <em>exactly</em> in the order specified above; I selected the above ordering
-in an effort to simplify my description.</p>
-
-<p>Here is my attempt at visualizing the control flow of a detoured function on x86-64:</p>
-
-<p><img src="https://dblohm7.ca/images/detours_hook.svg"></p>
-
-<h3>Refactoring</h3>
-
-<p>Previously, the DLL interceptor relied on directly manipulating pointers in order to read and write the
-various instructions involved in the hook. In <a title="Parameterize memory operations in WindowsDllInterceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432653">bug 1432653</a> I changed things so that the memory
-operations are parameterized based on two orthogonal concepts:</p>
-
-<ul>
-<li>In-process vs out-of-process memory access: I wanted to be able to abstract reads and writes such
-that we could optionally set a hook in another process from our own.</li>
-<li>Virtual memory allocation scheme: I wanted to be able to change how trampoline memory was allocated.
-Previously, each instance of <code>WindowsDllInterceptor</code> allocated its own page of memory for trampolines,
-but each instance also typically only sets one or two hooks. This means that most of the 4KiB page
-was unused. Furthermore, since Windows allocates blocks of pages on a 64KiB boundary, this wasted a
-lot of precious virtual address space in our 32-bit builds.</li>
-</ul>
-
-
-<p>By refactoring and parameterizing these operations, we ended up with the following combinations:</p>
-
-<ul>
-<li>In-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;</li>
-<li>In-process memory access, all <code>WindowsDllInterceptor</code> instances within a module <em>share</em> trampoline space;</li>
-<li>Out-of-process memory access, each <code>WindowsDllInterceptor</code> instance receives its own trampoline space;</li>
-<li>Out-of-process memory access, all <code>WindowsDllInterceptor</code> instances within a module share trampoline space (currently
-not implemented as this option is not particularly useful at the moment).</li>
-</ul>
-
-
-<p>Instead of directly manipulating pointers, we now use instances of <code>ReadOnlyTargetFunction</code>,
-<code>WritableTargetFunction</code>, and <code>Trampoline</code> to manipulate our code/data. Those classes in turn use the
-memory management and virtual memory allocation policies to perform the actual reading and writing.</p>
-
-<h3>Memory Management Policies</h3>
-
-<p>The interceptor now supports two policies, <code>MMPolicyInProcess</code> and <code>MMPolicyOutOfProcess</code>. Each policy
-must implement the following memory operations:</p>
-
-<ul>
-<li>Read</li>
-<li>Write</li>
-<li>Change protection attributes</li>
-<li>Reserve trampoline space</li>
-<li>Commit trampoline space</li>
-</ul>
-
-
-<p><code>MMPolicyInProcess</code> is implemented using <code>memcpy</code> for read and write, <code>VirtualProtect</code>
-for protection attribute changes, and <code>VirtualAlloc</code> for reserving and committing trampoline space.</p>
-
-<p><code>MMPolicyOutOfProcess</code> uses <code>ReadProcessMemory</code> and <code>WriteProcessMemory</code> for read and write. As a perf
-optimization, we try to batch reads and writes together to reduce the system call traffic. We obviously
-use <code>VirtualProtectEx</code> to adjust protection attributes in the other process.</p>
-
-<p>Out-of-process trampoline reservation and commitment, however, is a bit different and is worth a
-separate call-out. We allocate trampoline space using shared memory. It is mapped into the local
-process with read+write permissions using <code>MapViewOfFile</code>. The memory is mapped into the remote process
-as read+execute using some code that I wrote in <a title="Add out-of-process memory access policies to DLL interceptor" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451511">bug 1451511</a> that either uses <code>NtMapViewOfSection</code> or
-<code>MapViewOfFile2</code>, depending on availability. Individual pages from those chunks are then committed via
-<code>VirtualAlloc</code> in the local process and <code>VirtualAllocEx</code> in the remote process. This scheme enables
-us to read and write to trampoline memory directly, without needing to do cross-process reads and writes!</p>
-
-<h3>VM Sharing Policies</h3>
-
-<p>The code for these policies is a lot simpler than the code for the memory management policies. We now
-have <code>VMSharingPolicyUnique</code> and <code>VMSharingPolicyShared</code>. Each of these policies must implement the
-following operations:</p>
-
-<ul>
-<li>Reserve space for up to <em>N</em> trampolines of size <em>K</em>;</li>
-<li>Obtain a <code>Trampoline</code> object for the next available <em>K</em>-byte trampoline slot;</li>
-<li>Return an iterable collection of all extant trampolines.</li>
-</ul>
-
-
-<p><code>VMSharingPolicyShared</code> is actually implemented by delegating to a <code>static</code> instance of
-<code>VMSharingPolicyUnique</code>.</p>
-
-<h3>Implications of Refactoring</h3>
-
-<p>To determine the performance implications, I added timings to our DLL Interceptor unit test. I was
-very happy to see that, despite the additional layers of abstraction, the C++ compiler&rsquo;s optimizer was
-doing its job: There was no performance impact whatsoever!</p>
-
-<p><a name="vmsharing"></a>Once the refactoring was complete, I switched the default VM Sharing Policy for <code>WindowsDllInterceptor</code>
-over to <code>VMSharingPolicyShared</code> in <a title="DLL interceptors should share trampoline VM" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1451524">bug 1451524</a>.</p>
-
-<p>Browsing today&rsquo;s <code>mozilla-central</code> tip, I count 14 locations where we instantiate interceptors inside
-<code>xul.dll</code>. Given that not all interceptors are necessarily instantiated at once, I am now offering a
-worst-case back-of-the-napkin estimate of the memory savings:</p>
-
-<ul>
-<li>Each interceptor would likely be consuming 4KiB (most of which is unused) of committed VM. Due to
-Windows&#8217; 64 KiB allocation guanularity, each interceptor would be leaving a further 60KiB
-of address space in a free but unusable state. Assuming all 14 interceptors were actually instantiated,
-they would thus consume a combined 56KiB of committed VM and 840KiB of free but unusable address space.</li>
-<li>By sharing trampoline VM, the interceptors would consume only 4KiB combined and waste only 60KiB of
-address space, thus yielding savings of 52KiB in committed memory and 780KiB in addressable memory.</li>
-</ul>
-
-
-<h3>Oh, and One More Thing</h3>
-
-<p>Another problem that I discovered during this refactoring was <a title="Repeated failed function hook attempts cause exhaustion of interceptor trampoline space" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1459335">bug 1459335</a>. It turns out that some
-of the interceptor&rsquo;s callers were not distinguishing between &ldquo;I have not set this hook yet&rdquo; and &ldquo;I
-attempted to set this hook but it failed&rdquo; scenarios. Across several call sites, I discovered that
-our code would repeatedly retry to set hooks even when they had previously failed, causing leakage
-of trampoline space!</p>
-
-<p>To fix this, I modified the interceptor&rsquo;s interface so that we use one-time initialization APIs to
-set hooks; since landing this bug, it is no longer possible for clients of the DLL interceptor to
-set a hook that had previously failed to be set.</p>
-
-<p>Quantifying the memory costs of this bug is&hellip; non-trivial, but it suffices to say that fixing
-this bug probably resulted in the savings of at least a few hundred KiB in committed VM on
-affected machines.</p>
-
-<p>That&rsquo;s it for today&rsquo;s post, folks! Thanks for reading! Coming up in <a href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/">Q2, Part 2</a>: Implementing a Skeletal Launcher Process</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -503,6 +421,10 @@ affected machines.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2021/08/13/all-good-things/">All Good Things&#8230;</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
       </li>
     
@@ -516,10 +438,6 @@ affected machines.</p>
     
       <li class="post">
         <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
       </li>
     
   </ul>

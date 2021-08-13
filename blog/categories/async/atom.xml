@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: async | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/async/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:21:35-06:00</updated>
-  <id>http://dblohm7.ca/</id>
+  <title><![CDATA[Category: async | Aaron Klotz's Software Blog]]></title>
+  <link href="https://dblohm7.ca/blog/categories/async/atom.xml" rel="self"/>
+  <link href="https://dblohm7.ca/"/>
+  <updated>2021-08-13T13:58:43-06:00</updated>
+  <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
-    <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
+    <link href="https://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
     <updated>2017-04-07T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
+    <id>https://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
     <content type="html"><![CDATA[<p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
 initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
 to remain enabled on release, so we cut our losses and cancelled the project
@@ -114,9 +114,9 @@ future.</p>
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: Nightly]]></title>
-    <link href="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/"/>
+    <link href="https://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/"/>
     <updated>2014-12-31T12:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly</id>
+    <id>https://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly</id>
     <content type="html"><![CDATA[<p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asynchronous Plugin
 Initialization is available for testing. It is deactivated by default, so in
 order to try it out you will need to navigate to <code>about:config</code> and toggle the
@@ -130,9 +130,9 @@ order to try it out you will need to navigate to <code>about:config</code> and t
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: An Introduction]]></title>
-    <link href="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/"/>
+    <link href="https://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/"/>
     <updated>2014-06-17T02:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction</id>
+    <id>https://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction</id>
     <content type="html"><![CDATA[<p>I have spent a lot of time this quarter working on <a title="Asynchronous Initialization of Out-of-process Plugins" href="https://bugzilla.mozilla.org/show_bug.cgi?id=998863">bug 998863</a>, &ldquo;Asynchronous
 Initialization of Out-of-process Plugins.&rdquo; While the bug summary is fairly self
 explanatory, I would like to provide some more details about why I am doing this

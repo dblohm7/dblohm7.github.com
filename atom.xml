@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:21:35-06:00</updated>
-  <id>http://dblohm7.ca/</id>
+  <title><![CDATA[Aaron Klotz's Software Blog]]></title>
+  <link href="https://dblohm7.ca/atom.xml" rel="self"/>
+  <link href="https://dblohm7.ca/"/>
+  <updated>2021-08-13T13:58:43-06:00</updated>
+  <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
     
@@ -14,10 +14,37 @@
 
   
   <entry>
+    <title type="html"><![CDATA[All Good Things...]]></title>
+    <link href="https://dblohm7.ca/blog/2021/08/13/all-good-things/"/>
+    <updated>2021-08-13T14:00:00-06:00</updated>
+    <id>https://dblohm7.ca/blog/2021/08/13/all-good-things</id>
+    <content type="html"><![CDATA[<p>Today is my final day as an employee of Mozilla Corporation.</p>
+
+<p>My first patch landed in Firefox 19, and my final patch as an employee has
+landed in Nightly for Firefox 93.</p>
+
+<p>I&rsquo;ll be moving on to something new in a few weeks&#8217; time, but for now, I&rsquo;d just
+like to say this:</p>
+
+<p>My time at Mozilla has made me into a better software developer, a better
+leader, and more imporantly, a better person.</p>
+
+<p>I&rsquo;d like to thank all the Mozillians whom I have interacted with over the years
+for their contributions to making that happen.</p>
+
+<p>I will continue to update this blog with catch-up posts describing my Mozilla
+work, though I am unsure what content I will be able to contribute beyond that.
+Time will tell!</p>
+
+<p>Until next time&hellip;</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64]]></title>
-    <link href="http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/"/>
+    <link href="https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1/"/>
     <updated>2021-03-01T12:50:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1</id>
+    <id>https://dblohm7.ca/blog/2021/03/01/2019-roundup-part-1</id>
     <content type="html"><![CDATA[<p>In my continuing efforts to get caught up on discussing my work, I am now
 commencing a roundup for 2019. I think I am going to structure this one
 slightly differently from the last one: I am going to try to segment this
@@ -211,9 +238,9 @@ trampoline.</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default]]></title>
-    <link href="http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/"/>
+    <link href="https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/"/>
     <updated>2021-02-24T17:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2</id>
+    <id>https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2</id>
     <content type="html"><![CDATA[<p><em>This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -401,9 +428,9 @@ Stay tuned for more roundups in the future!</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process]]></title>
-    <link href="http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/"/>
+    <link href="https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/"/>
     <updated>2021-01-05T09:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3</id>
+    <id>https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3</id>
     <content type="html"><![CDATA[<p><em>This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -485,9 +512,9 @@ meaningful decrease in browser startup time! How I made these measurements is ad
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process]]></title>
-    <link href="http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/"/>
+    <link href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/"/>
     <updated>2021-01-04T15:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2</id>
+    <id>https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2</id>
     <content type="html"><![CDATA[<p><em>This is the third post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -570,9 +597,9 @@ code, but this was also not yet an issue because the launcher process was opt-in
   
   <entry>
     <title type="html"><![CDATA[Coming Around Full Circle]]></title>
-    <link href="http://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/"/>
+    <link href="https://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/"/>
     <updated>2019-09-30T10:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2019/09/30/coming-around-full-circle</id>
+    <id>https://dblohm7.ca/blog/2019/09/30/coming-around-full-circle</id>
     <content type="html"><![CDATA[<p>One thing about me that most Mozillians don&rsquo;t know is that, when I first applied to work at MoCo,
 I had applied to work on the mobile platform. When all was said and done, it was decided at the time
 that I would be a better fit for an opening on Taras Glek&rsquo;s platform performance team.</p>
@@ -639,9 +666,9 @@ which is something that I never really had a chance to try.</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 1 - Refactoring the DLL Interceptor]]></title>
-    <link href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/"/>
+    <link href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/"/>
     <updated>2019-01-23T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
+    <id>https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
     <content type="html"><![CDATA[<p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -805,9 +832,9 @@ affected machines.</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q1 - Learning More About DLLs Injected Into Firefox]]></title>
-    <link href="http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/"/>
+    <link href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/"/>
     <updated>2019-01-18T17:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1</id>
+    <id>https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1</id>
     <content type="html"><![CDATA[<p>I had a very busy 2018. So busy, in fact, that I have not been able to devote any time to actually
 discussing what I worked on! I had intended to write these posts during the end of December, but a
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
@@ -919,9 +946,9 @@ Refactoring the DLL Interceptor!</p>
   
   <entry>
     <title type="html"><![CDATA[Legacy Firefox Extensions and "Userspace"]]></title>
-    <link href="http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace/"/>
+    <link href="https://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace/"/>
     <updated>2017-11-16T13:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace</id>
+    <id>https://dblohm7.ca/blog/2017/11/16/legacy-firefox-extensions-and-userspace</id>
     <content type="html"><![CDATA[<p>This week&rsquo;s release of Firefox Quantum has prompted all kinds of feedback, both
 positive and negative. That is not surprising to anybody &mdash; any software that
 has a large number of users is going to be a topic for discussion, especially
@@ -1004,9 +1031,9 @@ ecosystem that <em>does</em> fit with that analogy.</p>
   
   <entry>
     <title type="html"><![CDATA[Win32 Gotchas]]></title>
-    <link href="http://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
+    <link href="https://dblohm7.ca/blog/2017/07/17/win32-gotchas/"/>
     <updated>2017-07-17T12:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
+    <id>https://dblohm7.ca/blog/2017/07/17/win32-gotchas</id>
     <content type="html"><![CDATA[<p>For the second time since I have been at Mozilla I have encountered a situation
 where hooks are called for notifications of a newly created window, but that
 window has not yet been initialized properly, causing the hooks to behave badly.</p>
@@ -1127,9 +1154,9 @@ window&rsquo;s <code>WM_CREATE</code> handler instead.</p>
   
   <entry>
     <title type="html"><![CDATA[Why I Prefer Using CRITICAL_SECTIONs for Mutexes in Windows Nightly Builds]]></title>
-    <link href="http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
+    <link href="https://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds/"/>
     <updated>2017-06-12T15:50:43-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
+    <id>https://dblohm7.ca/blog/2017/06/12/why-i-prefer-using-critical-sections-for-mutexes-in-windows-nightly-builds</id>
     <content type="html"><![CDATA[<p>In the past I have argued that our Nightly builds, both debug and release, should
 use <code>CRITICAL_SECTION</code>s (with full debug info) for our implementation of
 <code>mozilla::Mutex</code>. I&rsquo;d like to illustrate some reasons why this is so useful.</p>
@@ -1178,9 +1205,9 @@ archived article from MSDN Magazine.</p>
   
   <entry>
     <title type="html"><![CDATA[Asynchronous Plugin Initialization: Requiem]]></title>
-    <link href="http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
+    <link href="https://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem/"/>
     <updated>2017-04-07T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
+    <id>https://dblohm7.ca/blog/2017/04/07/asynchronous-plugin-initialization-requiem</id>
     <content type="html"><![CDATA[<p>My colleague <del>bsmedberg</del> njn is going to be removing asynchronous plugin
 initialization in <a title="Remove support for async plugin init" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1352575">bug 1352575</a>. Sadly the feature never became solid enough
 to remain enabled on release, so we cut our losses and cancelled the project
@@ -1277,9 +1304,9 @@ future.</p>
   
   <entry>
     <title type="html"><![CDATA[New Team, New Project]]></title>
-    <link href="http://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
+    <link href="https://dblohm7.ca/blog/2016/04/06/new-team-new-project/"/>
     <updated>2016-04-06T21:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
+    <id>https://dblohm7.ca/blog/2016/04/06/new-team-new-project</id>
     <content type="html"><![CDATA[<p>In February of this year I switched teams: After 3+ years on Mozilla&rsquo;s
 Performance Team, and after having the word &ldquo;performance&rdquo; in my job description
 in some form or another for several years prior to that, I decided that it was
@@ -1341,9 +1368,9 @@ Wicked Code, August 2000 <em>MSDN Magazine</em>. This is not available on the MS
   
   <entry>
     <title type="html"><![CDATA[New Mozdbgext Command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
+    <link href="https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
     <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
+    <id>https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
     <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
 
 <p>The syntax is pretty simple:</p>
@@ -1449,9 +1476,9 @@ the pointer.</p>
   
   <entry>
     <title type="html"><![CDATA[Announcing Mozdbgext]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
+    <link href="https://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
     <updated>2016-01-26T12:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
+    <id>https://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
     <content type="html"><![CDATA[<p>A well-known problem at Mozilla is that, while most of our desktop users run
 Windows, most of Mozilla&rsquo;s developers do not. There are a lot of problems that
 result from that, but one of the most frustrating to me is that sometimes
@@ -1553,9 +1580,9 @@ including <code>cdb</code>.</p>
   
   <entry>
     <title type="html"><![CDATA[Bugs From Hell: Injected Third-party Code + Detours = a Bad Time]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/"/>
+    <link href="https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time/"/>
     <updated>2016-01-11T13:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time</id>
+    <id>https://dblohm7.ca/blog/2016/01/11/bugs-from-hell-injected-third-party-code-plus-detours-equals-a-bad-time</id>
     <content type="html"><![CDATA[<p>Happy New Year!</p>
 
 <p>I&rsquo;m finally getting &lsquo;round to writing about a nasty bug that I had to spend a
@@ -1929,9 +1956,9 @@ whose relationship to this bug was not obvious.</p>
   
   <entry>
     <title type="html"><![CDATA[On WebExtensions]]></title>
-    <link href="http://dblohm7.ca/blog/2015/08/30/on-webextensions/"/>
+    <link href="https://dblohm7.ca/blog/2015/08/30/on-webextensions/"/>
     <updated>2015-08-30T02:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/08/30/on-webextensions</id>
+    <id>https://dblohm7.ca/blog/2015/08/30/on-webextensions</id>
     <content type="html"><![CDATA[<p>There has been enough that has been said over the past week about <a href="https://blog.mozilla.org/addons/2015/08/21/the-future-of-developing-firefox-add-ons/">WebExtensions</a>
 that I wasn&rsquo;t sure if I wanted to write this post. As usual, I can&rsquo;t seem to
 help myself. Note the usual disclaimer that this is my personal opinion. Further
@@ -1995,9 +2022,9 @@ same functionality to a mechanism that is more formal and abstract.</p>
   
   <entry>
     <title type="html"><![CDATA[Interesting Win32 APIs]]></title>
-    <link href="http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
+    <link href="https://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/"/>
     <updated>2015-07-28T11:30:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
+    <id>https://dblohm7.ca/blog/2015/07/28/interesting-win32-apis</id>
     <content type="html"><![CDATA[<p>Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
 changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
 many changes, but the ones that were there are quite exciting IMHO. While
@@ -2049,15 +2076,15 @@ platforms, so we should probably add this to the Win32 port.</p>
   
   <entry>
     <title type="html"><![CDATA[WaitMessage Considered Harmful]]></title>
-    <link href="http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/"/>
+    <link href="https://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful/"/>
     <updated>2015-03-12T15:00:00-06:00</updated>
-    <id>http://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful</id>
+    <id>https://dblohm7.ca/blog/2015/03/12/waitmessage-considered-harmful</id>
     <content type="html"><![CDATA[<p>I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame.</p>
 
 <p>Today I want to talk about some code that we imported from Chromium some time
 ago. I replaced it in Mozilla&rsquo;s codebase a few months back in <a title="IPC message pump for windows should use WinUtils::WaitForMessage" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1072752">bug 1072752</a>:</p>
 
-<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='http://dblohm7.ca/downloads/code/message_pump_win.cc'>download</a></figcaption>
+<figure class='code'><figcaption><span> (message_pump_win.cc)</span> <a href='https://dblohm7.ca/downloads/code/message_pump_win.cc'>download</a></figcaption>
 <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>261</span>
 <span class='line-number'>262</span>
 <span class='line-number'>263</span>
@@ -2145,9 +2172,9 @@ own windows to Firefox&rsquo;s windows.</p>
   
   <entry>
     <title type="html"><![CDATA[Attached Input Queues on Firefox for Windows]]></title>
-    <link href="http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/"/>
+    <link href="https://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows/"/>
     <updated>2015-03-03T17:28:06-07:00</updated>
-    <id>http://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows</id>
+    <id>https://dblohm7.ca/blog/2015/03/03/attached-input-queues-on-firefox-for-windows</id>
     <content type="html"><![CDATA[<p>I&rsquo;ve <a href="https://dblohm7.ca/blog/2012/11/22/plugin-hang-user-interface-for-firefox/">previously</a> <a href="https://dblohm7.ca/blog/2013/02/15/plugin-hang-ui-on-aurora/">blogged</a>
 indirectly about attached input queues, but today I want to address the issue directly. What once was a nuisance in the realm of plugin hangs has grown into a more
 serious problem in the land of OMTC and e10s.</p>
@@ -2241,22 +2268,6 @@ confirming previous hypotheses that I&rsquo;ve discussed with colleagues in the 
 <p>In my opinion, my Input Queue Visualizer has already yielded some very interesting data. Hopefully this will help us to troubleshoot our issues in the future. Oh,
 and the code is up on <a href="https://github.com/dblohm7/iqvis">GitHub</a>! It&rsquo;s poorly documented at the moment, but just remember to only try running it on 64-bit Windows
 8.1 for the time being!</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Asynchronous Plugin Initialization: Nightly]]></title>
-    <link href="http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/"/>
-    <updated>2014-12-31T12:00:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly</id>
-    <content type="html"><![CDATA[<p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asynchronous Plugin
-Initialization is available for testing. It is deactivated by default, so in
-order to try it out you will need to navigate to <code>about:config</code> and toggle the
-<code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
-
-<p>If you experience any problems, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Plug-ins&amp;blocked=1116806">file a bug</a> that blocks <a title="Let Asynchronous Plugin Initialization ride the train" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1116806">bug 1116806</a>.</p>
-
-<p>Happy New Year!</p>
 ]]></content>
   </entry>
   

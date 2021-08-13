@@ -5,12 +5,13 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Aaron Klotz at Mozilla</title>
+  <title>Aaron Klotz&#8217;s Software Blog</title>
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="Something that I&rsquo;ve been noticing on numerous social media and discussion forum
-sites is that whenever Firefox comes up, inevitably there are &hellip;">
+  <meta name="description" content="Today&rsquo;s Nightly 34 build includes the work I did
+for bug 286355: a profile unlocker for our Windows users. This should be very
+helpful to those &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,9 +20,9 @@ sites is that whenever Firefox comes up, inevitably there are &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://dblohm7.ca/posts/8">
+  <link rel="canonical" href="https://dblohm7.ca/posts/8">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="Aaron Klotz at Mozilla" type="application/atom+xml">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz's Software Blog" type="application/atom+xml">
   <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
   <script src="/javascripts/modernizr-2.0.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -49,9 +50,9 @@ sites is that whenever Firefox comes up, inevitably there are &hellip;">
 
 <body   >
   <header role="banner"><hgroup>
-  <h1><a href="/">Aaron Klotz at Mozilla</a></h1>
+  <h1><a href="/">Aaron Klotz&#8217;s Software Blog</a></h1>
   
-    <h2>My adventures as a member of Mozilla&#8217;s GeckoView Team</h2>
+    <h2>My Adventures as a Former Mozilla Employee</h2>
   
 </hgroup>
 
@@ -84,6 +85,66 @@ sites is that whenever Firefox comes up, inevitably there are &hellip;">
       
   <header>
     
+      <h1 class="entry-title"><a href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/">Profile Unlocking in Firefox 34 for Windows</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2014-08-21T00:00:00-06:00" pubdate data-updated="true">Aug 21st, 2014</time>
+        
+           | <a href="/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/#disqus_thread"
+             data-disqus-identifier="https://dblohm7.ca/blog/2014/08/21/profile-unlocking-in-firefox-34-for-windows/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Today&rsquo;s <a href="http://nightly.mozilla.org">Nightly 34</a> build includes the work I did
+for <a title="Need win32 implementation of nsIProfileUnlocker" href="https://bugzilla.mozilla.org/show_bug.cgi?id=286355">bug 286355</a>: a profile unlocker for our Windows users. This should be very
+helpful to those users whose workflow is interrupted by a Firefox instance that
+cannot start because a previous Firefox instance has not finished shutting down.</p>
+
+<p>Firefox 34 users running Windows Vista or newer will now be presented with this
+dialog box:</p>
+
+<p><a href="https://dblohm7.ca/images/profile-unlocker.png"><img src="https://dblohm7.ca/images/profile-unlocker.png"></a></p>
+
+<p>Clicking &ldquo;Close Firefox&rdquo; will terminate that previous instance and proceed
+with starting your new Firefox instance.</p>
+
+<p>Unfortunately this feature is not available to Windows XP users. To support this
+feature on Windows XP we would need to call undocumented API functions. I
+prefer to avoid calling undocumented APIs when writing production software due
+to the potential stability and compatibility issues that can arise from doing
+so.</p>
+
+<p>While this feature adds some convenience to an otherwise annoying issue, please
+be assured that the Desktop Performance Team will continue to investigate and
+fix the root causes of long shutdowns so that a profile unlocker hopefully
+becomes unnecessary.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
       <h1 class="entry-title"><a href="/blog/2014/08/14/diffusion-of-responsibility/">Diffusion of Responsibility</a></h1>
     
     
@@ -102,7 +163,7 @@ sites is that whenever Firefox comes up, inevitably there are &hellip;">
 <time datetime="2014-08-14T00:00:00-06:00" pubdate data-updated="true">Aug 14th, 2014</time>
         
            | <a href="/blog/2014/08/14/diffusion-of-responsibility/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
+             data-disqus-identifier="https://dblohm7.ca/blog/2014/08/14/diffusion-of-responsibility/">Comments</a>
         
       </p>
     
@@ -270,7 +331,7 @@ comments. Thanks for reading!</p>
 <time datetime="2014-06-17T00:00:00-06:00" pubdate data-updated="true">Jun 17th, 2014</time>
         
            | <a href="/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Comments</a>
+             data-disqus-identifier="https://dblohm7.ca/blog/2014/06/17/asynchronous-plugin-initialization-an-introduction/">Comments</a>
         
       </p>
     
@@ -343,85 +404,6 @@ information in this post is subject to change. :-)</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Detecting Main Thread I/O With SPS</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2013-06-12T00:00:00-06:00" pubdate data-updated="true">Jun 12th, 2013</time>
-        
-           | <a href="/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/#disqus_thread"
-             data-disqus-identifier="http://dblohm7.ca/blog/2013/06/12/detecting-main-thread-i-slash-o-with-sps/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867762">bug 867762</a> I am landing I/O
-interpose facilities for SPS. This feature will allow main thread I/O to be
-displayed in the profiler UI.</p>
-
-<p>There are a few components to this patch. Classes that implement the
-<code>IOInterposerModule</code> interface are responsible for hooking into an arbitrary I/O
-facility and calling into <code>IOInterposer</code> with those events.</p>
-
-<p>The <code>IOInterposer</code> receives those events and then dispatches them to any registered
-observers. For the purposes of SPS there is only one observer,
-<code>ProfilerIOInterposeObserver</code>, however I wrote this keeping in mind that we
-may eventually want to use the I/O interpose facilities for other purposes (such
-as shutdown write poisioning).</p>
-
-<p>For bug 867762 I have implemented two modules. <code>NSPRInterposer</code> hooks into NSPR
-file I/O and generates events whenever a <code>PR_Read</code>, <code>PR_Write</code>, or <code>PR_Sync</code> occurs.
-The second module, <code>SQLiteInterposer</code>, leverages the SQLite VFS that we use for
-telemetry to tap into reads, writes, and fsyncs generated by SQLite. In the future
-we expect to expand this into several additional modules. Some ideas include a module
-that uses Event Tracing for Windows to read events from the Windows kernel and a
-module that interposes calls to <code>read</code>, <code>write</code>, and <code>fsync</code> on Linux.</p>
-
-<p>On the observer side of things, for now we simply insert a marker into the profiler
-timeline whenever main thread I/O is reported. Here is a sample screenshot of the
-markers in action (the pink stuff for readers who are unfamiliar with SPS markers):</p>
-
-<p><a href="https://dblohm7.ca/images/iomarkers.png"><img src="https://dblohm7.ca/images/iomarkers.png"></a></p>
-
-<p>In <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=867757">bug 867757</a> (under review)
-this will become more sophisticated, as SPS will immediately sample the callstack of
-the thread whose I/O has been intercepted. This annotated stack will be inserted
-directly into the timeline.</p>
-
-<p>There will need to be some UI changes for this to be presented in a reasonable way,
-but with both existing patches applied the data is already useful. By firing up
-Cleopatra and filtering on either <code>NSPRInterposer</code> or <code>SQLiteInterposer</code>, you can
-isolate and view the main thread I/O stacks:</p>
-
-<p><a href="https://dblohm7.ca/images/iofilteredstacks.png"><img src="https://dblohm7.ca/images/iofilteredstacks.png"></a></p>
-
-<p>Hopefully these patches will prove to be beneficial to our efforts to eliminate
-main thread I/O.</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/9">&larr; Older</a>
@@ -439,6 +421,10 @@ main thread I/O.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2021/08/13/all-good-things/">All Good Things&#8230;</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
       </li>
     
@@ -452,10 +438,6 @@ main thread I/O.</p>
     
       <li class="post">
         <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a>
       </li>
     
   </ul>

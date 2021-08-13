@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: mozdbgext | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/mozdbgext/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:21:35-06:00</updated>
-  <id>http://dblohm7.ca/</id>
+  <title><![CDATA[Category: mozdbgext | Aaron Klotz's Software Blog]]></title>
+  <link href="https://dblohm7.ca/blog/categories/mozdbgext/atom.xml" rel="self"/>
+  <link href="https://dblohm7.ca/"/>
+  <updated>2021-08-13T13:58:43-06:00</updated>
+  <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>
-    <link href="http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
+    <link href="https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat/"/>
     <updated>2016-02-11T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
+    <id>https://dblohm7.ca/blog/2016/02/11/new-mozdbgext-command-iat</id>
     <content type="html"><![CDATA[<p>As of today I have added a new command to <code>mozdbgext</code>: <code>!iat</code>.</p>
 
 <p>The syntax is pretty simple:</p>
@@ -123,9 +123,9 @@ the pointer.</p>
   
   <entry>
     <title type="html"><![CDATA[Announcing mozdbgext]]></title>
-    <link href="http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
+    <link href="https://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext/"/>
     <updated>2016-01-26T12:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
+    <id>https://dblohm7.ca/blog/2016/01/26/announcing-mozdbgext</id>
     <content type="html"><![CDATA[<p>A well-known problem at Mozilla is that, while most of our desktop users run
 Windows, most of Mozilla&rsquo;s developers do not. There are a lot of problems that
 result from that, but one of the most frustrating to me is that sometimes

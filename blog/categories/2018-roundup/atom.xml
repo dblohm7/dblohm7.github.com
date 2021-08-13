@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: 2018 roundup | Aaron Klotz at Mozilla]]></title>
-  <link href="http://dblohm7.ca/blog/categories/2018-roundup/atom.xml" rel="self"/>
-  <link href="http://dblohm7.ca/"/>
-  <updated>2021-07-26T12:21:35-06:00</updated>
-  <id>http://dblohm7.ca/</id>
+  <title><![CDATA[Category: 2018 roundup | Aaron Klotz's Software Blog]]></title>
+  <link href="https://dblohm7.ca/blog/categories/2018-roundup/atom.xml" rel="self"/>
+  <link href="https://dblohm7.ca/"/>
+  <updated>2021-08-13T13:58:43-06:00</updated>
+  <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default]]></title>
-    <link href="http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/"/>
+    <link href="https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/"/>
     <updated>2021-02-24T17:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/02/24/2018-roundup-h2</id>
+    <id>https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2</id>
     <content type="html"><![CDATA[<p><em>This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -205,9 +205,9 @@ Stay tuned for more roundups in the future!</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process]]></title>
-    <link href="http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/"/>
+    <link href="https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3/"/>
     <updated>2021-01-05T09:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3</id>
+    <id>https://dblohm7.ca/blog/2021/01/05/2018-roundup-q2-part3</id>
     <content type="html"><![CDATA[<p><em>This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -289,9 +289,9 @@ meaningful decrease in browser startup time! How I made these measurements is ad
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process]]></title>
-    <link href="http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/"/>
+    <link href="https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2/"/>
     <updated>2021-01-04T15:45:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2</id>
+    <id>https://dblohm7.ca/blog/2021/01/04/2018-roundup-q2-part2</id>
     <content type="html"><![CDATA[<p><em>This is the third post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -374,9 +374,9 @@ code, but this was also not yet an issue because the launcher process was opt-in
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q2, Part 1 - Refactoring the DLL Interceptor]]></title>
-    <link href="http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/"/>
+    <link href="https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1/"/>
     <updated>2019-01-23T18:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
+    <id>https://dblohm7.ca/blog/2019/01/23/2018-roundup-q2-part1</id>
     <content type="html"><![CDATA[<p><em>This is the second post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
 
@@ -540,9 +540,9 @@ affected machines.</p>
   
   <entry>
     <title type="html"><![CDATA[2018 Roundup: Q1 - Learning More About DLLs Injected into Firefox]]></title>
-    <link href="http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/"/>
+    <link href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/"/>
     <updated>2019-01-18T17:30:00-07:00</updated>
-    <id>http://dblohm7.ca/blog/2019/01/18/2018-roundup-q1</id>
+    <id>https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1</id>
     <content type="html"><![CDATA[<p>I had a very busy 2018. So busy, in fact, that I have not been able to devote any time to actually
 discussing what I worked on! I had intended to write these posts during the end of December, but a
 hardware failure delayed that until the new year. Alas, here we are in 2019, and I am going to do a
