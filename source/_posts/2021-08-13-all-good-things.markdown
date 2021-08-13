@@ -14,7 +14,7 @@ I'll be moving on to something new in a few weeks' time, but for now, I'd just
 like to say this:
 
 My time at Mozilla has made me into a better software developer, a better
-leader, and more imporantly, a better person.
+leader, and more importantly, a better person.
 
 I'd like to thank all the Mozillians whom I have interacted with over the years
 for their contributions to making that happen.
