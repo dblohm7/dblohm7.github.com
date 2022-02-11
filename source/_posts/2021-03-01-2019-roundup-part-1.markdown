@@ -134,7 +134,7 @@ of lower and upper bounds. I wrote a conversion method, `MMPolicyBase::SpanFromP
 to convert between the two formats. In addition to format conversion, this method 
 also constrains resulting bounds such that they are above the 1MiB mark of the 
 process' address space (to avoid reserving memory in VM regions that are 
-sensitive to compatiblity concerns), as well as below the maximum allowable 
+sensitive to compatibility concerns), as well as below the maximum allowable 
 user-mode VM address.
 
 Another issue with range-aware VM allocation is determining the location, within 
