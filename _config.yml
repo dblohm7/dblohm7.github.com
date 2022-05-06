@@ -4,10 +4,10 @@
 
 url: https://dblohm7.ca
 title: Aaron Klotz's Software Blog
-subtitle: My Adventures as a Former Mozilla Employee
+subtitle: My Adventures in Software Development
 author: Aaron Klotz
 simple_search: http://google.com/search
-description: Blog by software engineer Aaron Klotz, discussing his work.
+description: Blog by Tailscale (previously Mozilla) engineer Aaron Klotz, discussing his work.
 
 # Default date format is "ordinal" (resulting in "July 22nd 2007")
 # You can customize the format as defined in
