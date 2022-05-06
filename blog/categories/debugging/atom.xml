@@ -4,7 +4,7 @@
   <title><![CDATA[Category: debugging | Aaron Klotz's Software Blog]]></title>
   <link href="https://dblohm7.ca/blog/categories/debugging/atom.xml" rel="self"/>
   <link href="https://dblohm7.ca/"/>
-  <updated>2022-02-11T09:51:44-07:00</updated>
+  <updated>2022-05-06T17:40:31-06:00</updated>
   <id>https://dblohm7.ca/</id>
   <author>
     <name><![CDATA[Aaron Klotz]]></name>
@@ -12,6 +12,99 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[DnsQueryEx needs love]]></title>
+    <link href="https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love/"/>
+    <updated>2022-05-06T17:40:00-06:00</updated>
+    <id>https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love</id>
+    <content type="html"><![CDATA[<p>Recently I&rsquo;ve been doing some work with <a href="https://web.archive.org/web/20220107041650/https://docs.microsoft.com/en-us/windows/win32/api/windns/nf-windns-dnsqueryex"><code>DnsQueryEx</code></a>,
+but unfortunately this has been less than pleasant. Not only are there errors in its documentation,
+but the API itself contains a bug that IMHO should never have made it to release.</p>
+
+<p>Like many other Win32 APIs, <code>DnsQueryEx</code> is an asynchronous interface that also
+supports calling synchronously. Whether their completion mechanism uses an event
+object, an APC, an I/O Completion Port, or some other technique, asynchronous
+Win32 APIs consistently employ a common convention:</p>
+
+<p>When a caller invokes the API, and that API is able to execute asynchronously,
+it returns <code>ERROR_IO_PENDING</code>. On the other hand, when the API fails, the API is
+able to immediately satisfy the request, or the API was invoked synchronously,
+the function immediately returns the final error code.</p>
+
+<p>For emphasis: <strong>In Win32, most asynchronous APIs reserve the right to complete
+synchronously if they are able to immediately satisfy a request.</strong></p>
+
+<p>Enter <code>DnsQueryEx</code>: while its internal implementation follows this convention,
+the implementation of its public interface does not!</p>
+
+<p>This is really easy to reproduce (on a fully-updated Windows 10 21H1, at least)
+by setting up an asynchronous call to <code>DnsQueryEx</code>, and querying for <code>"localhost"</code>.
+The caller must populate the <code>pQueryCompletionCallback</code> field in the <a href="https://web.archive.org/web/20220107051448/https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-dns_query_request"><code>DNS_QUERY_REQUEST</code></a>
+structure.</p>
+
+<p><code>DnsQueryEx</code> returns <code>ERROR_SUCCESS</code>. Great, the asynchronous API was able to
+immediately fulfill the request!</p>
+
+<p>Everything works according to plan until we examine the <code>pQueryRecords</code> field of
+the <a href="https://web.archive.org/web/20220106224652/https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-dns_query_result"><code>DNS_QUERY_RESULT</code></a>
+structure. That field is <code>NULL</code>! Every other output from this function points to
+a successful query, and yet we receive no results!</p>
+
+<p>I spent several hours pouring over the documentation and attempting different
+permutations of the <code>localhost</code> query, however the only way that I could coerce
+<code>DnsQueryEx</code> to actually produce the expected output is if I invoked it
+synchronously.</p>
+
+<p>I finally determined that this poking around was becoming futile and decided to
+examine the disassembly. Here&rsquo;s some (highly-simplified) pseudocode of what I found:</p>
+
+<pre><code class="c++">  // Inside DnsQueryEx
+  bool isSynchronous = pQueryRequest-&gt;pQueryCompletionCallback == nullptr;
+  PDNS_QUERY_RESULT internalDnsQueryResult = /*&lt;make private copy of pQueryResults&gt;*/;
+  // Call internal implementation. It returns the same error codes as DnsQueryEx
+  DWORD win32ErrorCode = Query_PrivateExW(pQueryRequest, internalDnsQueryResult);
+  if (isSynchronous) {
+    memcpy(pQueryResult, internalDnsQueryResult, sizeof(DNS_QUERY_RESULT));
+    return win32ErrorCode;
+  }
+  // Otherwise we're executing asynchronously, continue on that path...
+</code></pre>
+
+<p>Based on the background that I outlined above, do you see the bug?</p>
+
+<p>I&rsquo;ll give you a hint: <code>ERROR_IO_PENDING</code>.</p>
+
+<p>See it now?</p>
+
+<p>Okay, here goes: <code>isSynchronous</code> is the wrong condition for determining
+whether to copy the internal records to <code>pQueryResult</code> and immediately
+return! In fact, I would argue that <code>isSynchronous</code> should not be checked at
+all: instead, <code>DnsQueryEx</code> should be checking that <code>win32ErrorCode != ERROR_IO_PENDING</code>!</p>
+
+<p>To add insult to injury, <code>Query_PrivateExW</code> correctly allocates the output
+records from the heap, so <code>DnsQueryEx</code> is effectively leaking them.</p>
+
+<p>I&rsquo;m going to try reporting this issue via Feedback Hub, but if any Microsofties
+see this, I&rsquo;d appreciate it if you could flag the maintainer of <code>dnsapi.dll</code> and
+get this fixed.</p>
+
+<p>I suppose one workaround is to look for a successful call to <code>DnsQueryEx</code> with
+<code>NULL</code> records, and then fall back to invoking it synchronously. On the other
+hand, that doesn&rsquo;t help with the memory leak.</p>
+
+<p>Another gross, hacky option could be to manually check for special queries like
+<code>localhost</code> prior to calling the API, but this isn&rsquo;t exhaustive: there could
+be other reasons that <code>Query_PrivateExW</code> decides to execute synchronously.</p>
+
+<p>As you can see, this is a pretty trivial test case, which is why I find this
+bug to be so disappointing. I am a big proponent of attributing bugs to an OS
+until I have proof otherwise, but the disassembly I encountered was pretty
+damning.</p>
+
+<p>Hopefully this gets fixed. Until next time&hellip;</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[New mozdbgext command: !iat]]></title>

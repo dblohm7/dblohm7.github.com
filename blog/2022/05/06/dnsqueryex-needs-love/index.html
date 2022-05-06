@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>DnsQueryEx Needs Love - Aaron Klotz&#8217;s Software Blog</title>
+  <meta name="author" content="Aaron Klotz">
+
+  
+  <meta name="description" content="Recently I&rsquo;ve been doing some work with DnsQueryEx,
+but unfortunately this has been less than pleasant. Not only are there errors in its &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Aaron Klotz's Software Blog" type="application/atom+xml">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  
+
+<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="https://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36293908-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-36293908-1');
+  </script>
+
+
+  <link href="https://dblohm7.ca/favicon.svg" rel="icon" sizes="any" type="image/svg+xml">
+  <link href="https://dblohm7.ca/favicon.gif" rel="icon">
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Aaron Klotz&#8217;s Software Blog</a></h1>
+  
+    <h2>My Adventures in Software Development</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:dblohm7.ca" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">DnsQueryEx Needs Love</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2022-05-06T00:00:00-06:00" pubdate data-updated="true">May 6th, 2022</time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="https://dblohm7.ca">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Recently I&rsquo;ve been doing some work with <a href="https://web.archive.org/web/20220107041650/https://docs.microsoft.com/en-us/windows/win32/api/windns/nf-windns-dnsqueryex"><code>DnsQueryEx</code></a>,
+but unfortunately this has been less than pleasant. Not only are there errors in its documentation,
+but the API itself contains a bug that IMHO should never have made it to release.</p>
+
+<p>Like many other Win32 APIs, <code>DnsQueryEx</code> is an asynchronous interface that also
+supports calling synchronously. Whether their completion mechanism uses an event
+object, an APC, an I/O Completion Port, or some other technique, asynchronous
+Win32 APIs consistently employ a common convention:</p>
+
+<p>When a caller invokes the API, and that API is able to execute asynchronously,
+it returns <code>ERROR_IO_PENDING</code>. On the other hand, when the API fails, the API is
+able to immediately satisfy the request, or the API was invoked synchronously,
+the function immediately returns the final error code.</p>
+
+<p>For emphasis: <strong>In Win32, most asynchronous APIs reserve the right to complete
+synchronously if they are able to immediately satisfy a request.</strong></p>
+
+<p>Enter <code>DnsQueryEx</code>: while its internal implementation follows this convention,
+the implementation of its public interface does not!</p>
+
+<p>This is really easy to reproduce (on a fully-updated Windows 10 21H1, at least)
+by setting up an asynchronous call to <code>DnsQueryEx</code>, and querying for <code>"localhost"</code>.
+The caller must populate the <code>pQueryCompletionCallback</code> field in the <a href="https://web.archive.org/web/20220107051448/https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-dns_query_request"><code>DNS_QUERY_REQUEST</code></a>
+structure.</p>
+
+<p><code>DnsQueryEx</code> returns <code>ERROR_SUCCESS</code>. Great, the asynchronous API was able to
+immediately fulfill the request!</p>
+
+<p>Everything works according to plan until we examine the <code>pQueryRecords</code> field of
+the <a href="https://web.archive.org/web/20220106224652/https://docs.microsoft.com/en-us/windows/win32/api/windns/ns-windns-dns_query_result"><code>DNS_QUERY_RESULT</code></a>
+structure. That field is <code>NULL</code>! Every other output from this function points to
+a successful query, and yet we receive no results!</p>
+
+<p>I spent several hours pouring over the documentation and attempting different
+permutations of the <code>localhost</code> query, however the only way that I could coerce
+<code>DnsQueryEx</code> to actually produce the expected output is if I invoked it
+synchronously.</p>
+
+<p>I finally determined that this poking around was becoming futile and decided to
+examine the disassembly. Here&rsquo;s some (highly-simplified) pseudocode of what I found:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c++'><span class='line'>  <span class="c1">// Inside DnsQueryEx</span>
+</span><span class='line'>  <span class="kt">bool</span> <span class="n">isSynchronous</span> <span class="o">=</span> <span class="n">pQueryRequest</span><span class="o">-&gt;</span><span class="n">pQueryCompletionCallback</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">PDNS_QUERY_RESULT</span> <span class="n">internalDnsQueryResult</span> <span class="o">=</span> <span class="cm">/*&lt;make private copy of pQueryResults&gt;*/</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// Call internal implementation. It returns the same error codes as DnsQueryEx</span>
+</span><span class='line'>  <span class="n">DWORD</span> <span class="n">win32ErrorCode</span> <span class="o">=</span> <span class="n">Query_PrivateExW</span><span class="p">(</span><span class="n">pQueryRequest</span><span class="p">,</span> <span class="n">internalDnsQueryResult</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">isSynchronous</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">memcpy</span><span class="p">(</span><span class="n">pQueryResult</span><span class="p">,</span> <span class="n">internalDnsQueryResult</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">DNS_QUERY_RESULT</span><span class="p">));</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">win32ErrorCode</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// Otherwise we&#39;re executing asynchronously, continue on that path...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Based on the background that I outlined above, do you see the bug?</p>
+
+<p>I&rsquo;ll give you a hint: <code>ERROR_IO_PENDING</code>.</p>
+
+<p>See it now?</p>
+
+<p>Okay, here goes: <code>isSynchronous</code> is the wrong condition for determining
+whether to copy the internal records to <code>pQueryResult</code> and immediately
+return! In fact, I would argue that <code>isSynchronous</code> should not be checked at
+all: instead, <code>DnsQueryEx</code> should be checking that <code>win32ErrorCode != ERROR_IO_PENDING</code>!</p>
+
+<p>To add insult to injury, <code>Query_PrivateExW</code> correctly allocates the output
+records from the heap, so <code>DnsQueryEx</code> is effectively leaking them.</p>
+
+<p>I&rsquo;m going to try reporting this issue via Feedback Hub, but if any Microsofties
+see this, I&rsquo;d appreciate it if you could flag the maintainer of <code>dnsapi.dll</code> and
+get this fixed.</p>
+
+<p>I suppose one workaround is to look for a successful call to <code>DnsQueryEx</code> with
+<code>NULL</code> records, and then fall back to invoking it synchronously. On the other
+hand, that doesn&rsquo;t help with the memory leak.</p>
+
+<p>Another gross, hacky option could be to manually check for special queries like
+<code>localhost</code> prior to calling the API, but this isn&rsquo;t exhaustive: there could
+be other reasons that <code>Query_PrivateExW</code> decides to execute synchronously.</p>
+
+<p>As you can see, this is a pretty trivial test case, which is why I find this
+bug to be so disappointing. I am a big proponent of attributing bugs to an OS
+until I have proof otherwise, but the disassembly I encountered was pretty
+damning.</p>
+
+<p>Hopefully this gets fixed. Until next time&hellip;</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Aaron Klotz</span></span>
+
+      
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2022-05-06T17:40:00-06:00" pubdate data-updated="true">2022-05-06 17:40:00 -0600</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/debugging/'>debugging</a>, <a class='category' href='/blog/categories/win32/'>win32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love/" data-via="dblohm7" data-counturl="https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love/" >Tweet</a>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2021/08/13/all-good-things/" title="Previous Post: All Good Things...">&laquo; All Good Things&#8230;</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2022/05/06/dnsqueryex-needs-love/">DnsQueryEx Needs Love</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/08/13/all-good-things/">All Good Things&#8230;</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/03/01/2019-roundup-part-1/">2019 Roundup: Part 1 - Porting the DLL Interceptor to AArch64</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
+      </li>
+    
+  </ul>
+</section>
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2022 - Aaron Klotz -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'dblohm7';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love/';
+        var disqus_url = 'https://dblohm7.ca/blog/2022/05/06/dnsqueryex-needs-love/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

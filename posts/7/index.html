@@ -9,7 +9,8 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="I could apologize for the clickbaity title, but I won&rsquo;t. I have no shame. Today I want to talk about some code that we imported from Chromium &hellip;">
+  <meta name="description" content="Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
+changed between Windows 8.1 and the Windows 10 technical &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -50,7 +51,7 @@
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz&#8217;s Software Blog</a></h1>
   
-    <h2>My Adventures as a Former Mozilla Employee</h2>
+    <h2>My Adventures in Software Development</h2>
   
 </hgroup>
 
@@ -77,6 +78,89 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/07/28/interesting-win32-apis/">Interesting Win32 APIs</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2015-07-28T00:00:00-06:00" pubdate data-updated="true">Jul 28th, 2015</time>
+        
+           | <a href="/blog/2015/07/28/interesting-win32-apis/#disqus_thread"
+             data-disqus-identifier="https://dblohm7.ca/blog/2015/07/28/interesting-win32-apis/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Yesterday I decided to diff the export tables of some core Win32 DLLs to see what&rsquo;s
+changed between Windows 8.1 and the Windows 10 technical preview. There weren&rsquo;t
+many changes, but the ones that were there are quite exciting IMHO. While
+researching these new APIs, I also stumbled across some others that were
+added during the Windows 8 timeframe that we should be considering as well.</p>
+
+<h2>Volatile Ranges</h2>
+
+<p>While my diff showed these APIs as new exports for Windows 10, the MSDN docs
+claim that these APIs are actually new for the Windows 8.1 Update. Using the
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781436%28v=vs.85%29.aspx"><code>OfferVirtualMemory</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dn781437%28v=vs.85%29.aspx"><code>ReclaimVirtualMemory</code></a>
+functions, we can now specify ranges of virtual memory that are safe to
+discarded under memory pressure. Later on, should we request that access be
+restored to that memory, the kernel will either return that virtual memory to us
+unmodified, or advise us that the associated pages have been discarded.</p>
+
+<p>A couple of years ago we had an intern on the Perf Team who was working on
+bringing this capability to Linux. I am pleasantly surprised that this is now
+offered on Windows.</p>
+
+<h2><code>madvise(MADV_WILLNEED)</code> for Win32</h2>
+
+<p>For the longest time we have been hacking around the absence of a <code>madvise</code>-like
+API on Win32. On Linux we will do a <code>madvise(MADV_WILLNEED)</code> on memory-mapped
+files when we want the kernel to read ahead. On Win32, we were opening the
+backing file and then doing a series of sequential reads through the file to
+force the kernel to cache the file data. As of Windows 8, we can now call
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/hh780543%28v=vs.85%29.aspx"><code>PrefetchVirtualMemory</code></a>
+for a similar effect.</p>
+
+<h2>Operation Recorder: An API for SuperFetch</h2>
+
+<p>The <a href="https://msdn.microsoft.com/en-us/library/hh437562%28v=vs.85%29.aspx"><code>OperationStart</code></a>
+and <a href="https://msdn.microsoft.com/en-us/library/hh437558%28v=vs.85%29.aspx"><code>OperationEnd</code></a>
+APIs are intended to record access patterns during a file I/O operation.
+SuperFetch will then create prefetch files for the operation, enabling prefetch
+capabilities above and beyond the use case of initial process startup.</p>
+
+<h2>Memory Pressure Notifications</h2>
+
+<p>This API is not actually new, but I couldn&rsquo;t find any invocations of it in the
+Mozilla codebase. <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366541%28v=vs.85%29.aspx"><code>CreateMemoryResourceNotification</code></a>
+allocates a kernel handle that becomes signalled when physical memory is running
+low. Gecko already has facilities for handling memory pressure events on other
+platforms, so we should probably add this to the Win32 port.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -333,51 +417,6 @@ and the code is up on <a href="https://github.com/dblohm7/iqvis">GitHub</a>! It&
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Asynchronous Plugin Initialization: Nightly</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2014-12-31T00:00:00-07:00" pubdate data-updated="true">Dec 31st, 2014</time>
-        
-           | <a href="/blog/2014/12/31/asynchronous-plugin-initialization-nightly/#disqus_thread"
-             data-disqus-identifier="https://dblohm7.ca/blog/2014/12/31/asynchronous-plugin-initialization-nightly/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>As of today&rsquo;s <a href="http://nightly.mozilla.org">Nightly</a>, Asynchronous Plugin
-Initialization is available for testing. It is deactivated by default, so in
-order to try it out you will need to navigate to <code>about:config</code> and toggle the
-<code>dom.ipc.plugins.asyncInit</code> preference to <code>true</code>.</p>
-
-<p>If you experience any problems, please <a href="https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&amp;component=Plug-ins&amp;blocked=1116806">file a bug</a> that blocks <a title="Let Asynchronous Plugin Initialization ride the train" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1116806">bug 1116806</a>.</p>
-
-<p>Happy New Year!</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/8">&larr; Older</a>
@@ -395,6 +434,10 @@ order to try it out you will need to navigate to <code>about:config</code> and t
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2022/05/06/dnsqueryex-needs-love/">DnsQueryEx Needs Love</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/08/13/all-good-things/">All Good Things&#8230;</a>
       </li>
     
@@ -408,10 +451,6 @@ order to try it out you will need to navigate to <code>about:config</code> and t
     
       <li class="post">
         <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
       </li>
     
   </ul>

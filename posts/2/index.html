@@ -9,7 +9,7 @@
   <meta name="author" content="Aaron Klotz">
 
   
-  <meta name="description" content="This is the fourth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+  <meta name="description" content="This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
 blog entry for Q1. Yes, you are reading &hellip;">
   
 
@@ -51,7 +51,7 @@ blog entry for Q1. Yes, you are reading &hellip;">
   <header role="banner"><hgroup>
   <h1><a href="/">Aaron Klotz&#8217;s Software Blog</a></h1>
   
-    <h2>My Adventures as a Former Mozilla Employee</h2>
+    <h2>My Adventures in Software Development</h2>
   
 </hgroup>
 
@@ -78,6 +78,225 @@ blog entry for Q1. Yes, you are reading &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2021/02/24/2018-roundup-h2/">2018 Roundup: H2 - Preparing to Enable the Launcher Process by Default</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+  
+
+
+
+<time datetime="2021-02-24T00:00:00-07:00" pubdate data-updated="true">Feb 24th, 2021</time>
+        
+           | <a href="/blog/2021/02/24/2018-roundup-h2/#disqus_thread"
+             data-disqus-identifier="https://dblohm7.ca/blog/2021/02/24/2018-roundup-h2/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><em>This is the fifth post in my &ldquo;2018 Roundup&rdquo; series. For an index of all entries, please see my
+blog entry for <a href="https://dblohm7.ca/blog/2019/01/18/2018-roundup-q1/">Q1</a>.</em></p>
+
+<p>Yes, you are reading the dates correctly: I am posting this over two years after I began this series.
+I am trying to get caught up on documenting my past work!</p>
+
+<h3>CI and Developer Tooling</h3>
+
+<p>Given that the launcher process completely changes how our Win32 Firefox builds
+start, I needed to update both our CI harnesses, as well as the launcher process
+itself. I didn&rsquo;t do much that was particularly noteworthy from a technical
+standpoint, but I will mention some important points:</p>
+
+<p>During normal use, the launcher process usually exits immediately after the
+browser process is confirmed to have started. This was a deliberate design
+decision that I made. Having the launcher process wait for the browser process
+to terminate would not do any harm, however I did not want the launcher process
+hanging around in Task Manager and being misunderstood by users who are checking
+their browser&rsquo;s resource usage.</p>
+
+<p>On the other hand, such a design completely breaks scripts that expect to start
+Firefox and be able to synchronously wait for the browser to exit before
+continuing! Clearly I needed to provide an opt-in for the latter case, so I added
+the <code>--wait-for-browser</code> command-line option. The launcher process also implicitly
+enables this mode under a few <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/browser/app/winlauncher/LauncherProcessWin.cpp#92">other scenarios</a>.</p>
+
+<p>Secondly, there is the issue of debugging. Developers were previously used to
+attaching to the first <code>firefox.exe</code> process they see and expecting to be debugging
+the browser process. With the launcher process enabled by default, this is no
+longer the case.</p>
+
+<p>There are few options here:</p>
+
+<ul>
+<li>Visual Studio users may install the <a href="https://devblogs.microsoft.com/devops/introducing-the-child-process-debugging-power-tool/">Child Process Debugging Power Tool</a>,
+which enables the VS debugger to attach to child processes;</li>
+<li>WinDbg users may start their debugger with the <code>-o</code> command-line flag,
+or use the <code>Debug child processes also</code> checkbox in the GUI;</li>
+<li>I added support for a <code>MOZ_DEBUG_BROWSER_PAUSE</code> environment variable, which
+allows developers to set a timeout (in seconds) for the browser process to
+print its pid to <code>stdout</code> and wait for a debugger attachment.</li>
+</ul>
+
+
+<h3>Performance Testing</h3>
+
+<p>As I have alluded to in previous posts, I needed to measure the effect of adding
+an additional process to the critical path of Firefox startup. Since in-process
+testing will not work in this case, I needed to use something that could provide
+a holistic view across both launcher and browser processes. I decided to enhance
+our existing <code>xperf</code> suite in Talos to support my use case.</p>
+
+<p>I already had prior experience with <code>xperf</code>; I spent a significant part of 2013
+working with Joel Maher to put the <code>xperf</code> Talos suite into production. I also
+knew that the existing code was not sufficiently generic to be able to handle my
+use case.</p>
+
+<p>I threw together a rudimentary <a href="https://github.com/dblohm7/xperf">analysis framework</a>
+for working with CSV-exported xperf data. Then, after Joel&rsquo;s review, I vendored
+it into <code>mozilla-central</code> and used it to construct an analysis for startup time.
+[<em>While a more thorough discussion of this framework is definitely warranted, I
+also feel that it is tangential to the discussion at hand; I&rsquo;ll write a dedicated
+blog entry about this topic in the future. &ndash; Aaron</em>]</p>
+
+<p>In essence, the analysis considers the following facts when processing an xperf recording:</p>
+
+<ul>
+<li>The launcher process will be the first <code>firefox.exe</code> process that runs;</li>
+<li>The browser process will be started by the launcher process;</li>
+<li>The browser process will fire a <a href="https://searchfox.org/mozilla-central/source/toolkit/components/startup/mozprofilerprobe.mof">session store window restored</a> event.</li>
+</ul>
+
+
+<p>For our analysis, we needed to do the following:</p>
+
+<ol>
+<li>Find the event showing the first <code>firefox.exe</code> process being created;</li>
+<li>Find the session store window restored event from the second <code>firefox.exe</code> process;</li>
+<li>Output the time interval between the two events.</li>
+</ol>
+
+
+<p><a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/testing/talos/talos/xtalos/parse_xperf.py#36">This block of code</a>
+demonstrates how that analysis is specified using my analyzer framework.</p>
+
+<p>Overall, these test results were quite positive. We saw a very slight but
+imperceptible increase in startup time on machines with solid-state drives,
+however the security benefits from the launcher process outweigh this very small
+regression.</p>
+
+<p>Most interestingly, we saw a signficant <em>improvement</em> in startup time on Windows
+10 machines with magnetic hard disks! As I mentioned in Q2 Part 3, I believe
+this improvement is due to reduced hard disk seeking thanks to the launcher
+process forcing <code>\windows\system32</code> to the front of the dynamic linker&rsquo;s search
+path.</p>
+
+<h3>Error and Experimentation Readiness</h3>
+
+<p>By Q3 I had the launcher process in a state where it was built by default into
+Firefox, but it was still opt-in. As I have written previously, we needed the
+launcher process to gracefully fail even without having the benefit of various
+Gecko services such as preferences and the crash reporter.</p>
+
+<h4>Error Propagation</h4>
+
+<p>Firstly, I created a new class, <a href="https://searchfox.org/mozilla-central/rev/31a3457890b5698af1277413ee9d9bd6c5955183/widget/windows/WinHeaderOnlyUtils.h#73"><code>WindowsError</code></a>,
+that encapsulates all types of Windows error codes. As an aside, I would strongly
+encourage all Gecko developers who are writing new code that invokes Windows APIs
+to use this class in your error handling.</p>
+
+<p><code>WindowsError</code> is currently able to store Win32 <code>DWORD</code> error codes, <code>NTSTATUS</code>
+error codes, and <code>HRESULT</code> error codes. Internally the code is stored as an
+<code>HRESULT</code>, since that type has encodings to support the other two. <code>WindowsError</code>
+also provides a method to convert its error code to a localized string for
+human-readable output.</p>
+
+<p>As for the launcher process itself, nearly every function in the launcher
+process returns a <code>mozilla::Result</code>-based type. In case of error, we return a
+<code>LauncherResult</code>, which [<em>as of 2018; this has changed more recently &ndash; Aaron</em>]
+is a structure containing the error&rsquo;s source file, line number, and <code>WindowsError</code>
+describing the failure.</p>
+
+<h4>Detecting Browser Process Failures</h4>
+
+<p>While all <code>Result</code>s in the launcher process may be indicating a successful
+start, we may not yet be out of the woods! Consider the possibility that the
+various interventions taken by the launcher process might have somehow impaired
+the browser process&#8217; ability to start!</p>
+
+<p>To deal with this situation, the launcher process and the browser process share
+code that tracks whether both processes successfully started in sequence.</p>
+
+<p>When the launcher process is started, it checks information recorded about the
+previous run. If the browser process previously failed to start correctly, the
+launcher process disables itself and proceeds to start the browser process
+without any of its typical interventions.</p>
+
+<p>Once the browser has successfully started, it reflects the launcher process
+state into telemetry, preferences, and <code>about:support</code>.</p>
+
+<p>Future attempts to start Firefox will bypass the launcher process until the
+next time the installation&rsquo;s binaries are updated, at which point we reset and
+attempt once again to start with the launcher process. We do this in the hope
+that whatever was failing in version <em>n</em> might be fixed in version <em>n + 1</em>.</p>
+
+<p>Note that this update behaviour implies that there is no way to forcibly and
+permanently disable the launcher process. This is by design: the error detection
+feature is designed to prevent the browser from becoming unusable, not to provide
+configurability. The launcher process is a security feature and not something
+that we should want users adjusting any more than we would want users to be
+disabling the capability system or some other important security mitigation. In
+fact, my original roadmap for InjectEject called for eventually removing the
+failure detection code if the launcher failure rate ever reached zero.</p>
+
+<h4>Experimentation and Emergency</h4>
+
+<p>The pref reflection built into the failure detection system is bi-directional.
+This allowed us to ship a release where we ran a study with a fraction of users
+running with the launcher process enabled by default.</p>
+
+<p>Once we rolled out the launcher process at 100%, this pref also served as a
+useful &ldquo;emergency kill switch&rdquo; that we could have flipped if necessary.</p>
+
+<p>Fortunately our experiments were successful and we rolled the launcher process
+out to release at 100% without ever needing the kill switch!</p>
+
+<p>At this point, this pref should probably be removed, as we no longer need nor
+want to control launcher process deployment in this way.</p>
+
+<h4>Error Reporting</h4>
+
+<p>When telemetry is enabled, the launcher process is able to convert its
+<code>LauncherResult</code> into a ping which is sent in the background by <code>ping-sender</code>.
+When telemetry is disabled, we perform a last-ditch effort to surface the error
+by logging details about the <code>LauncherResult</code> failure in the Windows Event Log.</p>
+
+<h3>In Conclusion</h3>
+
+<p>Thanks for reading! This concludes my 2018 Roundup series! There is so much more
+work from 2018 that I did for this project that I wish I could discuss, but for
+security reasons I must refrain. Nonetheless, I hope you enjoyed this series.
+Stay tuned for more roundups in the future!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -306,104 +525,6 @@ code, but this was also not yet an issue because the launcher process was opt-in
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2019/09/30/coming-around-full-circle/">Coming Around Full Circle</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-
-
-  
-
-
-
-<time datetime="2019-09-30T00:00:00-06:00" pubdate data-updated="true">Sep 30th, 2019</time>
-        
-           | <a href="/blog/2019/09/30/coming-around-full-circle/#disqus_thread"
-             data-disqus-identifier="https://dblohm7.ca/blog/2019/09/30/coming-around-full-circle/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>One thing about me that most Mozillians don&rsquo;t know is that, when I first applied to work at MoCo,
-I had applied to work on the mobile platform. When all was said and done, it was decided at the time
-that I would be a better fit for an opening on Taras Glek&rsquo;s platform performance team.</p>
-
-<p>My first day at Mozilla was October 15, 2012 &mdash; I will be celebrating my seventh anniversary at MoCo in
-just a couple short weeks! Some people with similar tenures have suggested to me that we are now
-&ldquo;old guard,&rdquo; but I&rsquo;m not sure that I feel that way! Anyway, I digress.</p>
-
-<p>The platform performance team eventually evolved into a desktop-focused performance team by late 2013.
-By the end of 2015 I had decided that it was time for a change, and by March 2016 I had moved over to
-work for Jim Mathies, focusing on Gecko integration with Windows. I ended up spending the next twenty
-or so months helping the accessibility team port their Windows implementation over to multiprocess.</p>
-
-<p>Once Firefox Quantum 57 hit the streets, I scoped out and provided technical leadership for the
-InjectEject project, whose objective was to tackle some of the root problems with DLL injection that
-were causing us grief in Windows-land.</p>
-
-<p>I am proud to say that, over the past three years on Jim&rsquo;s team, I have done the best work of my career.
-I&rsquo;d like to thank Brad Lassey (now at Google) for his willingness to bring me over to his group, as well as
-Jim, and David Bolter (a11y manager at the time) for their confidence in me. As somebody who had spent most
-of his adult life having no confidence in his work whatsoever, their willingness to entrust me with
-taking on those risks and responsibilities made an enormous difference in my self esteem and my
-professional life.</p>
-
-<p>Over the course of H1 2019, I began to feel restless again. I knew it was time for another change. What
-I did not expect was that the agent of that change would be James Willcox, aka Snorp. In Whistler, Snorp
-planted the seed in my head that I might want to come over to work with him on GeckoView, within the
-mobile group which David was now managing.</p>
-
-<p>The timing seemed perfect, so I made the decision to move to GeckoView. I had to finish tying up some
-loose ends with InjectEject, so all the various stakeholders agreed that I&rsquo;d move over at the end of Q3 2019.</p>
-
-<p>Which brings me to this week, when I officially join the GeckoView team, working for Emily Toop. I find
-it somewhat amusing that I am now joining the team that evolved from the team that I had originally applied
-for back in 2012. I have truly come full circle in my career at Mozilla!</p>
-
-<p>So, what&rsquo;s next?</p>
-
-<ul>
-<li><p>I have a couple of InjectEject bugs that are pretty much finished, but just need some polish and
-code reviews before landing.</p></li>
-<li><p>For the next month or two at least, I am going to continue to meet weekly with Jim to assist with
-the transition as he ramps up new staff on the project.</p></li>
-<li><p>I still plan to be the module owner for the Firefox Launcher Process and the MSCOM library, however most
-day-to-day work will be done by others going forward;</p></li>
-<li><p>I will continue to serve as the mozglue peer in charge of the DLL blocklist and DLL interceptor, with
-the same caveat.</p></li>
-</ul>
-
-
-<p>Switching over to Android from Windows does not mean that I am leaving my Windows experience at the door; I
-would like to continue to be a resource on that front, so I would encourage people to continue to ask me
-for advice.</p>
-
-<p>On the other hand, I am very much looking forward to stepping back into the mobile space. My first crack at
-mobile was as an intern back in 2003, when I was working with some code that had to run on PalmOS 3.0! I have not
-touched Android since I shipped a couple of utility apps back in 2011, so I am looking forward to learning
-more about what has changed. I am also looking forward to learning more about native development on Android,
-which is something that I never really had a chance to try.</p>
-
-<p>As they used to say on Monty Python&rsquo;s Flying Circus, &ldquo;And now for something completely different!&rdquo;</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -421,6 +542,10 @@ which is something that I never really had a chance to try.</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2022/05/06/dnsqueryex-needs-love/">DnsQueryEx Needs Love</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2021/08/13/all-good-things/">All Good Things&#8230;</a>
       </li>
     
@@ -434,10 +559,6 @@ which is something that I never really had a chance to try.</p>
     
       <li class="post">
         <a href="/blog/2021/01/05/2018-roundup-q2-part3/">2018 Roundup: Q2, Part 3 - Fleshing Out the Launcher Process</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2021/01/04/2018-roundup-q2-part2/">2018 Roundup: Q2, Part 2 - Implementing a Skeletal Launcher Process</a>
       </li>
     
   </ul>
