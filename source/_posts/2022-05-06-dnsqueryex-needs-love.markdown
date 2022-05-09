@@ -10,9 +10,9 @@ but unfortunately this has been less than pleasant. Not only are there errors in
 but the API itself contains a bug that IMHO should never have made it to release.
 
 Like many other Win32 APIs, `DnsQueryEx` is an asynchronous interface that also
-supports calling synchronously. Whether their completion mechanism uses an event
-object, an APC, an I/O Completion Port, or some other technique, asynchronous
-Win32 APIs consistently employ a common convention:
+supports being called synchronously. Whether their completion mechanism uses an
+event object, an APC, an I/O Completion Port, or some other technique,
+asynchronous Win32 APIs consistently employ a common convention:
 
 When a caller invokes the API, and that API is able to execute asynchronously,
 it returns `ERROR_IO_PENDING`. On the other hand, when the API fails, the API is
