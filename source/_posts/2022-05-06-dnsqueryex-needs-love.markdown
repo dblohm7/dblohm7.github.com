@@ -109,3 +109,8 @@ until I have proof otherwise, but the disassembly I encountered was pretty
 damning.
 
 Hopefully this gets fixed. Until next time...
+
+**UPDATE:** Microsoft's Tommy Jensen [noted](https://twitter.com/tommyatms/status/1523732124343304193)
+that this bug has been fixed in Windows 11, but unfortunately [will not](https://twitter.com/tommyatms/status/1523735004009820165)
+be backported to Windows 10. Thanks to Brad Fitzpatrick for amplifying this post on Twitter.
+
